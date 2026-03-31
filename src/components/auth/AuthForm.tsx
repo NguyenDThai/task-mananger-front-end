@@ -8,9 +8,10 @@ type Props = {
 };
 
 export default function AuthForm({ type, onSubmit }: Props) {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [confirm, setConfirm] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,12 +21,16 @@ export default function AuthForm({ type, onSubmit }: Props) {
       return;
     }
 
-    if (type === "register" && password !== confirm) {
+    if (type === "register" && password !== confirmPassword) {
       alert("Mật khẩu không khớp");
       return;
     }
 
-    onSubmit({ email, password });
+    if (type === "register") {
+      onSubmit({ name, email, password, confirmPassword });
+    } else {
+      onSubmit({ email, password });
+    }
   };
 
   return (
@@ -45,6 +50,17 @@ export default function AuthForm({ type, onSubmit }: Props) {
       </div>
 
       <div className="space-y-4">
+        {type === "register" && (
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Your name"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-white"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </div>
+        )}
         <div className="relative">
           <input
             type="email"
@@ -71,8 +87,8 @@ export default function AuthForm({ type, onSubmit }: Props) {
               type="password"
               placeholder="Confirm Password"
               className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-gray-50/50 hover:bg-white"
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
             />
           </div>
         )}

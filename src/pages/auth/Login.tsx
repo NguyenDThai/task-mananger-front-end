@@ -2,15 +2,24 @@
 import AuthForm from "../../components/auth/AuthForm";
 import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/auth/authSlide";
-import { useNavigate } from "react-router-dom";
+import { useLoginMutation } from "../../redux/api/authApi";
+import { toast } from "react-toastify";
 
 function Login() {
+  const [loginApi] = useLoginMutation();
   const dispatch = useDispatch();
-  const navigate = useNavigate();
 
-  const handleLogin = (data: any) => {
-    dispatch(login(data));
-    navigate("/"); // chuyển về home
+  const handleLogin = async (data: any) => {
+    try {
+      const res = await loginApi(data).unwrap();
+
+      dispatch(login(res));
+      toast.success(res.message || "Đăng nhập thành công!");
+    } catch (error: any) {
+      console.error("Login error:", error);
+
+      toast.error(error?.data?.message || "Đăng nhập thất bại");
+    }
   };
 
   return (
