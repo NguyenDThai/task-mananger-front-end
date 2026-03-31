@@ -4,10 +4,12 @@ import { useDispatch } from "react-redux";
 import { login } from "../../redux/features/auth/authSlide";
 import { useLoginMutation } from "../../redux/api/authApi";
 import { toast } from "react-toastify";
+import { useNavigate } from "react-router-dom";
 
 function Login() {
   const [loginApi] = useLoginMutation();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleLogin = async (data: any) => {
     try {
@@ -15,6 +17,7 @@ function Login() {
 
       dispatch(login(res));
       toast.success(res.message || "Đăng nhập thành công!");
+      navigate("/");
     } catch (error: any) {
       console.error("Login error:", error);
 
