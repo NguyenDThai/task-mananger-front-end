@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import AuthForm from "../../components/auth/AuthForm";
 import { useDispatch } from "react-redux";
-import { login } from "../../redux/features/auth/authSlide";
+import { setCredentials } from "../../redux/features/auth/authSlide";
 import { useLoginMutation } from "../../redux/api/authApi";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
@@ -15,7 +15,7 @@ function Login() {
     try {
       const res = await loginApi(data).unwrap();
 
-      dispatch(login(res));
+      dispatch(setCredentials(res));
       toast.success(res.message || "Đăng nhập thành công!");
       navigate("/");
     } catch (error: any) {
