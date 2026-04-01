@@ -12,18 +12,25 @@ import type { ProjectTask, SubTask, TaskUser } from '../types';
 
 // --- Sub-components for Row ---
 
-const Avatar = ({ user }: { user: TaskUser }) => (
-  <div className="flex items-center gap-2 group cursor-pointer text-center justify-center">
-    <img
-      src={user.avatar}
-      alt={user.name}
-      className="w-5.5 h-5.5 rounded-full border border-gray-100 shadow-sm hover:scale-110 transition-transform"
-    />
-    <span className="text-[10px] text-gray-400 font-medium hidden group-hover:inline transition-all">
-      {user.name}
-    </span>
-  </div>
-);
+const Avatar = ({ user }: { user?: TaskUser }) => {
+  if (!user)
+    return <div className="text-[10px] text-gray-300 italic">Unassigned</div>;
+  return (
+    <div className="flex items-center gap-2 group cursor-pointer text-center justify-center">
+      <img
+        src={
+          user.avatar ||
+          `https://api.dicebear.com/7.x/initials/svg?seed=${user.name || 'U'}`
+        }
+        alt={user.name || 'User'}
+        className="w-5.5 h-5.5 rounded-full border border-gray-100 shadow-sm hover:scale-110 transition-transform bg-blue-50"
+      />
+      <span className="text-[10px] text-gray-400 font-medium hidden group-hover:inline transition-all">
+        {user.name || 'Unknown'}
+      </span>
+    </div>
+  );
+};
 
 // --- StatusSelect (Small compact version for nested tables) ---
 const StatusSelect = ({ initialStatus }: { initialStatus: string }) => {
@@ -252,7 +259,12 @@ export const TaskRow = ({
           <StatusSelect initialStatus={task.status} />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px]">
-          {task.dueDate}
+          {task.dueDate
+            ? new Date(task.dueDate).toLocaleDateString('en-GB', {
+                day: '2-digit',
+                month: 'short',
+              })
+            : '-'}
         </td>
         <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[90px]">
           {'estimated' in task ? task.estimated : '-'}
@@ -331,7 +343,7 @@ export const TaskRow = ({
                   <tbody className="divide-y divide-gray-100">
                     {task.subtasks.map((sub) => (
                       <tr
-                        key={sub.id}
+                        key={sub._id || sub.id}
                         className="hover:bg-gray-50 transition-colors group/sub"
                       >
                         {/* 45px offset accounted for by combining indent + first column */}
@@ -351,7 +363,12 @@ export const TaskRow = ({
                           <StatusSelect initialStatus={sub.status} />
                         </td>
                         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px]">
-                          {sub.dueDate}
+                          {sub.dueDate
+                            ? new Date(sub.dueDate).toLocaleDateString(
+                                'en-GB',
+                                { day: '2-digit', month: 'short' },
+                              )
+                            : '-'}
                         </td>
                         <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[90px]">
                           -

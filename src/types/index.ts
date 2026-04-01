@@ -18,10 +18,11 @@ export interface TaskUser {
 }
 
 export interface SubTask {
-  id: string;
+  _id: string; // From MongoDB
+  id?: string; // Some legacy code uses id
   name: string;
   assignee: TaskUser;
-  status: 'Pending' | 'Done' | 'In Progress';
+  status: 'Pending' | 'Done' | 'In Progress' | 'None' | 'Doing' | 'Stuck';
   dueDate: string;
   priority: 'Low' | 'Medium' | 'High';
 }
@@ -29,5 +30,5 @@ export interface SubTask {
 export interface ProjectTask extends SubTask {
   subtasks?: SubTask[];
   estimated: string;
-  labels: string[];
+  labels?: string[];
 }

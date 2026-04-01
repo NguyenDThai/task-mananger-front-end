@@ -1,88 +1,32 @@
-import { useState } from 'react';
 import { Plus } from 'lucide-react';
-import type { ProjectTask } from '../types';
 import { TaskRow } from './TaskRow';
+import { useGetTasksQuery } from '../redux/api/taskApi';
 
 const MyTask = () => {
-  // Mock Data
-  const [mockTasks] = useState<ProjectTask[]>([
-    {
-      id: '1',
-      name: 'Thiết kế hệ thống Design System v4.0',
-      assignee: {
-        name: 'Thái',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Thai',
-      },
-      status: 'In Progress',
-      dueDate: '20 May',
-      estimated: '24h',
-      priority: 'High',
-      labels: ['Design', 'Core'],
-      subtasks: [
-        {
-          id: '1-1',
-          name: 'Phác thảo bảng màu (Palette) và Font Family',
-          assignee: {
-            name: 'An',
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=An',
-          },
-          status: 'Done',
-          dueDate: '12 May',
-          priority: 'Medium',
-        },
-        {
-          id: '1-2',
-          name: 'Tạo bộ Button Component động',
-          assignee: {
-            name: 'Thái',
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Thai',
-          },
-          status: 'Pending',
-          dueDate: '15 May',
-          priority: 'Low',
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: 'Tích hợp API thanh toán Stripe Checkout',
-      assignee: {
-        name: 'Linh',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Linh',
-      },
-      status: 'Pending',
-      dueDate: '25 May',
-      estimated: '40h',
-      priority: 'High',
-      labels: ['Dev', 'Finance'],
-    },
-    {
-      id: '3',
-      name: 'Tối ưu hiệu năng ứng dụng (Performance)',
-      assignee: {
-        name: 'Thái',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Thai',
-      },
-      status: 'In Progress',
-      dueDate: '30 May',
-      estimated: '12h',
-      priority: 'Medium',
-      labels: ['Infra'],
-      subtasks: [
-        {
-          id: '3-1',
-          name: 'Audit Lighthouse cho trang Home',
-          assignee: {
-            name: 'Hoàng',
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Hoang',
-          },
-          status: 'Pending',
-          dueDate: '28 May',
-          priority: 'Low',
-        },
-      ],
-    },
-  ]);
+  const { data, isLoading, error } = useGetTasksQuery();
+  const tasks = data?.tasks || [];
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen text-red-500 gap-4">
+        <p className="font-bold">Đã có lỗi xảy ra khi tải dữ liệu!</p>
+        <button
+          onClick={() => window.location.reload()}
+          className="px-4 py-2 bg-red-100 rounded-md"
+        >
+          Thử lại
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-white min-h-screen">
@@ -146,8 +90,8 @@ const MyTask = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {mockTasks.map((task) => (
-              <TaskRow key={task.id} task={task} />
+            {tasks.map((task) => (
+              <TaskRow key={task._id || task.id} task={task} />
             ))}
           </tbody>
         </table>
@@ -158,7 +102,7 @@ const MyTask = () => {
             <div className="p-1.5 rounded-full group-hover:bg-blue-50 transition-colors">
               <Plus size={14} />
             </div>
-            Quick Add Task
+            Add task
           </button>
         </div>
       </div>
