@@ -105,28 +105,28 @@ const MyTask = () => {
                 <input type="checkbox" className="rounded-sm border-gray-300" />
               </th>
               <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest pl-3 w-[350px]">
-                Task Name
+                Tên
               </th>
               <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[120px]">
-                Assignee
+                Phụ Trách
               </th>
               <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[140px]">
-                Status
+                Trạng Thái
               </th>
               <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[110px]">
-                Due Date
+                Hạn Chót
               </th>
               <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[90px]">
-                Est (H)
+                Dự Kiến
               </th>
               <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[120px]">
-                Priority
+                Ưu Tiên
               </th>
               <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left w-[160px]">
-                Labels
+                Nhãn
               </th>
               <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[60px]">
-                Done
+                Hôm nay
               </th>
               <th className="px-3 py-2 w-[40px]"></th>
             </tr>

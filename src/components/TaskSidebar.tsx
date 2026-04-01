@@ -124,7 +124,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               onBlur={() => handleUpdate({ name })}
-              className="text-2xl font-bold text-gray-900 border-none p-0 focus:ring-0 resize-none w-full placeholder:text-gray-300"
+              className="text-2xl font-bold text-gray-900 border-none p-0 focus:ring-0 resize-none w-full placeholder:text-gray-300 outline-none"
               placeholder="Task name..."
               rows={2}
             />
@@ -161,7 +161,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
             <div className="flex items-center">
               <div className="w-32 flex items-center gap-2 text-gray-400 text-sm font-medium">
                 <Clock size={16} />
-                <span>Status</span>
+                <span>Trạng Thái</span>
               </div>
               <div className="flex-1">
                 <select
@@ -170,7 +170,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                     setStatus(e.target.value);
                     handleUpdate({ status: e.target.value });
                   }}
-                  className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 cursor-pointer"
+                  className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 cursor-pointer outline-none"
                 >
                   <option value="None">None</option>
                   <option value="Doing">Doing</option>
@@ -185,7 +185,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
             <div className="flex items-center">
               <div className="w-32 flex items-center gap-2 text-gray-400 text-sm font-medium">
                 <Calendar size={16} />
-                <span>Due Date</span>
+                <span>Hạn Chót</span>
               </div>
               <div className="flex-1 px-1">
                 <input
@@ -195,7 +195,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                     setDueDate(e.target.value);
                     handleUpdate({ dueDate: e.target.value });
                   }}
-                  className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 cursor-pointer"
+                  className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 cursor-pointer outline-none"
                 />
               </div>
             </div>
@@ -204,7 +204,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
             <div className="flex items-center">
               <div className="w-32 flex items-center gap-2 text-gray-400 text-sm font-medium">
                 <Flag size={16} />
-                <span>Priority</span>
+                <span>Ưu Tiên</span>
               </div>
               <div className="flex-1 text-center">
                 <select
@@ -213,7 +213,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                     setPriority(e.target.value);
                     handleUpdate({ priority: e.target.value });
                   }}
-                  className="w-full bg-transparent border-none text-sm font-bold focus:ring-0 p-0 text-gray-700 cursor-pointer"
+                  className="w-full bg-transparent border-none text-sm font-bold focus:ring-0 p-0 text-gray-700 cursor-pointer outline-none"
                 >
                   <option value="Low">Low</option>
                   <option value="Medium">Medium</option>
@@ -226,7 +226,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
             <div className="flex items-center">
               <div className="w-32 flex items-center gap-2 text-gray-400 text-sm font-medium">
                 <Clock size={16} />
-                <span>Estimate (H)</span>
+                <span>Dự Kiến</span>
               </div>
               <div className="flex-1">
                 <input
@@ -235,7 +235,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                   onChange={(e) => setEstimated(e.target.value)}
                   onBlur={() => handleUpdate({ estimated })}
                   placeholder="e.g. 2.5h"
-                  className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0"
+                  className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 outline-none"
                 />
               </div>
             </div>
@@ -247,7 +247,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
           <div className="flex flex-col gap-4">
             <div className="flex items-center gap-2 text-gray-400 text-xs font-black uppercase tracking-widest">
               <Tag size={12} />
-              Labels
+              Nhãn
             </div>
             <div className="flex flex-wrap gap-2">
               {task.labels?.map((l) => (

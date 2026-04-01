@@ -343,28 +343,28 @@ export const TaskRow = ({
                     <tr>
                       <th className="px-3 py-2 border-r border-gray-100 w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
                       <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3 w-[305px]">
-                        Task name
+                        Tên
                       </th>
                       <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px]">
-                        Assignee
+                        Phụ Trách
                       </th>
                       <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px]">
-                        Status
+                        Trạng Thái
                       </th>
                       <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px]">
-                        Due date
+                        Hạn Chót
                       </th>
                       <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[90px]">
-                        Est
+                        Dự Kiến
                       </th>
                       <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px]">
-                        Priority
+                        Ưu Tiên
                       </th>
                       <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px]">
-                        Labels
+                        Nhãn
                       </th>
                       <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px]">
-                        Done
+                        Hôm Nay
                       </th>
                       <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px]"></th>
                     </tr>
