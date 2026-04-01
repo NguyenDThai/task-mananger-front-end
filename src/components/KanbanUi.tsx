@@ -1,5 +1,5 @@
-import { Cloud, User } from "lucide-react";
-import type { Task } from "../types";
+import { Cloud, User } from 'lucide-react';
+import type { Task } from '../types';
 
 const KanbanUi = ({ tasks }: { tasks: Task[] }) => {
   return (
@@ -18,7 +18,7 @@ const KanbanUi = ({ tasks }: { tasks: Task[] }) => {
 
       <div className="flex-1 overflow-x-auto pb-4 custom-scrollbar">
         <div className="flex gap-6 h-full min-w-max">
-          {["To Do", "In Progress", "Review", "Done"].map((column) => (
+          {['To Do', 'In Progress', 'Review', 'Done'].map((column) => (
             <div
               key={column}
               className="w-80 bg-gray-100/50 rounded-3xl p-4 flex flex-col space-y-4 border border-gray-200/50 backdrop-blur-sm"
@@ -33,7 +33,7 @@ const KanbanUi = ({ tasks }: { tasks: Task[] }) => {
                       tasks.filter(
                         (t) =>
                           t.status ===
-                          (column === "Done" ? "Completed" : column),
+                          (column === 'Done' ? 'Completed' : column),
                       ).length
                     }
                   </span>
@@ -47,7 +47,7 @@ const KanbanUi = ({ tasks }: { tasks: Task[] }) => {
                 {tasks
                   .filter(
                     (t) =>
-                      t.status === (column === "Done" ? "Completed" : column),
+                      t.status === (column === 'Done' ? 'Completed' : column),
                   )
                   .map((task) => (
                     <div
@@ -57,11 +57,11 @@ const KanbanUi = ({ tasks }: { tasks: Task[] }) => {
                       <div className="flex justify-between items-start mb-3">
                         <span
                           className={`text-[10px] uppercase font-black tracking-tighter px-2 py-0.5 rounded-md ${
-                            task.priority === "High"
-                              ? "bg-red-50 text-red-600"
-                              : task.priority === "Medium"
-                                ? "bg-orange-50 text-orange-600"
-                                : "bg-green-50 text-green-600"
+                            task.priority === 'High'
+                              ? 'bg-red-50 text-red-600'
+                              : task.priority === 'Medium'
+                                ? 'bg-orange-50 text-orange-600'
+                                : 'bg-green-50 text-green-600'
                           }`}
                         >
                           {task.priority}
