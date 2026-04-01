@@ -219,7 +219,7 @@ export const TaskRow = ({
         className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors ${isSubtask ? 'bg-white' : 'bg-white'}`}
       >
         {/* Main Checkbox */}
-        <td className="px-3 py-2 border-r border-gray-200 w-[48px] text-center relative font-mono">
+        <td className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
           <div className="flex items-center justify-center">
             <input
               type="checkbox"
@@ -229,7 +229,7 @@ export const TaskRow = ({
         </td>
 
         {/* Task Name and Toggle */}
-        <td className="px-3 py-2 border-r border-gray-200 w-[350px]">
+        <td className="px-3 py-2 border-r border-gray-200">
           <div className="flex items-center justify-between group/cell h-full pr-2">
             <div className="flex items-center gap-2">
               {hasSubtasks && (
@@ -278,16 +278,16 @@ export const TaskRow = ({
         </td>
 
         {/* Standard Columns */}
-        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[120px]">
+        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
           <Avatar user={task.assignee} />
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px]">
+        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
           <StatusSelect
             initialStatus={task.status}
             taskId={(task as any)._id || (task as any).id}
           />
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px]">
+        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
           {task.dueDate
             ? new Date(task.dueDate).toLocaleDateString('en-GB', {
                 day: '2-digit',
@@ -295,13 +295,13 @@ export const TaskRow = ({
               })
             : '-'}
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[90px]">
+        <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[80px] min-w-[80px] max-w-[80px]">
           {'estimated' in task ? task.estimated : '-'}
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px]">
+        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
           <PriorityIcon priority={task.priority} />
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px]">
+        <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]">
           <div className="flex flex-wrap gap-1">
             {'labels' in task &&
               task.labels?.map((l) => (
@@ -314,13 +314,13 @@ export const TaskRow = ({
               ))}
           </div>
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px]">
+        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
           <CheckCircle2
             size={16}
             className={`mx-auto ${task.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
           />
         </td>
-        <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px]">
+        <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]">
           <MoreHorizontal
             size={14}
             className="mx-auto opacity-0 group-hover:opacity-100 cursor-pointer"
@@ -332,7 +332,7 @@ export const TaskRow = ({
       {isExpanded && hasSubtasks && task.subtasks && (
         <tr className="bg-gray-50/20">
           <td colSpan={10} className="p-0 border-b border-gray-200 relative">
-            <div className="flex pl-[44px] py-4 pr-8 relative">
+            <div className="flex pl-[44px] py-4 relative">
               {/* Connector Line from parent */}
               <div className="absolute left-[24px] top-0 bottom-6 w-[1px] bg-gray-200" />
 
@@ -341,32 +341,32 @@ export const TaskRow = ({
                 <table className="w-full text-left border-collapse table-fixed">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
-                      <th className="px-3 py-2 border-r border-gray-100 w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3 w-[305px]">
+                      <th className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
                         Tên
                       </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px]">
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
                         Phụ Trách
                       </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px]">
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
                         Trạng Thái
                       </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px]">
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
                         Hạn Chót
                       </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[90px]">
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[80px] min-w-[80px] max-w-[80px]">
                         Dự Kiến
                       </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px]">
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
                         Ưu Tiên
                       </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px]">
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
                         Nhãn
                       </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px]">
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
                         Hôm Nay
                       </th>
-                      <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px]"></th>
+                      <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -376,30 +376,30 @@ export const TaskRow = ({
                         className="hover:bg-gray-50 transition-colors group/sub"
                       >
                         {/* 45px offset accounted for by combining indent + first column */}
-                        <td className="px-3 py-2 border-r border-gray-100 w-[48px] text-center">
+                        <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center">
                           <input
                             type="checkbox"
                             className="w-3.5 h-3.5 rounded border-gray-300"
                           />
                         </td>
                         <td
-                          className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium w-[305px] cursor-pointer hover:text-blue-600 transition-colors"
+                          className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
                           onClick={() =>
                             onSelectTask && onSelectTask(sub as ProjectTask)
                           }
                         >
                           {sub.name}
                         </td>
-                        <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px]">
+                        <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
                           <Avatar user={sub.assignee} />
                         </td>
-                        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px]">
+                        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
                           <StatusSelect
                             initialStatus={sub.status}
                             taskId={(sub as any)._id || (sub as any).id}
                           />
                         </td>
-                        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px]">
+                        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
                           {sub.dueDate
                             ? new Date(sub.dueDate).toLocaleDateString(
                                 'en-GB',
@@ -407,20 +407,20 @@ export const TaskRow = ({
                               )
                             : '-'}
                         </td>
-                        <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[90px]">
+                        <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[80px] min-w-[80px] max-w-[80px]">
                           -
                         </td>
-                        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px]">
+                        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
                           <PriorityIcon priority={sub.priority} />
                         </td>
-                        <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px]"></td>
-                        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px]">
+                        <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]"></td>
+                        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
                           <CheckCircle2
                             size={16}
                             className={`mx-auto ${sub.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
                           />
                         </td>
-                        <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px]"></td>
+                        <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]"></td>
                       </tr>
                     ))}
                   </tbody>
