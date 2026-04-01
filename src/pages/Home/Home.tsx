@@ -10,7 +10,6 @@ import type { Task } from "../../types";
 
 const Home = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  console.log("🚀 ~ Home ~ user:", user);
   const [activeView, setActiveView] = useState("my-tasks"); // dashboard, kanban, my-tasks, profile
   const [taskFilter, setTaskFilter] = useState("all");
 

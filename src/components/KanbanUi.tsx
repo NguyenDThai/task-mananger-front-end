@@ -1,3 +1,4 @@
+import { Cloud, User } from "lucide-react";
 import type { Task } from "../types";
 
 const KanbanUi = ({ tasks }: { tasks: Task[] }) => (
@@ -10,7 +11,7 @@ const KanbanUi = ({ tasks }: { tasks: Task[] }) => (
         </p>
       </div>
       <button className="bg-blue-600 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform">
-        + Add Stage
+        + Add Task
       </button>
     </div>
 
@@ -63,13 +64,14 @@ const KanbanUi = ({ tasks }: { tasks: Task[] }) => (
                       >
                         {task.priority}
                       </span>
-                      <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-400">
-                        👤
+                      <div className="w-7 h-7 rounded-full bg-gray-100 flex items-center justify-center text-[10px] text-gray-400">
+                        <User />
                       </div>
                     </div>
                     <h4 className="font-bold text-gray-800 leading-tight mb-4">
                       {task.title}
                     </h4>
+                    {/* Số người tham gia */}
                     <div className="flex items-center justify-between text-xs text-gray-400 border-t border-gray-50 pt-3">
                       <div className="flex items-center -space-x-2">
                         <div className="w-6 h-6 rounded-full border-2 border-white bg-blue-100 flex items-center justify-center text-[10px] text-blue-600 font-bold">
@@ -79,7 +81,10 @@ const KanbanUi = ({ tasks }: { tasks: Task[] }) => (
                           B
                         </div>
                       </div>
-                      <span>💬 3</span>
+                      <span className="flex items-center gap-2">
+                        <Cloud />
+                        <span>3</span>
+                      </span>
                     </div>
                   </div>
                 ))}
