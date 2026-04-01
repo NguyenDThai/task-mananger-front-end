@@ -28,7 +28,32 @@ export const taskApi = createApi({
       }),
       invalidatesTags: ['Task'],
     }),
+    updateTask: builder.mutation<
+      ProjectTask,
+      { id: string; data: Partial<ProjectTask> }
+    >({
+      query: ({ id, data }) => ({
+        url: `/task/${id}`,
+        method: 'PATCH',
+        body: data,
+        credentials: 'include',
+      }),
+      invalidatesTags: ['Task'],
+    }),
+    deleteTask: builder.mutation<{ message: string }, string>({
+      query: (id) => ({
+        url: `/task/${id}`,
+        method: 'DELETE',
+        credentials: 'include',
+      }),
+      invalidatesTags: ['Task'],
+    }),
   }),
 });
 
-export const { useGetTasksQuery, useCreateTaskMutation } = taskApi;
+export const {
+  useGetTasksQuery,
+  useCreateTaskMutation,
+  useUpdateTaskMutation,
+  useDeleteTaskMutation,
+} = taskApi;

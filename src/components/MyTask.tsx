@@ -1,10 +1,49 @@
-import { Plus } from 'lucide-react';
+import { useState } from 'react';
+import { Plus, Check } from 'lucide-react';
 import { TaskRow } from './TaskRow';
-import { useGetTasksQuery } from '../redux/api/taskApi';
+import { useGetTasksQuery, useCreateTaskMutation } from '../redux/api/taskApi';
+import TaskSidebar from './TaskSidebar';
+import type { ProjectTask } from '../types';
 
 const MyTask = () => {
   const { data, isLoading, error } = useGetTasksQuery();
+  const [createTask] = useCreateTaskMutation();
   const tasks = data?.tasks || [];
+
+  // Sidebar state
+  const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+  // Quick Add state
+  const [isAdding, setIsAdding] = useState(false);
+  const [taskName, setTaskName] = useState('');
+
+  const handleOpenSidebar = (task: ProjectTask) => {
+    setSelectedTask(task);
+    setIsSidebarOpen(true);
+  };
+
+  const handleQuickAdd = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!taskName.trim()) {
+      setIsAdding(false);
+      return;
+    }
+
+    try {
+      await createTask({ name: taskName }).unwrap();
+      setTaskName('');
+      setIsAdding(false);
+    } catch (err) {
+      console.error('Failed to create task:', err);
+    }
+  };
+
+  // Close sidebar if task is deleted or data changes?
+  // Actually rtk query handles updates fine.
+  // We need to keep selectedTask synced if it's updated.
+  const currentSelectedTask =
+    tasks.find((t) => t._id === selectedTask?._id) || selectedTask;
 
   if (isLoading) {
     return (
@@ -29,7 +68,7 @@ const MyTask = () => {
   }
 
   return (
-    <div className="bg-white min-h-screen">
+    <div className="bg-white min-h-screen relative overflow-x-hidden">
       {/* Minimalistic Header */}
       <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
         <div>
@@ -47,7 +86,10 @@ const MyTask = () => {
           <button className="px-4 py-2 text-gray-500 font-bold text-[12px] hover:text-gray-900 transition-all">
             Export Excel
           </button>
-          <button className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm transition-all active:scale-95 font-bold text-[12px]">
+          <button
+            onClick={() => setIsAdding(true)}
+            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm transition-all active:scale-95 font-bold text-[12px]"
+          >
             <Plus size={16} />
             New Task
           </button>
@@ -55,7 +97,7 @@ const MyTask = () => {
       </div>
 
       {/* Grid Table Container */}
-      <div className="overflow-x-auto p-0">
+      <div className="overflow-x-auto p-0 pb-32">
         <table className="w-full text-left border-collapse border-b border-gray-200 min-w-[1300px] table-fixed">
           <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm shadow-gray-200/50">
             <tr>
@@ -91,21 +133,54 @@ const MyTask = () => {
           </thead>
           <tbody className="divide-y divide-gray-200">
             {tasks.map((task) => (
-              <TaskRow key={task._id || task.id} task={task} />
+              <TaskRow
+                key={task._id || task.id}
+                task={task}
+                onSelectTask={handleOpenSidebar}
+              />
             ))}
           </tbody>
         </table>
 
         {/* Footer Quick Add */}
         <div className="p-4 bg-white border-b border-gray-200">
-          <button className="flex items-center gap-3 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-all uppercase tracking-widest group">
-            <div className="p-1.5 rounded-full group-hover:bg-blue-50 transition-colors">
-              <Plus size={14} />
-            </div>
-            Add task
-          </button>
+          {isAdding ? (
+            <form
+              onSubmit={handleQuickAdd}
+              className="flex gap-2 items-center pl-8"
+            >
+              <input
+                autoFocus
+                value={taskName}
+                onChange={(e) => setTaskName(e.target.value)}
+                onBlur={() => handleQuickAdd()}
+                placeholder="What needs to be done?"
+                className="flex-1 bg-blue-50/50 border-none outline-none rounded px-3 py-1.5 text-[13px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
+              />
+              <button
+                type="submit"
+                className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+              >
+                <Check size={14} />
+              </button>
+            </form>
+          ) : (
+            <button
+              onClick={() => setIsAdding(true)}
+              className="flex items-center gap-3 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-all uppercase tracking-widest group cursor-pointer"
+            >
+              Add task
+            </button>
+          )}
         </div>
       </div>
+
+      <TaskSidebar
+        key={currentSelectedTask?._id || currentSelectedTask?.id || 'none'}
+        task={currentSelectedTask}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
     </div>
   );
 };

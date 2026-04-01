@@ -1,11 +1,11 @@
-import { createApi, fetchBaseQuery } from "@reduxjs/toolkit/query/react";
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
-import type { User } from "../../types";
+import type { User } from '../../types';
 
 export const authApi = createApi({
-  reducerPath: "authApi",
+  reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: "http://localhost:5000/api",
+    baseUrl: 'http://localhost:5000/api',
     prepareHeaders: (headers) => {
       // In case we want to support token in headers as well
       return headers;
@@ -15,30 +15,36 @@ export const authApi = createApi({
     // login api
     login: builder.mutation({
       query: (data) => ({
-        url: "/auth/login",
-        method: "POST",
+        url: '/auth/login',
+        method: 'POST',
         body: data,
-        credentials: "include",
+        credentials: 'include',
       }),
     }),
     register: builder.mutation({
       query: (data) => ({
-        url: "/auth/register",
-        method: "POST",
+        url: '/auth/register',
+        method: 'POST',
         body: data,
       }),
     }),
     getMe: builder.query<User, void>({
       query: () => ({
-        url: "/auth/me",
-        credentials: "include",
+        url: '/auth/me',
+        credentials: 'include',
       }),
     }),
     logout: builder.mutation<void, void>({
       query: () => ({
-        url: "/auth/logout",
-        method: "POST",
-        credentials: "include",
+        url: '/auth/logout',
+        method: 'POST',
+        credentials: 'include',
+      }),
+    }),
+    getUsers: builder.query<{ users: User[] }, void>({
+      query: () => ({
+        url: '/auth/users',
+        credentials: 'include',
       }),
     }),
   }),
@@ -49,4 +55,5 @@ export const {
   useRegisterMutation,
   useGetMeQuery,
   useLogoutMutation,
+  useGetUsersQuery,
 } = authApi;

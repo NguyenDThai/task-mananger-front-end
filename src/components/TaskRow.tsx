@@ -8,12 +8,13 @@ import {
   Plus,
   Pencil,
 } from 'lucide-react';
+import { useUpdateTaskMutation } from '../redux/api/taskApi';
 import type { ProjectTask, SubTask, TaskUser } from '../types';
 
 // --- Sub-components for Row ---
 
-const Avatar = ({ user }: { user?: TaskUser }) => {
-  if (!user)
+const Avatar = ({ user }: { user?: TaskUser | string | null }) => {
+  if (!user || typeof user === 'string')
     return <div className="text-[10px] text-gray-300 italic">Unassigned</div>;
   return (
     <div className="flex items-center gap-2 group cursor-pointer text-center justify-center">
@@ -30,8 +31,22 @@ const Avatar = ({ user }: { user?: TaskUser }) => {
 };
 
 // --- StatusSelect (Small compact version for nested tables) ---
-const StatusSelect = ({ initialStatus }: { initialStatus: string }) => {
+const StatusSelect = ({
+  initialStatus,
+  taskId,
+}: {
+  initialStatus: string;
+  taskId: string;
+}) => {
   const [status, setStatus] = useState(initialStatus);
+  const [prevInitialStatus, setPrevInitialStatus] = useState(initialStatus);
+
+  if (initialStatus !== prevInitialStatus) {
+    setPrevInitialStatus(initialStatus);
+    setStatus(initialStatus);
+  }
+
+  const [updateTask] = useUpdateTaskMutation();
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
@@ -133,9 +148,17 @@ const StatusSelect = ({ initialStatus }: { initialStatus: string }) => {
                 {Object.entries(statusConfigs).map(([key, cfg]) => (
                   <button
                     key={key}
-                    onClick={() => {
-                      setStatus(key);
-                      setIsOpen(false);
+                    onClick={async () => {
+                      try {
+                        await updateTask({
+                          id: taskId,
+                          data: { status: key },
+                        }).unwrap();
+                        setStatus(key);
+                        setIsOpen(false);
+                      } catch (err) {
+                        console.error('Failed to update status:', err);
+                      }
                     }}
                     className={`
                     w-full flex items-center gap-3 px-3 py-1.5 rounded text-[11px] font-bold transition-colors
@@ -180,9 +203,11 @@ const PriorityIcon = ({ priority }: { priority: string }) => {
 export const TaskRow = ({
   task,
   isSubtask = false,
+  onSelectTask,
 }: {
   task: ProjectTask | SubTask;
   isSubtask?: boolean;
+  onSelectTask?: (task: ProjectTask) => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const hasSubtasks =
@@ -218,8 +243,12 @@ export const TaskRow = ({
               {!hasSubtasks && !isSubtask && <div className="w-6" />}
 
               <span
-                onClick={() => setIsExpanded(!isExpanded)}
-                className={`text-[13px] font-bold select-none cursor-default ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} ${task.status === 'Done' ? 'text-gray-300 line-through' : ''}`}
+                onClick={() =>
+                  !isSubtask &&
+                  onSelectTask &&
+                  onSelectTask(task as ProjectTask)
+                }
+                className={`text-[13px] font-bold select-none cursor-pointer hover:text-blue-600 transition-colors ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} ${task.status === 'Done' ? 'text-gray-300 line-through' : ''}`}
               >
                 {task.name}
               </span>
@@ -253,7 +282,10 @@ export const TaskRow = ({
           <Avatar user={task.assignee} />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px]">
-          <StatusSelect initialStatus={task.status} />
+          <StatusSelect
+            initialStatus={task.status}
+            taskId={(task as any)._id || (task as any).id}
+          />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px]">
           {task.dueDate
@@ -350,14 +382,22 @@ export const TaskRow = ({
                             className="w-3.5 h-3.5 rounded border-gray-300"
                           />
                         </td>
-                        <td className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium w-[305px]">
+                        <td
+                          className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium w-[305px] cursor-pointer hover:text-blue-600 transition-colors"
+                          onClick={() =>
+                            onSelectTask && onSelectTask(sub as ProjectTask)
+                          }
+                        >
                           {sub.name}
                         </td>
                         <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px]">
                           <Avatar user={sub.assignee} />
                         </td>
                         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px]">
-                          <StatusSelect initialStatus={sub.status} />
+                          <StatusSelect
+                            initialStatus={sub.status}
+                            taskId={(sub as any)._id || (sub as any).id}
+                          />
                         </td>
                         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px]">
                           {sub.dueDate
