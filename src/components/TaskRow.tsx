@@ -2,7 +2,6 @@ import { useState, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ChevronDown,
-  Calendar,
   Flag,
   MoreHorizontal,
   CheckCircle2,
@@ -14,19 +13,19 @@ import type { ProjectTask, SubTask, TaskUser } from '../types';
 // --- Sub-components for Row ---
 
 const Avatar = ({ user }: { user: TaskUser }) => (
-  <div className="flex items-center gap-2 group cursor-pointer text-center">
+  <div className="flex items-center gap-2 group cursor-pointer text-center justify-center">
     <img
       src={user.avatar}
       alt={user.name}
-      className="w-7 h-7 rounded-full border-2 border-white shadow-sm hover:scale-110 transition-transform mx-auto"
+      className="w-5.5 h-5.5 rounded-full border border-gray-100 shadow-sm hover:scale-110 transition-transform"
     />
-    <span className="text-[11px] text-gray-400 font-medium hidden group-hover:inline transition-all">
+    <span className="text-[10px] text-gray-400 font-medium hidden group-hover:inline transition-all">
       {user.name}
     </span>
   </div>
 );
 
-// --- StatusSelect (Popover Dropdown with arrow - No Backdrop) ---
+// --- StatusSelect (Small compact version for nested tables) ---
 const StatusSelect = ({ initialStatus }: { initialStatus: string }) => {
   const [status, setStatus] = useState(initialStatus);
   const [isOpen, setIsOpen] = useState(false);
@@ -66,7 +65,7 @@ const StatusSelect = ({ initialStatus }: { initialStatus: string }) => {
       desc: 'Đã hoàn thành',
     },
     None: {
-      label: 'Không xét trạng thái',
+      label: 'None',
       bg: 'bg-status-none',
       text: 'text-gray-600',
       desc: 'Chưa xét trạng thái',
@@ -94,13 +93,13 @@ const StatusSelect = ({ initialStatus }: { initialStatus: string }) => {
           ref={triggerRef}
           onClick={handleOpen}
           className={`
-            w-[110px] flex items-center justify-center gap-2 px-3 py-1.5 rounded-lg text-[12px] font-bold transition-all shadow-sm active:scale-95
+            w-[85px] flex items-center justify-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold transition-all shadow-sm active:scale-95
             ${current.bg} ${current.text}
           `}
         >
           {current.dot && (
             <div
-              className={`w-2 h-2 rounded-full flex-shrink-0 ${current.dot}`}
+              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${current.dot}`}
             />
           )}
           <span className="truncate">
@@ -109,29 +108,24 @@ const StatusSelect = ({ initialStatus }: { initialStatus: string }) => {
         </button>
       </div>
 
-      {/* Popover Selection (Uses Portal to prevent clipping, but looks like a dropdown) */}
       {isOpen &&
         createPortal(
           <div className="fixed inset-0 z-[2000]">
-            {/* Invisible Backdrop - only used for closing on click outside */}
             <div
               className="absolute inset-0 bg-transparent"
               onClick={() => setIsOpen(false)}
             />
-
             <div
-              className="absolute bg-white rounded-xl shadow-[0_8px_30px_rgba(0,0,0,0.1)] border border-gray-100 p-2 min-w-[210px] z-10 animate-in fade-in zoom-in-95 duration-100"
+              className="absolute bg-white rounded-lg shadow-xl border border-gray-200 p-1 min-w-[180px] z-10 animate-in fade-in zoom-in-95 duration-100"
               style={{
-                top: coords.top + 8,
+                top: coords.top + 6,
                 left: coords.left + coords.width / 2,
                 transform: 'translateX(-50%)',
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Arrow/Tail (Pointing to trigger button) */}
-              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-100 rotate-45" />
-
-              <div className="flex flex-col gap-1 relative z-20">
+              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-200 rotate-45" />
+              <div className="flex flex-col gap-0.5 relative z-20">
                 {Object.entries(statusConfigs).map(([key, cfg]) => (
                   <button
                     key={key}
@@ -140,15 +134,15 @@ const StatusSelect = ({ initialStatus }: { initialStatus: string }) => {
                       setIsOpen(false);
                     }}
                     className={`
-                    w-full flex items-center gap-3 px-3 py-2 rounded-lg text-[13px] font-bold transition-colors
+                    w-full flex items-center gap-3 px-3 py-1.5 rounded text-[11px] font-bold transition-colors
                     hover:bg-gray-50 active:scale-98
                     ${cfg.bg} ${cfg.text}
                   `}
                   >
                     {cfg.dot ? (
-                      <div className={`w-3 h-3 rounded-full ${cfg.dot}`} />
+                      <div className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                     ) : (
-                      <div className="w-3 h-3" />
+                      <div className="w-1.5 h-1.5" />
                     )}
                     {cfg.label}
                   </button>
@@ -169,16 +163,16 @@ const PriorityIcon = ({ priority }: { priority: string }) => {
     Low: 'text-emerald-500',
   };
   return (
-    <div className="flex items-center gap-1.5 opacity-80 justify-center">
-      <Flag size={12} className={`fill-current ${styles[priority]}`} />
-      <span className="text-xs font-semibold text-gray-500 capitalize">
+    <div className="flex items-center gap-1 opacity-80 justify-center">
+      <Flag size={10} className={`fill-current ${styles[priority]}`} />
+      <span className="text-[10px] font-bold text-gray-500 capitalize">
         {priority}
       </span>
     </div>
   );
 };
 
-// --- TaskRow Component ---
+// --- TaskRow Component (Grid with Nested Subtask Block) ---
 export const TaskRow = ({
   task,
   isSubtask = false,
@@ -193,138 +187,201 @@ export const TaskRow = ({
   return (
     <>
       <tr
-        className={`group border-b border-gray-50/50 hover:bg-slate-50 transition-all duration-200 ${isSubtask ? 'bg-slate-50/10' : ''}`}
+        className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors ${isSubtask ? 'bg-white' : 'bg-white'}`}
       >
-        {/* Checkbox & Expand Icon */}
-        <td className="pl-4 py-2 w-10 relative text-center">
-          {/* Vertical line connector for subtasks */}
-          {isSubtask && (
-            <div className="absolute left-[34px] top-0 bottom-0 w-[1.5px] bg-gray-200/50" />
-          )}
-          <div className="flex items-center gap-2">
+        {/* Main Checkbox */}
+        <td className="px-3 py-2 border-r border-gray-200 w-[48px] text-center relative font-mono">
+          <div className="flex items-center justify-center">
             <input
               type="checkbox"
-              className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
             />
-            {hasSubtasks ? (
-              <button
-                onClick={() => setIsExpanded(!isExpanded)}
-                className={`text-gray-400 hover:text-blue-600 transition-all duration-300 transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
-              >
-                <ChevronDown size={14} />
-              </button>
-            ) : (
-              <div className="w-3.5" />
-            )}
           </div>
         </td>
 
-        {/* Task Name Column with Hover Actions */}
-        <td className={`py-4 ${isSubtask ? 'pl-8' : 'pl-2'}`}>
-          <div className="flex items-center justify-between group/cell pr-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => hasSubtasks && setIsExpanded(!isExpanded)}
-                className={`text-[13px] font-bold transition-all text-left ${isSubtask ? 'text-gray-500' : 'text-gray-800'} ${task.status === 'Done' ? 'text-gray-300 line-through decoration-gray-200' : ''}`}
+        {/* Task Name and Toggle */}
+        <td className="px-3 py-2 border-r border-gray-200 w-[350px]">
+          <div className="flex items-center justify-between group/cell h-full pr-2">
+            <div className="flex items-center gap-2">
+              {hasSubtasks && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className={`p-1 rounded hover:bg-gray-100 text-gray-400 transition-all duration-300 transform ${isExpanded ? 'rotate-0' : '-rotate-90'}`}
+                >
+                  <ChevronDown size={14} />
+                </button>
+              )}
+              {!hasSubtasks && !isSubtask && <div className="w-6" />}
+
+              <span
+                onClick={() => setIsExpanded(!isExpanded)}
+                className={`text-[13px] font-bold select-none cursor-default ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} ${task.status === 'Done' ? 'text-gray-300 line-through' : ''}`}
               >
                 {task.name}
-              </button>
+              </span>
 
-              {/* Subtask count badge */}
+              {/* Row Badges */}
               {hasSubtasks && !isExpanded && (
-                <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-blue-50 text-blue-500 text-[10px] font-bold ring-1 ring-blue-100">
-                  <Plus size={10} />
-                  {task.subtasks?.length} Subtasks
+                <span className="ml-2 px-1.5 py-0.5 rounded bg-blue-50 text-blue-500 text-[9px] font-black border border-blue-100">
+                  {task.subtasks?.length}
                 </span>
               )}
             </div>
 
-            {/* QUICK ACTIONS: Shown on row hover */}
-            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-              <button
-                className="p-1 px-1.5 hover:bg-slate-100 rounded-md text-slate-300 hover:text-blue-500 transition-all"
-                title="Edit task"
-              >
-                <Pencil size={12} />
-              </button>
-              <button
-                className="p-1 px-1.5 hover:bg-slate-100 rounded-md text-slate-300 hover:text-blue-500 transition-all"
-                title="Add subtask"
-              >
-                <Plus size={14} />
-              </button>
-            </div>
+            {/* Quick Actions */}
+            {!isSubtask && (
+              <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
+                <Pencil
+                  size={11}
+                  className="text-gray-300 hover:text-blue-500 cursor-pointer"
+                />
+                <Plus
+                  size={13}
+                  className="text-gray-300 hover:text-blue-500 cursor-pointer"
+                />
+              </div>
+            )}
           </div>
         </td>
 
-        {/* Assignee */}
-        <td className="py-2 px-4 whitespace-nowrap">
+        {/* Standard Columns */}
+        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[120px]">
           <Avatar user={task.assignee} />
         </td>
-
-        {/* Status (Popover Dropdown) */}
-        <td className="py-2 px-4 whitespace-nowrap">
+        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px]">
           <StatusSelect initialStatus={task.status} />
         </td>
-
-        {/* Due Date */}
-        <td className="py-2 px-4 whitespace-nowrap text-center">
-          <div className="flex items-center gap-1.5 text-gray-400 justify-center">
-            <Calendar
-              size={12}
-              className={task.status === 'Done' ? 'opacity-30' : ''}
-            />
-            <span className="text-[11px] font-medium">{task.dueDate}</span>
-          </div>
+        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px]">
+          {task.dueDate}
         </td>
-
-        {/* Estimated */}
-        <td className="py-2 px-4 text-[11px] text-gray-400 font-mono tracking-tighter text-center">
+        <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[90px]">
           {'estimated' in task ? task.estimated : '-'}
         </td>
-
-        {/* Priority */}
-        <td className="py-2 px-4">
+        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px]">
           <PriorityIcon priority={task.priority} />
         </td>
-
-        {/* Labels */}
-        <td className="py-2 px-4 min-w-[100px]">
+        <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px]">
           <div className="flex flex-wrap gap-1">
             {'labels' in task &&
               task.labels?.map((l) => (
                 <span
                   key={l}
-                  className="px-1.5 py-0.5 bg-gray-50 text-[9px] text-gray-400 rounded-sm border border-gray-100 uppercase font-bold tracking-tight"
+                  className="px-1.5 py-0.5 bg-gray-50 text-[9px] text-gray-400 rounded-sm border border-gray-100 uppercase font-black"
                 >
                   {l}
                 </span>
               ))}
           </div>
         </td>
-
-        {/* Today Action */}
-        <td className="py-2 px-4 text-center">
+        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px]">
           <CheckCircle2
             size={16}
-            className={`mx-auto transition-all ${task.status === 'Done' ? 'text-emerald-500' : 'text-gray-100 hover:text-blue-400 cursor-pointer'}`}
+            className={`mx-auto ${task.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
           />
         </td>
-
-        {/* Quick Menu */}
-        <td className="pr-4 py-2 text-right">
-          <button className="p-1 px-2 rounded-md opacity-0 group-hover:opacity-100 hover:bg-gray-100 transition-all text-gray-300">
-            <MoreHorizontal size={14} />
-          </button>
+        <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px]">
+          <MoreHorizontal
+            size={14}
+            className="mx-auto opacity-0 group-hover:opacity-100 cursor-pointer"
+          />
         </td>
       </tr>
 
-      {/* Recursive Render Subtasks */}
-      {isExpanded &&
-        hasSubtasks &&
-        task.subtasks?.map((sub) => (
-          <TaskRow key={sub.id} task={sub} isSubtask={true} />
-        ))}
+      {/* Bản con */}
+      {isExpanded && hasSubtasks && task.subtasks && (
+        <tr className="bg-gray-50/20">
+          <td colSpan={10} className="p-0 border-b border-gray-200 relative">
+            <div className="flex pl-[44px] py-4 pr-8 relative">
+              {/* Connector Line from parent */}
+              <div className="absolute left-[24px] top-0 bottom-6 w-[1px] bg-gray-200" />
+
+              {/* Nested Table Card Container */}
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden animate-in slide-in-from-top-1 duration-200">
+                <table className="w-full text-left border-collapse table-fixed">
+                  <thead className="bg-gray-50 border-b border-gray-200">
+                    <tr>
+                      <th className="px-3 py-2 border-r border-gray-100 w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3 w-[305px]">
+                        Task name
+                      </th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px]">
+                        Assignee
+                      </th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px]">
+                        Status
+                      </th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px]">
+                        Due date
+                      </th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[90px]">
+                        Est
+                      </th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px]">
+                        Priority
+                      </th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px]">
+                        Labels
+                      </th>
+                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px]">
+                        Done
+                      </th>
+                      <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px]"></th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100">
+                    {task.subtasks.map((sub) => (
+                      <tr
+                        key={sub.id}
+                        className="hover:bg-gray-50 transition-colors group/sub"
+                      >
+                        {/* 45px offset accounted for by combining indent + first column */}
+                        <td className="px-3 py-2 border-r border-gray-100 w-[48px] text-center">
+                          <input
+                            type="checkbox"
+                            className="w-3.5 h-3.5 rounded border-gray-300"
+                          />
+                        </td>
+                        <td className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium w-[305px]">
+                          {sub.name}
+                        </td>
+                        <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px]">
+                          <Avatar user={sub.assignee} />
+                        </td>
+                        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px]">
+                          <StatusSelect initialStatus={sub.status} />
+                        </td>
+                        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px]">
+                          {sub.dueDate}
+                        </td>
+                        <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[90px]">
+                          -
+                        </td>
+                        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px]">
+                          <PriorityIcon priority={sub.priority} />
+                        </td>
+                        <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px]"></td>
+                        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px]">
+                          <CheckCircle2
+                            size={16}
+                            className={`mx-auto ${sub.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
+                          />
+                        </td>
+                        <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px]"></td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                {/* Footer Quick Add inside block */}
+                <div className="p-2.5 bg-gray-50/20 border-t border-gray-100">
+                  <button className="flex items-center gap-2 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-colors pl-8">
+                    <Plus size={14} /> Thêm công việc con...
+                  </button>
+                </div>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
     </>
   );
 };
