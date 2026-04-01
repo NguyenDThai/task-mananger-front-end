@@ -25,9 +25,6 @@ const Avatar = ({ user }: { user?: TaskUser }) => {
         alt={user.name || 'User'}
         className="w-5.5 h-5.5 rounded-full border border-gray-100 shadow-sm hover:scale-110 transition-transform bg-blue-50"
       />
-      <span className="text-[10px] text-gray-400 font-medium hidden group-hover:inline transition-all">
-        {user.name || 'Unknown'}
-      </span>
     </div>
   );
 };
