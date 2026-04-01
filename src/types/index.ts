@@ -11,3 +11,23 @@ export interface Task {
   priority: string;
   category: string;
 }
+
+export interface TaskUser {
+  name: string;
+  avatar: string;
+}
+
+export interface SubTask {
+  id: string;
+  name: string;
+  assignee: TaskUser;
+  status: 'Pending' | 'Done' | 'In Progress';
+  dueDate: string;
+  priority: 'Low' | 'Medium' | 'High';
+}
+
+export interface ProjectTask extends SubTask {
+  subtasks?: SubTask[];
+  estimated: string;
+  labels: string[];
+}
