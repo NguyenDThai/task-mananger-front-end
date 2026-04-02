@@ -101,34 +101,32 @@ const MyTask = () => {
         <table className="w-full text-left border-collapse border-b border-gray-200 min-w-[1300px] table-fixed">
           <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm shadow-gray-200/50">
             <tr>
-              <th className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center">
-                <input type="checkbox" className="rounded-sm border-gray-300" />
-              </th>
-              <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest pl-3">
+              <th className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
+              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
                 Tên
               </th>
-              <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
                 Phụ Trách
               </th>
-              <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
+              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
                 Trạng Thái
               </th>
-              <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
                 Hạn Chót
               </th>
-              <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[80px] min-w-[80px] max-w-[80px]">
+              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
                 Dự Kiến
               </th>
-              <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
                 Ưu Tiên
               </th>
-              <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
+              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
                 Nhãn
               </th>
-              <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-black text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
-                Hôm nay
+              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
+                Hôm Nay
               </th>
-              <th className="px-3 py-2 w-[40px] min-w-[40px] max-w-[40px]"></th>
+              <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -167,9 +165,9 @@ const MyTask = () => {
           ) : (
             <button
               onClick={() => setIsAdding(true)}
-              className="flex items-center gap-3 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-all uppercase tracking-widest group cursor-pointer"
+              className="flex items-center gap-3 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-all tracking-widest group cursor-pointer"
             >
-              Add task
+              Thêm công việc
             </button>
           )}
         </div>

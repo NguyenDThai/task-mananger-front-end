@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useLayoutEffect, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import {
   ChevronDown,
@@ -7,8 +7,12 @@ import {
   CheckCircle2,
   Plus,
   Pencil,
+  Check,
 } from 'lucide-react';
-import { useUpdateTaskMutation } from '../redux/api/taskApi';
+import {
+  useUpdateTaskMutation,
+  useCreateTaskMutation,
+} from '../redux/api/taskApi';
 import type { ProjectTask, SubTask, TaskUser } from '../types';
 
 // --- Sub-components for Row ---
@@ -210,8 +214,72 @@ export const TaskRow = ({
   onSelectTask?: (task: ProjectTask) => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  const hasSubtasks =
-    'subtasks' in task && task.subtasks && task.subtasks.length > 0;
+  const [isAddingSubtask, setIsAddingSubtask] = useState(false);
+  const [subtaskName, setSubtaskName] = useState('');
+  const [createTask] = useCreateTaskMutation();
+
+  const subtasks = 'subtasks' in task ? task.subtasks : undefined;
+  const hasSubtasks = !!(subtasks && subtasks.length > 0);
+
+  const handleQuickAddSubtask = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!subtaskName.trim()) {
+      setIsAddingSubtask(false);
+      return;
+    }
+
+    try {
+      await createTask({
+        name: subtaskName,
+        parentTask: (task as SubTask)._id || (task as SubTask).id,
+        status: 'None',
+        priority: 'Medium',
+      }).unwrap();
+
+      setSubtaskName('');
+      setIsAddingSubtask(false);
+    } catch (err) {
+      console.error('Failed to add subtask:', err);
+    }
+  };
+
+  // --- Dynamic Positioning Logic ---
+  const containerRef = useRef<HTMLDivElement>(null);
+  const subtaskRefs = useRef<(HTMLTableRowElement | null)[]>([]);
+  const [dynamicTop, setDynamicTop] = useState(36);
+
+  // Kích hàm thay đổi kích thước khi mảng subtask thay đổi
+  const updatePosition = () => {
+    if (containerRef.current && subtasks && subtasks.length > 0) {
+      // User requirement: Math.ceil(subtasks.length / 2) - 1
+      const targetIndex = Math.ceil(subtasks.length / 2) - 1;
+
+      // Lấy index tương ứng của subtask
+      const targetRow = subtaskRefs.current[targetIndex];
+
+      if (targetRow) {
+        const containerRect = containerRef.current.getBoundingClientRect();
+        const rowRect = targetRow.getBoundingClientRect();
+        // Calculate offset (bottom of target row relative to container top)
+        const offset = rowRect.bottom - containerRect.top;
+
+        setDynamicTop(offset);
+      }
+    }
+  };
+
+  // Update position on layout changes or expansion
+  useLayoutEffect(() => {
+    if (isExpanded) {
+      updatePosition();
+    }
+  }, [isExpanded, subtasks?.length]);
+
+  // Handle window resizing
+  useEffect(() => {
+    window.addEventListener('resize', updatePosition);
+    return () => window.removeEventListener('resize', updatePosition);
+  }, [subtasks?.length]);
 
   return (
     <>
@@ -256,7 +324,7 @@ export const TaskRow = ({
               {/* Row Badges */}
               {hasSubtasks && !isExpanded && (
                 <span className="ml-2 px-1.5 py-0.5 rounded bg-blue-50 text-blue-500 text-[9px] font-black border border-blue-100">
-                  {task.subtasks?.length}
+                  {subtasks?.length}
                 </span>
               )}
             </div>
@@ -271,6 +339,11 @@ export const TaskRow = ({
                 <Plus
                   size={13}
                   className="text-gray-300 hover:text-blue-500 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(true);
+                    setIsAddingSubtask(true);
+                  }}
                 />
               </div>
             )}
@@ -284,7 +357,7 @@ export const TaskRow = ({
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
           <StatusSelect
             initialStatus={task.status}
-            taskId={(task as any)._id || (task as any).id}
+            taskId={(task as SubTask)._id || (task as SubTask).id || ''}
           />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
@@ -329,112 +402,150 @@ export const TaskRow = ({
       </tr>
 
       {/* Bản con */}
-      {isExpanded && hasSubtasks && task.subtasks && (
+      {isExpanded && !isSubtask && (
         <tr className="bg-gray-50/20">
           <td colSpan={10} className="p-0 border-b border-gray-200 relative">
-            <div className="flex pl-[44px] py-4 relative">
+            <div ref={containerRef} className="flex pl-[44px] py-4 relative">
               {/* Main Vertical Line (aligned with dropdown icon center) */}
               <div className="absolute left-0 top-0 bottom-0 w-[1.5px] bg-gray-200/60" />
 
-              {/* Horizontal Connector Line (Dynamic center) */}
-              <div className="absolute left-0 w-[44px] h-[1.5px] top-1/2 -translate-y-1/2 bg-gray-200/60" />
+              {/* Horizontal Connector Line (Dynamic Position) */}
+              <div
+                className="absolute left-0 w-[44px] h-[1.5px] bg-gray-200/60 transition-all duration-300"
+                style={{ top: `${dynamicTop}px` }}
+              />
 
               {/* Nested Table Card Container */}
-              <div className="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm animate-in slide-in-from-top-1 duration-200">
-                <table className="w-full text-left border-collapse table-fixed">
-                  <thead className="bg-gray-50 border-b border-gray-200">
-                    <tr>
-                      <th className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
-                        Tên
-                      </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
-                        Phụ Trách
-                      </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
-                        Trạng Thái
-                      </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
-                        Hạn Chót
-                      </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[80px] min-w-[80px] max-w-[80px]">
-                        Dự Kiến
-                      </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
-                        Ưu Tiên
-                      </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
-                        Nhãn
-                      </th>
-                      <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
-                        Hôm Nay
-                      </th>
-                      <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
-                    </tr>
-                  </thead>
-                  <tbody className=" divide-y divide-gray-100">
-                    {task.subtasks.map((sub) => {
-                      return (
-                        <tr
-                          key={sub._id || sub.id}
-                          className="hover:bg-gray-50 transition-colors group/sub "
-                        >
-                          {/* 45px offset accounted for by combining indent + first column */}
-                          <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center">
-                            <input
-                              type="checkbox"
-                              className="w-3.5 h-3.5 rounded border-gray-300"
-                            />
-                          </td>
-                          <td
-                            className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                            onClick={() =>
-                              onSelectTask && onSelectTask(sub as ProjectTask)
-                            }
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm animate-in slide-in-from-top-1 duration-200 overflow-hidden">
+                {hasSubtasks && (
+                  <table className="w-full text-left border-collapse table-fixed">
+                    <thead className="bg-gray-50 border-b border-gray-200">
+                      <tr>
+                        <th className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
+                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
+                          Tên
+                        </th>
+                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+                          Phụ Trách
+                        </th>
+                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
+                          Trạng Thái
+                        </th>
+                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+                          Hạn Chót
+                        </th>
+                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+                          Dự Kiến
+                        </th>
+                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+                          Ưu Tiên
+                        </th>
+                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
+                          Nhãn
+                        </th>
+                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
+                          Hôm Nay
+                        </th>
+                        <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
+                      </tr>
+                    </thead>
+                    <tbody className=" divide-y divide-gray-100">
+                      {subtasks?.map((sub, index) => {
+                        return (
+                          <tr
+                            key={sub._id || sub.id}
+                            ref={(el) => {
+                              subtaskRefs.current[index] = el;
+                            }}
+                            className="hover:bg-gray-50 transition-colors group/sub "
                           >
-                            {sub.name}
-                          </td>
-                          <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-                            <Avatar user={sub.assignee} />
-                          </td>
-                          <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
-                            <StatusSelect
-                              initialStatus={sub.status}
-                              taskId={(sub as any)._id || (sub as any).id}
-                            />
-                          </td>
-                          <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
-                            {sub.dueDate
-                              ? new Date(sub.dueDate).toLocaleDateString(
-                                  'en-GB',
-                                  { day: '2-digit', month: 'short' },
-                                )
-                              : '-'}
-                          </td>
-                          <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[80px] min-w-[80px] max-w-[80px]">
-                            -
-                          </td>
-                          <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-                            <PriorityIcon priority={sub.priority} />
-                          </td>
-                          <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]"></td>
-                          <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
-                            <CheckCircle2
-                              size={16}
-                              className={`mx-auto ${sub.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
-                            />
-                          </td>
-                          <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]"></td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            {/* 45px offset accounted for by combining indent + first column */}
+                            <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center">
+                              <input
+                                type="checkbox"
+                                className="w-3.5 h-3.5 rounded border-gray-300"
+                              />
+                            </td>
+                            <td
+                              className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                              onClick={() =>
+                                onSelectTask && onSelectTask(sub as ProjectTask)
+                              }
+                            >
+                              {sub.name}
+                            </td>
+                            <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
+                              <Avatar user={sub.assignee} />
+                            </td>
+                            <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
+                              <StatusSelect
+                                initialStatus={sub.status}
+                                taskId={
+                                  (sub as SubTask)._id ||
+                                  (sub as SubTask).id ||
+                                  ''
+                                }
+                              />
+                            </td>
+                            <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
+                              {sub.dueDate
+                                ? new Date(sub.dueDate).toLocaleDateString(
+                                    'en-GB',
+                                    { day: '2-digit', month: 'short' },
+                                  )
+                                : '-'}
+                            </td>
+                            <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
+                              -
+                            </td>
+                            <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
+                              <PriorityIcon priority={sub.priority} />
+                            </td>
+                            <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]"></td>
+                            <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
+                              <CheckCircle2
+                                size={16}
+                                className={`mx-auto ${sub.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
+                              />
+                            </td>
+                            <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]"></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                )}
+
                 {/* Footer Quick Add inside block */}
                 <div className="p-2.5 bg-gray-50/20 border-t border-gray-100">
-                  <button className="flex items-center gap-2 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-colors pl-8">
-                    <Plus size={14} /> Thêm công việc con...
-                  </button>
+                  {isAddingSubtask ? (
+                    <form
+                      onSubmit={handleQuickAddSubtask}
+                      className="flex gap-2 items-center pl-8"
+                    >
+                      <input
+                        autoFocus
+                        value={subtaskName}
+                        onChange={(e) => setSubtaskName(e.target.value)}
+                        onBlur={() => handleQuickAddSubtask()}
+                        placeholder="Thêm công việc con mới..."
+                        className="flex-1 bg-white border-gray-200 outline-none rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
+                      />
+                      <button
+                        type="submit"
+                        className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                      >
+                        <Check size={14} />
+                      </button>
+                    </form>
+                  ) : (
+                    <button
+                      onClick={() => setIsAddingSubtask(true)}
+                      className="flex items-center gap-2 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-colors pl-8"
+                    >
+                      <Plus size={14} /> Thêm công việc con...
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
