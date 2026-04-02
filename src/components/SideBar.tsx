@@ -1,4 +1,9 @@
-
+import { LogOut } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import { useLogoutMutation } from '../redux/api/authApi';
+import { logout as logoutAction } from '../redux/features/auth/authSlide';
+import { toast } from 'react-toastify';
 
 interface SideBarProps {
   activeView: string;
@@ -6,6 +11,21 @@ interface SideBarProps {
 }
 
 const SideBar = ({ activeView, setActiveView }: SideBarProps) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [logoutApi] = useLogoutMutation();
+
+  const handleLogout = async () => {
+    try {
+      await logoutApi().unwrap();
+      dispatch(logoutAction());
+      toast.success('Bạn đã đăng xuất thành công');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
+  };
+
   return (
     <aside className="w-72 bg-white border-r border-gray-100 hidden lg:flex flex-col">
       <div className="p-10">
@@ -26,17 +46,17 @@ const SideBar = ({ activeView, setActiveView }: SideBarProps) => {
           </p>
           <div className="space-y-2">
             {[
-              { id: "my-tasks", label: "My Tasks", icon: "🏢" },
-              { id: "kanban", label: "Kanban Board", icon: "📋" },
-              { id: "dashboard", label: "General View", icon: "⚡" },
+              { id: 'my-tasks', label: 'My Tasks', icon: '🏢' },
+              { id: 'kanban', label: 'Kanban Board', icon: '📋' },
+              { id: 'dashboard', label: 'General View', icon: '⚡' },
             ].map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveView(item.id)}
                 className={`w-full flex items-center space-x-4 px-5 py-4 rounded-3xl transition-all duration-300 font-bold ${
                   activeView === item.id
-                    ? "bg-blue-50 text-blue-600 shadow-sm"
-                    : "text-gray-400 hover:bg-gray-50 hover:text-gray-700"
+                    ? 'bg-blue-50 text-blue-600 shadow-sm'
+                    : 'text-gray-400 hover:bg-gray-50 hover:text-gray-700'
                 }`}
               >
                 <span className="text-xl">{item.icon}</span>
@@ -51,17 +71,29 @@ const SideBar = ({ activeView, setActiveView }: SideBarProps) => {
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 px-4">
             Account
           </p>
-          <button
-            onClick={() => setActiveView("profile")}
-            className={`w-full flex items-center space-x-4 px-5 py-4 rounded-3xl transition-all duration-300 font-bold ${
-              activeView === "profile"
-                ? "bg-blue-50 text-blue-600 shadow-sm"
-                : "text-gray-400 hover:bg-gray-50 hover:text-gray-700"
-            }`}
-          >
-            <span className="text-xl">👤</span>
-            <span>Profile Settings</span>
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={() => setActiveView('profile')}
+              className={`w-full flex items-center space-x-4 px-5 py-4 rounded-3xl transition-all duration-300 font-bold ${
+                activeView === 'profile'
+                  ? 'bg-blue-50 text-blue-600 shadow-sm'
+                  : 'text-gray-400 hover:bg-gray-50 hover:text-gray-700'
+              }`}
+            >
+              <span className="text-xl">👤</span>
+              <span>Profile Settings</span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-4 px-5 py-4 rounded-3xl transition-all duration-300 font-bold text-red-400 hover:bg-red-50 hover:text-red-600 group"
+            >
+              <LogOut
+                size={20}
+                className="group-hover:rotate-12 transition-transform"
+              />
+              <span>Log out</span>
+            </button>
+          </div>
         </div>
       </nav>
     </aside>
