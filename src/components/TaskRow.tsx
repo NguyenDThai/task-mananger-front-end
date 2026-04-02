@@ -21,6 +21,8 @@ import {
 } from '../redux/api/taskApi';
 import type { ProjectTask, SubTask, TaskUser } from '../types';
 import { StatusSelect } from './StatusSelect';
+import branchIcon from '../assets/branch.png';
+import AddingAssignee from './AddingAssignee';
 
 // --- Sub-components for Row ---
 
@@ -72,6 +74,8 @@ export const TaskRow = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [subtaskName, setSubtaskName] = useState('');
+  const [isAddingAssignee, setIsAddingAssignee] = useState(false);
+  const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
 
@@ -150,19 +154,16 @@ export const TaskRow = ({
         className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors ${isSubtask ? 'bg-white' : 'bg-white'}`}
       >
         {/* Main Checkbox */}
-        <td className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono overflow-hidden">
+        <td className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
           {/* Status color indicator bar */}
           <div
-            className={`absolute left-0 top-0 bottom-0 w-[4px] transition-colors duration-300 ${(() => {
-              if (subtasks && subtasks.length > 0) {
-                const allDone = subtasks.every((s) => s.status === 'Done');
-                return allDone ? 'bg-emerald-500' : 'bg-amber-500';
-              }
-              return task.status === 'Done'
-                ? 'bg-emerald-500'
-                : task.status === 'None' || !task.status
-                  ? 'bg-transparent'
-                  : 'bg-amber-500';
+            className={`absolute left-0 top-0 -bottom-[1px] w-[4px] transition-colors duration-300 ${(() => {
+              if (!subtasks || subtasks.length === 0) return 'bg-gray-200/60';
+              if (subtasks.every((s) => s.status === 'None'))
+                return 'bg-gray-200/60';
+              return subtasks.every((s) => s.status === 'Done')
+                ? 'bg-emerald-500/60'
+                : 'bg-amber-500/60';
             })()}`}
           />
           <div className="flex items-center justify-center">
@@ -193,16 +194,23 @@ export const TaskRow = ({
                   onSelectTask &&
                   onSelectTask(task as ProjectTask)
                 }
-                className={`text-[13px] font-bold select-none cursor-pointer hover:text-blue-600 transition-colors ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} `}
+                className={`text-[13px] select-none cursor-pointer hover:text-blue-600 transition-colors ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} `}
               >
                 {task.name}
               </span>
 
               {/* Row Badges */}
               {hasSubtasks && !isExpanded && (
-                <span className="ml-2 px-1.5 py-0.5 rounded bg-blue-50 text-blue-500 text-[9px] font-black border border-blue-100">
-                  {subtasks?.length}
-                </span>
+                <div className="flex items-center gap-1">
+                  <img
+                    src={branchIcon}
+                    className="max-w-3 max-h-3 shrink-0"
+                    alt=""
+                  />
+                  <span className="ml-2 px-1.5 py-0.5 text-[10px]">
+                    {subtasks?.length}
+                  </span>
+                </div>
               )}
             </div>
 
@@ -229,7 +237,18 @@ export const TaskRow = ({
 
         {/* Standard Columns */}
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-          <Avatar user={task.assignee} />
+          <div className="flex items-center gap-3 justify-center">
+            <Plus
+              size={15}
+              onClick={(e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setTriggerRect(rect);
+                setIsAddingAssignee(true);
+              }}
+              className="text-gray-300 hover:text-blue-500 cursor-pointer hidden group-hover:block"
+            />
+            <Avatar user={task.assignee} />
+          </div>
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
           <StatusSelect
@@ -298,6 +317,19 @@ export const TaskRow = ({
         </td>
       </tr>
 
+      {isAddingAssignee && triggerRect && (
+        <AddingAssignee
+          onClose={() => setIsAddingAssignee(false)}
+          taskId={(task as SubTask)._id || (task as SubTask).id || ''}
+          currentAssigneeId={
+            typeof task.assignee === 'string'
+              ? task.assignee
+              : (task.assignee as TaskUser)?._id
+          }
+          triggerRect={triggerRect}
+        />
+      )}
+
       {/* Bản con */}
       {isExpanded && !isSubtask && (
         <tr className="bg-gray-50/20">
@@ -306,6 +338,8 @@ export const TaskRow = ({
             <div
               className={`absolute left-0 top-0 bottom-0 w-[1.5px] transition-colors duration-300 ${(() => {
                 if (!subtasks || subtasks.length === 0) return 'bg-gray-200/60';
+                if (subtasks.every((s) => s.status === 'None'))
+                  return 'bg-gray-200/60';
                 return subtasks.every((s) => s.status === 'Done')
                   ? 'bg-emerald-500/60'
                   : 'bg-amber-500/60';
@@ -314,8 +348,10 @@ export const TaskRow = ({
 
             {/* Horizontal Connector Line (Dynamic Position) */}
             <div
-              className={`absolute left-0 w-[44px] h-[1.5px] transition-all duration-300 ${(() => {
+              className={`absolute left-0 w-[45px] h-[1.5px] z-10 transition-all duration-300 ${(() => {
                 if (!subtasks || subtasks.length === 0) return 'bg-gray-200/60';
+                if (subtasks.every((s) => s.status === 'None'))
+                  return 'bg-gray-200/60';
                 return subtasks.every((s) => s.status === 'Done')
                   ? 'bg-emerald-500/60'
                   : 'bg-amber-500/60';

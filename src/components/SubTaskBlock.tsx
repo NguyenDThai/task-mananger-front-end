@@ -10,8 +10,8 @@ interface SubTaskBlockProps {
   onSelectTask?: (task: ProjectTask) => void;
   containerRef: React.RefObject<HTMLDivElement | null>;
   subtaskRefs: React.MutableRefObject<(HTMLTableRowElement | null)[]>;
-  updateTask: (args: { id: string; data: any }) => {
-    unwrap: () => Promise<any>;
+  updateTask: (args: { id: string; data: Partial<SubTask> }) => {
+    unwrap: () => Promise<SubTask>;
   };
   isAddingSubtask: boolean;
   setIsAddingSubtask: (val: boolean) => void;
@@ -79,9 +79,9 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                   }}
                   className="hover:bg-gray-50 transition-colors group/sub "
                 >
-                  <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono overflow-hidden">
+                  <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
                     <div
-                      className={`absolute left-0 top-0 bottom-0 w-[4px] transition-colors duration-300 ${
+                      className={`absolute left-0 top-0 -bottom-[1px] w-[4px] transition-colors duration-300 ${
                         sub.status === 'Done'
                           ? 'bg-emerald-500'
                           : sub.status === 'None' || !sub.status
