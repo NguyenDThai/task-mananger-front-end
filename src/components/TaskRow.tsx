@@ -5,7 +5,6 @@ import {
   useEffect,
   useCallback,
 } from 'react';
-import { createPortal } from 'react-dom';
 import {
   ChevronDown,
   Flag,
@@ -13,18 +12,19 @@ import {
   CheckCircle2,
   Plus,
   Pencil,
-  Check,
 } from 'lucide-react';
 import { EstimatedPicker } from './EstimatedPicker';
+import { SubTaskBlock } from './SubTaskBlock';
 import {
   useUpdateTaskMutation,
   useCreateTaskMutation,
 } from '../redux/api/taskApi';
 import type { ProjectTask, SubTask, TaskUser } from '../types';
+import { StatusSelect } from './StatusSelect';
 
 // --- Sub-components for Row ---
 
-const Avatar = ({ user }: { user?: TaskUser | string | null }) => {
+export const Avatar = ({ user }: { user?: TaskUser | string | null }) => {
   if (!user || typeof user === 'string')
     return <div className="text-[10px] text-gray-300 italic">Unassigned</div>;
   return (
@@ -42,159 +42,8 @@ const Avatar = ({ user }: { user?: TaskUser | string | null }) => {
 };
 
 // --- StatusSelect (Small compact version for nested tables) ---
-const StatusSelect = ({
-  initialStatus,
-  taskId,
-}: {
-  initialStatus: string;
-  taskId: string;
-}) => {
-  const [status, setStatus] = useState(initialStatus);
-  const [prevInitialStatus, setPrevInitialStatus] = useState(initialStatus);
 
-  if (initialStatus !== prevInitialStatus) {
-    setPrevInitialStatus(initialStatus);
-    setStatus(initialStatus);
-  }
-
-  const [updateTask] = useUpdateTaskMutation();
-  const [isOpen, setIsOpen] = useState(false);
-  const triggerRef = useRef<HTMLButtonElement>(null);
-  const [coords, setCoords] = useState({ top: 0, left: 0, width: 0 });
-
-  const statusConfigs: Record<
-    string,
-    { label: string; bg: string; text: string; desc: string; dot?: string }
-  > = {
-    Doing: {
-      label: 'Doing',
-      bg: 'bg-status-doing',
-      text: 'text-blue-700',
-      dot: 'bg-blue-600',
-      desc: 'Đang triển khai',
-    },
-    Stuck: {
-      label: 'Stuck',
-      bg: 'bg-status-stuck',
-      text: 'text-red-700',
-      dot: 'bg-red-600',
-      desc: 'Đang bị tắc nghẽn',
-    },
-    Pending: {
-      label: 'Pending',
-      bg: 'bg-status-pedding',
-      text: 'text-orange-700',
-      dot: 'bg-orange-600',
-      desc: 'Đang tạm dừng',
-    },
-    Done: {
-      label: 'Done',
-      bg: 'bg-status-done',
-      text: 'text-emerald-700',
-      dot: 'bg-emerald-600',
-      desc: 'Đã hoàn thành',
-    },
-    None: {
-      label: 'None',
-      bg: 'bg-status-none',
-      text: 'text-gray-600',
-      desc: 'Chưa xét trạng thái',
-    },
-  };
-
-  const current = statusConfigs[status] || statusConfigs['None'];
-
-  const handleOpen = () => {
-    if (triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect();
-      setCoords({
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX,
-        width: rect.width,
-      });
-      setIsOpen(true);
-    }
-  };
-
-  return (
-    <>
-      <div className="flex justify-center">
-        <button
-          ref={triggerRef}
-          onClick={handleOpen}
-          className={`
-            w-[85px] flex items-center justify-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold transition-all shadow-sm active:scale-95
-            ${current.bg} ${current.text}
-          `}
-        >
-          {current.dot && (
-            <div
-              className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${current.dot}`}
-            />
-          )}
-          <span className="truncate">
-            {current.label === 'Không xét trạng thái' ? 'None' : current.label}
-          </span>
-        </button>
-      </div>
-
-      {isOpen &&
-        createPortal(
-          <div className="fixed inset-0 z-[2000]">
-            <div
-              className="absolute inset-0 bg-transparent"
-              onClick={() => setIsOpen(false)}
-            />
-            <div
-              className="absolute bg-white rounded-lg shadow-xl border border-gray-200 p-1 min-w-[180px] z-10 animate-in fade-in zoom-in-95 duration-100"
-              style={{
-                top: coords.top + 6,
-                left: coords.left + coords.width / 2,
-                transform: 'translateX(-50%)',
-              }}
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-t border-l border-gray-200 rotate-45" />
-              <div className="flex flex-col gap-0.5 relative z-20">
-                {Object.entries(statusConfigs).map(([key, cfg]) => (
-                  <button
-                    key={key}
-                    onClick={async () => {
-                      try {
-                        await updateTask({
-                          id: taskId,
-                          data: { status: key },
-                        }).unwrap();
-                        setStatus(key);
-                        setIsOpen(false);
-                      } catch (err) {
-                        console.error('Failed to update status:', err);
-                      }
-                    }}
-                    className={`
-                    w-full flex items-center gap-3 px-3 py-1.5 rounded text-[11px] font-bold transition-colors
-                    hover:bg-gray-50 active:scale-98
-                    ${cfg.bg} ${cfg.text}
-                  `}
-                  >
-                    {cfg.dot ? (
-                      <div className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
-                    ) : (
-                      <div className="w-1.5 h-1.5" />
-                    )}
-                    {cfg.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>,
-          document.body,
-        )}
-    </>
-  );
-};
-
-const PriorityIcon = ({ priority }: { priority: string }) => {
+export const PriorityIcon = ({ priority }: { priority: string }) => {
   const styles: Record<string, string> = {
     High: 'text-rose-500',
     Medium: 'text-amber-500',
@@ -301,7 +150,21 @@ export const TaskRow = ({
         className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors ${isSubtask ? 'bg-white' : 'bg-white'}`}
       >
         {/* Main Checkbox */}
-        <td className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
+        <td className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono overflow-hidden">
+          {/* Status color indicator bar */}
+          <div
+            className={`absolute left-0 top-0 bottom-0 w-[4px] transition-colors duration-300 ${(() => {
+              if (subtasks && subtasks.length > 0) {
+                const allDone = subtasks.every((s) => s.status === 'Done');
+                return allDone ? 'bg-emerald-500' : 'bg-amber-500';
+              }
+              return task.status === 'Done'
+                ? 'bg-emerald-500'
+                : task.status === 'None' || !task.status
+                  ? 'bg-transparent'
+                  : 'bg-amber-500';
+            })()}`}
+          />
           <div className="flex items-center justify-center">
             <input
               type="checkbox"
@@ -330,7 +193,7 @@ export const TaskRow = ({
                   onSelectTask &&
                   onSelectTask(task as ProjectTask)
                 }
-                className={`text-[13px] font-bold select-none cursor-pointer hover:text-blue-600 transition-colors ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} ${task.status === 'Done' ? 'text-gray-300 line-through' : ''}`}
+                className={`text-[13px] font-bold select-none cursor-pointer hover:text-blue-600 transition-colors ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} `}
               >
                 {task.name}
               </span>
@@ -374,7 +237,15 @@ export const TaskRow = ({
             taskId={(task as SubTask)._id || (task as SubTask).id || ''}
           />
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
+        <td
+          className={`px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px] ${(() => {
+            if (!task.dueDate || task.status === 'Done') return 'text-gray-500';
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            const due = new Date(task.dueDate);
+            return due < today ? 'text-rose-500' : 'text-gray-500';
+          })()}`}
+        >
           {task.dueDate
             ? new Date(task.dueDate).toLocaleDateString('en-GB', {
                 day: '2-digit',
@@ -431,165 +302,39 @@ export const TaskRow = ({
       {isExpanded && !isSubtask && (
         <tr className="bg-gray-50/20">
           <td colSpan={10} className="p-0 border-b border-gray-200 relative">
-            <div ref={containerRef} className="flex pl-[44px] py-4 relative">
-              {/* Main Vertical Line (aligned with dropdown icon center) */}
-              <div className="absolute left-0 top-0 bottom-0 w-[1.5px] bg-gray-200/60" />
+            {/* Main Vertical Line (aligned with dropdown icon center) */}
+            <div
+              className={`absolute left-0 top-0 bottom-0 w-[1.5px] transition-colors duration-300 ${(() => {
+                if (!subtasks || subtasks.length === 0) return 'bg-gray-200/60';
+                return subtasks.every((s) => s.status === 'Done')
+                  ? 'bg-emerald-500/60'
+                  : 'bg-amber-500/60';
+              })()}`}
+            />
 
-              {/* Horizontal Connector Line (Dynamic Position) */}
-              <div
-                className="absolute left-0 w-[44px] h-[1.5px] bg-gray-200/60 transition-all duration-300"
-                style={{ top: `${dynamicTop}px` }}
-              />
+            {/* Horizontal Connector Line (Dynamic Position) */}
+            <div
+              className={`absolute left-0 w-[44px] h-[1.5px] transition-all duration-300 ${(() => {
+                if (!subtasks || subtasks.length === 0) return 'bg-gray-200/60';
+                return subtasks.every((s) => s.status === 'Done')
+                  ? 'bg-emerald-500/60'
+                  : 'bg-amber-500/60';
+              })()}`}
+              style={{ top: `${dynamicTop}px` }}
+            />
 
-              {/* Nested Table Card Container */}
-              <div className="flex-1 bg-white border border-gray-200 shadow-sm animate-in slide-in-from-top-1 duration-200 overflow-hidden">
-                {hasSubtasks && (
-                  <table className="w-full text-left border-collapse table-fixed">
-                    <thead className="bg-gray-50 border-b border-gray-200">
-                      <tr>
-                        <th className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
-                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
-                          Tên
-                        </th>
-                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
-                          Phụ Trách
-                        </th>
-                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
-                          Trạng Thái
-                        </th>
-                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
-                          Hạn Chót
-                        </th>
-                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
-                          Dự Kiến
-                        </th>
-                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
-                          Ưu Tiên
-                        </th>
-                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
-                          Nhãn
-                        </th>
-                        <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
-                          Hôm Nay
-                        </th>
-                        <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
-                      </tr>
-                    </thead>
-                    <tbody className=" divide-y divide-gray-100">
-                      {subtasks?.map((sub, index) => {
-                        return (
-                          <tr
-                            key={sub._id || sub.id}
-                            ref={(el) => {
-                              subtaskRefs.current[index] = el;
-                            }}
-                            className="hover:bg-gray-50 transition-colors group/sub "
-                          >
-                            {/* 45px offset accounted for by combining indent + first column */}
-                            <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center">
-                              <input
-                                type="checkbox"
-                                className="w-3.5 h-3.5 rounded border-gray-300"
-                              />
-                            </td>
-                            <td
-                              className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                              onClick={() =>
-                                onSelectTask && onSelectTask(sub as ProjectTask)
-                              }
-                            >
-                              {sub.name}
-                            </td>
-                            <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-                              <Avatar user={sub.assignee} />
-                            </td>
-                            <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
-                              <StatusSelect
-                                initialStatus={sub.status}
-                                taskId={
-                                  (sub as SubTask)._id ||
-                                  (sub as SubTask).id ||
-                                  ''
-                                }
-                              />
-                            </td>
-                            <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
-                              {sub.dueDate
-                                ? new Date(sub.dueDate).toLocaleDateString(
-                                    'en-GB',
-                                    { day: '2-digit', month: 'short' },
-                                  )
-                                : '-'}
-                            </td>
-                            <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
-                              <EstimatedPicker
-                                value={sub.estimated || ''}
-                                onUpdate={async (val) => {
-                                  try {
-                                    await updateTask({
-                                      id: sub._id || sub.id || '',
-                                      data: { estimated: val },
-                                    }).unwrap();
-                                  } catch (err) {
-                                    console.error(
-                                      'Failed to update estimated:',
-                                      err,
-                                    );
-                                  }
-                                }}
-                              />
-                            </td>
-                            <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-                              <PriorityIcon priority={sub.priority} />
-                            </td>
-                            <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]"></td>
-                            <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
-                              <CheckCircle2
-                                size={16}
-                                className={`mx-auto ${sub.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
-                              />
-                            </td>
-                            <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]"></td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                )}
-
-                {/* Footer Quick Add inside block */}
-                <div className="p-2.5 bg-gray-50/20 border-t border-gray-100">
-                  {isAddingSubtask ? (
-                    <form
-                      onSubmit={handleQuickAddSubtask}
-                      className="flex gap-2 items-center pl-8"
-                    >
-                      <input
-                        autoFocus
-                        value={subtaskName}
-                        onChange={(e) => setSubtaskName(e.target.value)}
-                        onBlur={() => handleQuickAddSubtask()}
-                        placeholder="Thêm công việc con mới..."
-                        className="flex-1 bg-white border-gray-200 outline-none rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
-                      />
-                      <button
-                        type="submit"
-                        className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
-                      >
-                        <Check size={14} />
-                      </button>
-                    </form>
-                  ) : (
-                    <button
-                      onClick={() => setIsAddingSubtask(true)}
-                      className="flex items-center gap-2 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-colors pl-8"
-                    >
-                      <Plus size={14} /> Thêm công việc con...
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
+            <SubTaskBlock
+              subtasks={subtasks || []}
+              onSelectTask={onSelectTask}
+              containerRef={containerRef}
+              subtaskRefs={subtaskRefs}
+              updateTask={updateTask}
+              isAddingSubtask={isAddingSubtask}
+              setIsAddingSubtask={setIsAddingSubtask}
+              subtaskName={subtaskName}
+              setSubtaskName={setSubtaskName}
+              handleQuickAddSubtask={handleQuickAddSubtask}
+            />
           </td>
         </tr>
       )}
