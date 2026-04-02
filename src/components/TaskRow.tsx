@@ -333,11 +333,14 @@ export const TaskRow = ({
         <tr className="bg-gray-50/20">
           <td colSpan={10} className="p-0 border-b border-gray-200 relative">
             <div className="flex pl-[44px] py-4 relative">
-              {/* Connector Line from parent */}
-              <div className="absolute left-[24px] top-0 bottom-6 w-[1px] bg-gray-200" />
+              {/* Main Vertical Line (aligned with dropdown icon center) */}
+              <div className="absolute left-0 top-0 bottom-0 w-[1.5px] bg-gray-200/60" />
+
+              {/* Horizontal Connector Line (Dynamic center) */}
+              <div className="absolute left-0 w-[44px] h-[1.5px] top-1/2 -translate-y-1/2 bg-gray-200/60" />
 
               {/* Nested Table Card Container */}
-              <div className="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden animate-in slide-in-from-top-1 duration-200">
+              <div className="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm animate-in slide-in-from-top-1 duration-200">
                 <table className="w-full text-left border-collapse table-fixed">
                   <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
@@ -369,60 +372,62 @@ export const TaskRow = ({
                       <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-gray-100">
-                    {task.subtasks.map((sub) => (
-                      <tr
-                        key={sub._id || sub.id}
-                        className="hover:bg-gray-50 transition-colors group/sub"
-                      >
-                        {/* 45px offset accounted for by combining indent + first column */}
-                        <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center">
-                          <input
-                            type="checkbox"
-                            className="w-3.5 h-3.5 rounded border-gray-300"
-                          />
-                        </td>
-                        <td
-                          className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                          onClick={() =>
-                            onSelectTask && onSelectTask(sub as ProjectTask)
-                          }
+                  <tbody className=" divide-y divide-gray-100">
+                    {task.subtasks.map((sub) => {
+                      return (
+                        <tr
+                          key={sub._id || sub.id}
+                          className="hover:bg-gray-50 transition-colors group/sub "
                         >
-                          {sub.name}
-                        </td>
-                        <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-                          <Avatar user={sub.assignee} />
-                        </td>
-                        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
-                          <StatusSelect
-                            initialStatus={sub.status}
-                            taskId={(sub as any)._id || (sub as any).id}
-                          />
-                        </td>
-                        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
-                          {sub.dueDate
-                            ? new Date(sub.dueDate).toLocaleDateString(
-                                'en-GB',
-                                { day: '2-digit', month: 'short' },
-                              )
-                            : '-'}
-                        </td>
-                        <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[80px] min-w-[80px] max-w-[80px]">
-                          -
-                        </td>
-                        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-                          <PriorityIcon priority={sub.priority} />
-                        </td>
-                        <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]"></td>
-                        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
-                          <CheckCircle2
-                            size={16}
-                            className={`mx-auto ${sub.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
-                          />
-                        </td>
-                        <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]"></td>
-                      </tr>
-                    ))}
+                          {/* 45px offset accounted for by combining indent + first column */}
+                          <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center">
+                            <input
+                              type="checkbox"
+                              className="w-3.5 h-3.5 rounded border-gray-300"
+                            />
+                          </td>
+                          <td
+                            className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                            onClick={() =>
+                              onSelectTask && onSelectTask(sub as ProjectTask)
+                            }
+                          >
+                            {sub.name}
+                          </td>
+                          <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
+                            <Avatar user={sub.assignee} />
+                          </td>
+                          <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
+                            <StatusSelect
+                              initialStatus={sub.status}
+                              taskId={(sub as any)._id || (sub as any).id}
+                            />
+                          </td>
+                          <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] text-gray-500 font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px]">
+                            {sub.dueDate
+                              ? new Date(sub.dueDate).toLocaleDateString(
+                                  'en-GB',
+                                  { day: '2-digit', month: 'short' },
+                                )
+                              : '-'}
+                          </td>
+                          <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[80px] min-w-[80px] max-w-[80px]">
+                            -
+                          </td>
+                          <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
+                            <PriorityIcon priority={sub.priority} />
+                          </td>
+                          <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]"></td>
+                          <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
+                            <CheckCircle2
+                              size={16}
+                              className={`mx-auto ${sub.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]"></td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
                 {/* Footer Quick Add inside block */}
