@@ -256,26 +256,26 @@ export const TaskRow = ({
 
   // Kích hàm thay đổi kích thước khi mảng subtask thay đổi
   const updatePosition = useCallback(() => {
-    if (containerRef.current && subtasks && subtasks.length > 0) {
-      const targetIndex = Math.ceil(subtasks.length / 2) - 1;
+    if (!containerRef.current || !subtasks?.length) return;
 
-      // Lấy index tương ứng của subtask
-      const targetRow = subtaskRefs.current[targetIndex];
+    const targetIndex = Math.ceil(subtasks.length / 2) - 1;
+    const targetRow = subtaskRefs.current[targetIndex];
 
-      if (targetRow) {
-        const containerRect = containerRef.current.getBoundingClientRect();
-        const rowRect = targetRow.getBoundingClientRect();
-        // --- Logic căn chỉnh thanh ngang ---
-        // 1. Nếu chỉ có 1 task duy nhất: Căn vào CHÍNH GIỮA (vertical center) của task đó.
-        // 2. Nếu có từ 2 task trở lên: Căn vào CẠNH DƯỚI (bottom border) của task trung tâm.
-        const offset =
-          subtasks.length === 1
-            ? rowRect.top + rowRect.height / 2 - containerRect.top
-            : rowRect.bottom - containerRect.top - 1;
+    if (!targetRow) return;
 
-        setDynamicTop(offset);
-      }
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const rowRect = targetRow.getBoundingClientRect();
+
+    let offset: number;
+
+    if (subtasks.length === 1) {
+      // Vị trí rowRect đến top của container + 1/2 chiều cao của rowRect
+      offset = rowRect.top - containerRect.top + rowRect.height / 2;
+    } else {
+      offset = rowRect.bottom - containerRect.top - 1;
     }
+
+    setDynamicTop(offset);
   }, [subtasks]);
 
   // Update position on layout changes or expansion
