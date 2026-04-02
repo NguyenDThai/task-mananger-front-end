@@ -10,6 +10,7 @@ export const authApi = createApi({
       // In case we want to support token in headers as well
       return headers;
     },
+    credentials: 'include',
   }),
   endpoints: (builder) => ({
     // login api
@@ -18,7 +19,6 @@ export const authApi = createApi({
         url: '/auth/login',
         method: 'POST',
         body: data,
-        credentials: 'include',
       }),
     }),
     register: builder.mutation({
@@ -31,20 +31,17 @@ export const authApi = createApi({
     getMe: builder.query<{ user: User }, void>({
       query: () => ({
         url: '/auth/me',
-        credentials: 'include',
       }),
     }),
     logout: builder.mutation<void, void>({
       query: () => ({
         url: '/auth/logout',
         method: 'POST',
-        credentials: 'include',
       }),
     }),
     getUsers: builder.query<{ users: User[] }, void>({
       query: () => ({
         url: '/auth/users',
-        credentials: 'include',
       }),
     }),
   }),

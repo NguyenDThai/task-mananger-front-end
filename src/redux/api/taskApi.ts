@@ -9,13 +9,13 @@ export const taskApi = createApi({
       // In case we need it, but auth middleware handles it through cookies
       return headers;
     },
+    credentials: 'include',
   }),
   tagTypes: ['Task'],
   endpoints: (builder) => ({
     getTasks: builder.query<{ tasks: ProjectTask[] }, void>({
       query: () => ({
         url: '/task',
-        credentials: 'include', // Essential for cookie-based auth
       }),
       providesTags: ['Task'],
     }),
@@ -24,7 +24,6 @@ export const taskApi = createApi({
         url: '/task',
         method: 'POST',
         body: data,
-        credentials: 'include',
       }),
       invalidatesTags: ['Task'],
     }),
@@ -36,7 +35,6 @@ export const taskApi = createApi({
         url: `/task/${id}`,
         method: 'PATCH',
         body: data,
-        credentials: 'include',
       }),
       invalidatesTags: ['Task'],
     }),
@@ -44,7 +42,6 @@ export const taskApi = createApi({
       query: (id) => ({
         url: `/task/${id}`,
         method: 'DELETE',
-        credentials: 'include',
       }),
       invalidatesTags: ['Task'],
     }),

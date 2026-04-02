@@ -1,53 +1,52 @@
-import { useState } from "react";
-import { useSelector } from "react-redux";
-import SideBar from "../../components/SideBar";
-import RenderProfile from "../../components/RenderProfile";
-import KanbanUi from "../../components/KanbanUi";
-import MyTask from "../../components/MyTask";
-import { Bell, Search } from "lucide-react";
-import type { RootState } from "../../redux/store";
-import type { Task } from "../../types";
+import { useState } from 'react';
+import { useSelector } from 'react-redux';
+import SideBar from '../../components/SideBar';
+import RenderProfile from '../../components/RenderProfile';
+import KanbanUi from '../../components/KanbanUi';
+import MyTask from '../../components/MyTask';
+import { Bell, Search } from 'lucide-react';
+import type { RootState } from '../../redux/store';
+import type { Task } from '../../types';
 
 const Home = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const [activeView, setActiveView] = useState("my-tasks"); // dashboard, kanban, my-tasks, profile
-  const [taskFilter, setTaskFilter] = useState("all");
+  const [activeView, setActiveView] = useState('my-tasks'); // dashboard, kanban, my-tasks, profile
 
   const tasks: Task[] = [
     {
       id: 1,
-      title: "Design High-Fidelity UI",
-      status: "In Progress",
-      priority: "High",
-      category: "Design",
+      title: 'Design High-Fidelity UI',
+      status: 'In Progress',
+      priority: 'High',
+      category: 'Design',
     },
     {
       id: 2,
-      title: "Implement Auth Flow",
-      status: "Completed",
-      priority: "High",
-      category: "Dev",
+      title: 'Implement Auth Flow',
+      status: 'Completed',
+      priority: 'High',
+      category: 'Dev',
     },
     {
       id: 3,
-      title: "Setup Redux Store",
-      status: "Completed",
-      priority: "Medium",
-      category: "Dev",
+      title: 'Setup Redux Store',
+      status: 'Completed',
+      priority: 'Medium',
+      category: 'Dev',
     },
     {
       id: 4,
-      title: "Kanban Board Drag & Drop",
-      status: "To Do",
-      priority: "Low",
-      category: "UI/UX",
+      title: 'Kanban Board Drag & Drop',
+      status: 'To Do',
+      priority: 'Low',
+      category: 'UI/UX',
     },
     {
       id: 5,
-      title: "Profile Page Animation",
-      status: "To Do",
-      priority: "Medium",
-      category: "Frontend",
+      title: 'Profile Page Animation',
+      status: 'To Do',
+      priority: 'Medium',
+      category: 'Frontend',
     },
   ];
 
@@ -75,11 +74,11 @@ const Home = () => {
             </button>
             <div className="flex items-center gap-3 bg-white p-2 pr-6 rounded-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
               <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-black group-hover:rotate-6 transition-transform">
-                {user?.name?.[0].toUpperCase() || "A"}
+                {user?.name?.[0].toUpperCase() || 'A'}
               </div>
               <div>
                 <p className="text-xs font-black text-gray-800">
-                  {user?.name || "User"}
+                  {user?.name || 'User'}
                 </p>
                 <p className="text-[10px] font-bold text-gray-400">
                   Pro Member
@@ -90,16 +89,10 @@ const Home = () => {
         </header>
 
         <div className="flex-1 overflow-y-auto px-10 pb-10">
-          {activeView === "my-tasks" && (
-            <MyTask
-              tasks={tasks}
-              taskFilter={taskFilter}
-              setTaskFilter={setTaskFilter}
-            />
-          )}
-          {activeView === "kanban" && <KanbanUi tasks={tasks} />}
-          {activeView === "profile" && <RenderProfile user={user} />}
-          {activeView === "dashboard" && (
+          {activeView === 'my-tasks' && <MyTask />}
+          {activeView === 'kanban' && <KanbanUi tasks={tasks} />}
+          {activeView === 'profile' && <RenderProfile user={user} />}
+          {activeView === 'dashboard' && (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4 text-gray-300">
               <span className="text-8xl">📊</span>
               <h3 className="text-2xl font-black">Dashboard View</h3>
