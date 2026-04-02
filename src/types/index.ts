@@ -36,10 +36,10 @@ export interface SubTask {
   dueDate: string;
   priority: 'Low' | 'Medium' | 'High' | string;
   parentTask?: string;
+  estimated?: string;
 }
 
 export interface ProjectTask extends SubTask {
   subtasks?: SubTask[];
-  estimated: string;
   labels?: string[];
 }

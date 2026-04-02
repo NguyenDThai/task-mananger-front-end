@@ -15,6 +15,7 @@ import {
   Pencil,
   Check,
 } from 'lucide-react';
+import { EstimatedPicker } from './EstimatedPicker';
 import {
   useUpdateTaskMutation,
   useCreateTaskMutation,
@@ -223,6 +224,7 @@ export const TaskRow = ({
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [subtaskName, setSubtaskName] = useState('');
   const [createTask] = useCreateTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
 
   const subtasks = 'subtasks' in task ? task.subtasks : undefined;
   const hasSubtasks = !!(subtasks && subtasks.length > 0);
@@ -380,8 +382,20 @@ export const TaskRow = ({
               })
             : '-'}
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[80px] min-w-[80px] max-w-[80px]">
-          {'estimated' in task ? task.estimated : '-'}
+        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[80px] min-w-[80px] max-w-[80px]">
+          <EstimatedPicker
+            value={task.estimated || ''}
+            onUpdate={async (val) => {
+              try {
+                await updateTask({
+                  id: (task as SubTask)._id || (task as SubTask).id || '',
+                  data: { estimated: val },
+                }).unwrap();
+              } catch (err) {
+                console.error('Failed to update estimated:', err);
+              }
+            }}
+          />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
           <PriorityIcon priority={task.priority} />
@@ -428,7 +442,7 @@ export const TaskRow = ({
               />
 
               {/* Nested Table Card Container */}
-              <div className="flex-1 bg-white border border-gray-200 rounded-lg shadow-sm animate-in slide-in-from-top-1 duration-200 overflow-hidden">
+              <div className="flex-1 bg-white border border-gray-200 shadow-sm animate-in slide-in-from-top-1 duration-200 overflow-hidden">
                 {hasSubtasks && (
                   <table className="w-full text-left border-collapse table-fixed">
                     <thead className="bg-gray-50 border-b border-gray-200">
@@ -507,8 +521,23 @@ export const TaskRow = ({
                                   )
                                 : '-'}
                             </td>
-                            <td className="px-3 py-2 border-r border-gray-200 text-[11px] text-gray-400 font-mono text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
-                              -
+                            <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
+                              <EstimatedPicker
+                                value={sub.estimated || ''}
+                                onUpdate={async (val) => {
+                                  try {
+                                    await updateTask({
+                                      id: sub._id || sub.id || '',
+                                      data: { estimated: val },
+                                    }).unwrap();
+                                  } catch (err) {
+                                    console.error(
+                                      'Failed to update estimated:',
+                                      err,
+                                    );
+                                  }
+                                }}
+                              />
                             </td>
                             <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
                               <PriorityIcon priority={sub.priority} />

@@ -10,6 +10,7 @@ import {
   CheckCircle,
   Plus,
 } from 'lucide-react';
+import { EstimatedPicker } from './EstimatedPicker';
 import {
   useUpdateTaskMutation,
   useDeleteTaskMutation,
@@ -222,20 +223,20 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                 </div>
               </div>
 
-              {/* Estimated */}
+              {/* Estimated with Reusable Picker */}
               <div className="flex items-center">
                 <div className="w-32 flex items-center gap-2 text-gray-400 text-sm font-medium">
                   <Clock size={16} />
                   <span>Dự Kiến</span>
                 </div>
                 <div className="flex-1">
-                  <input
-                    type="text"
+                  <EstimatedPicker
                     value={estimated}
-                    onChange={(e) => setEstimated(e.target.value)}
-                    onBlur={() => handleUpdate({ estimated })}
-                    placeholder="e.g. 2.5h"
-                    className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 outline-none"
+                    variant="sidebar"
+                    onUpdate={(val) => {
+                      setEstimated(val);
+                      handleUpdate({ estimated: val });
+                    }}
                   />
                 </div>
               </div>

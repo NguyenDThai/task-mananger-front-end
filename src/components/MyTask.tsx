@@ -101,7 +101,14 @@ const MyTask = () => {
         <table className="w-full text-left border-collapse border-b border-gray-200 min-w-[1300px] table-fixed">
           <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm shadow-gray-200/50">
             <tr>
-              <th className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
+              <th className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                <div className="flex items-center justify-center">
+                  <input
+                    type="checkbox"
+                    className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
+                  />
+                </div>
+              </th>
               <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
                 Tên
               </th>
