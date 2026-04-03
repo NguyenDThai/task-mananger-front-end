@@ -34,6 +34,7 @@ const MyTask = () => {
       return creatorId === (me?._id || me?.id);
     });
 
+  // Tổng số task
   const totalTasksCount = allTasksAndSubtasks.length;
   const completedTasksCount = allTasksAndSubtasks.filter(
     (t) => t.status === 'Done',

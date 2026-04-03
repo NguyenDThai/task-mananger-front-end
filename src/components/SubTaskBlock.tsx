@@ -2,7 +2,7 @@ import React from 'react';
 import type { SubTask, ProjectTask } from '../types';
 import { Avatar, PriorityIcon } from './TaskRow';
 import { EstimatedPicker } from './EstimatedPicker';
-import { Plus, Check, CheckCircle2 } from 'lucide-react';
+import { Plus, Check, CheckCircle2, Pencil } from 'lucide-react';
 import { StatusSelect } from './StatusSelect';
 
 interface SubTaskBlockProps {
@@ -36,6 +36,29 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
   selectedTaskIds,
   onToggleSelection,
 }) => {
+  const [editingSubtaskId, setEditingSubtaskId] = React.useState<string | null>(
+    null,
+  );
+  const [editedSubtaskName, setEditedSubtaskName] = React.useState('');
+
+  const handleUpdateSubtaskName = async (sub: SubTask) => {
+    if (!editedSubtaskName.trim() || editedSubtaskName === sub.name) {
+      setEditingSubtaskId(null);
+      return;
+    }
+
+    try {
+      await updateTask({
+        id: sub._id || sub.id || '',
+        data: { name: editedSubtaskName },
+      }).unwrap();
+      setEditingSubtaskId(null);
+    } catch (err) {
+      console.error('Failed to update subtask name:', err);
+      setEditingSubtaskId(null);
+    }
+  };
+
   const hasSubtasks = !!(subtasks && subtasks.length > 0);
 
   return (
@@ -119,13 +142,43 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                       />
                     </div>
                   </td>
-                  <td
-                    className="px-3 py-2 border-r border-gray-200 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
-                    onClick={() =>
-                      onSelectTask && onSelectTask(sub as ProjectTask)
-                    }
-                  >
-                    {sub.name}
+                  <td className="px-3 py-2 border-r border-gray-200 group/cell">
+                    <div className="flex items-center justify-between">
+                      {editingSubtaskId === (sub._id || sub.id) ? (
+                        <input
+                          autoFocus
+                          className="text-[13px] border-none outline-none bg-blue-50/50 rounded px-1 py-0.5 w-full text-gray-800 font-medium"
+                          value={editedSubtaskName}
+                          onChange={(e) => setEditedSubtaskName(e.target.value)}
+                          onBlur={() => handleUpdateSubtaskName(sub)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleUpdateSubtaskName(sub);
+                            if (e.key === 'Escape') setEditingSubtaskId(null);
+                          }}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      ) : (
+                        <>
+                          <span
+                            className="text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors flex-1"
+                            onClick={() =>
+                              onSelectTask && onSelectTask(sub as ProjectTask)
+                            }
+                          >
+                            {sub.name}
+                          </span>
+                          <Pencil
+                            size={11}
+                            className="text-gray-300 hover:text-blue-500 cursor-pointer opacity-0 group-hover/cell:opacity-100 transition-opacity ml-2 shrink-0"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingSubtaskId(sub._id || sub.id || null);
+                              setEditedSubtaskName(sub.name);
+                            }}
+                          />
+                        </>
+                      )}
+                    </div>
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
                     <Avatar user={sub.assignee} />

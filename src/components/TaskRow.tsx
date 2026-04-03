@@ -80,8 +80,40 @@ export const TaskRow = ({
   const [subtaskName, setSubtaskName] = useState('');
   const [isAddingAssignee, setIsAddingAssignee] = useState(false);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState(task.name);
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
+
+  // Update tên task
+  const handleUpdateName = async () => {
+    if (!editedName.trim() || editedName === task.name) {
+      setIsEditingName(false);
+      setEditedName(task.name);
+      return;
+    }
+
+    try {
+      await updateTask({
+        id: task._id,
+        data: { name: editedName },
+      }).unwrap();
+      setIsEditingName(false);
+    } catch (err) {
+      console.error('Failed to update task name:', err);
+      setEditedName(task.name);
+      setIsEditingName(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleUpdateName();
+    } else if (e.key === 'Escape') {
+      setIsEditingName(false);
+      setEditedName(task.name);
+    }
+  };
 
   const subtasks = 'subtasks' in task ? task.subtasks : undefined;
   const hasSubtasks = !!(subtasks && subtasks.length > 0);
@@ -96,7 +128,7 @@ export const TaskRow = ({
     try {
       await createTask({
         name: subtaskName,
-        parentTask: (task as SubTask)._id || (task as SubTask).id,
+        parentTask: task._id,
         status: 'None',
         priority: 'Medium',
       }).unwrap();
@@ -163,11 +195,9 @@ export const TaskRow = ({
           <div className="flex items-center justify-center">
             <input
               type="checkbox"
-              checked={selectedTaskIds.includes(
-                (task as any)._id || (task as any).id,
-              )}
+              checked={selectedTaskIds.includes(task._id)}
               onChange={() => {
-                const id = (task as any)._id || (task as any).id;
+                const id = task._id;
                 const childrenIds = subtasks?.map((s) => s._id || s.id) || [];
                 onToggleSelection?.(id, childrenIds as string[]);
               }}
@@ -200,16 +230,28 @@ export const TaskRow = ({
               )}
               {!hasSubtasks && !isSubtask && <div className="w-6" />}
 
-              <span
-                onClick={() =>
-                  !isSubtask &&
-                  onSelectTask &&
-                  onSelectTask(task as ProjectTask)
-                }
-                className={`text-[13px] select-none cursor-pointer hover:text-blue-600 transition-colors ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} `}
-              >
-                {task.name}
-              </span>
+              {isEditingName ? (
+                <input
+                  autoFocus
+                  className="text-[13px] border-none outline-none bg-blue-50/50 rounded px-1 py-0.5 w-full text-gray-800 font-medium"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onBlur={handleUpdateName}
+                  onKeyDown={handleKeyDown}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              ) : (
+                <span
+                  onClick={() =>
+                    !isSubtask &&
+                    onSelectTask &&
+                    onSelectTask(task as ProjectTask)
+                  }
+                  className={`text-[13px] select-none cursor-pointer hover:text-blue-600 transition-colors ${isSubtask ? 'text-gray-500 font-medium' : 'text-gray-800'} `}
+                >
+                  {task.name}
+                </span>
+              )}
 
               {/* Row Badges */}
               {hasSubtasks && !isExpanded && (
@@ -232,6 +274,11 @@ export const TaskRow = ({
                 <Pencil
                   size={11}
                   className="text-gray-300 hover:text-blue-500 cursor-pointer"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditedName(task.name);
+                    setIsEditingName(true);
+                  }}
                 />
                 <Plus
                   size={13}
@@ -263,10 +310,7 @@ export const TaskRow = ({
           </div>
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
-          <StatusSelect
-            initialStatus={task.status}
-            taskId={(task as SubTask)._id || (task as SubTask).id || ''}
-          />
+          <StatusSelect initialStatus={task.status} taskId={task._id} />
         </td>
         <td
           className={`px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px] ${(() => {
@@ -290,7 +334,7 @@ export const TaskRow = ({
             onUpdate={async (val) => {
               try {
                 await updateTask({
-                  id: (task as SubTask)._id || (task as SubTask).id || '',
+                  id: task._id,
                   data: { estimated: val },
                 }).unwrap();
               } catch (err) {
@@ -332,7 +376,7 @@ export const TaskRow = ({
       {isAddingAssignee && triggerRect && (
         <AddingAssignee
           onClose={() => setIsAddingAssignee(false)}
-          taskId={(task as SubTask)._id || (task as SubTask).id || ''}
+          taskId={task._id}
           currentAssigneeId={
             typeof task.assignee === 'string'
               ? task.assignee
