@@ -5,11 +5,43 @@ import { useGetTasksQuery, useCreateTaskMutation } from '../redux/api/taskApi';
 import TaskSidebar from './TaskSidebar';
 import type { ProjectTask } from '../types';
 import ModalActionTasks from './ModalActionTasks';
+import SummaryTask from './SummaryTask';
 
 const MyTask = () => {
   const { data, isLoading, error } = useGetTasksQuery();
   const [createTask] = useCreateTaskMutation();
   const tasks = data?.tasks || [];
+
+  // Calculate global summary info
+  const allTasksAndSubtasks = tasks.flatMap((t) => [t, ...(t.subtasks || [])]);
+  const totalTasksCount = allTasksAndSubtasks.length;
+  const completedTasksCount = allTasksAndSubtasks.filter(
+    (t) => t.status === 'Done',
+  ).length;
+  const doingTasksCount = allTasksAndSubtasks.filter(
+    (t) => t.status === 'Doing' || t.status === 'In Progress',
+  ).length;
+  const todoTasksCount =
+    totalTasksCount - (completedTasksCount + doingTasksCount);
+
+  const globalDoneRatio =
+    totalTasksCount > 0 ? (completedTasksCount / totalTasksCount) * 100 : 0;
+  const globalDoingRatio =
+    totalTasksCount > 0 ? (doingTasksCount / totalTasksCount) * 100 : 0;
+  const globalTodoRatio =
+    totalTasksCount > 0 ? (todoTasksCount / totalTasksCount) * 100 : 0;
+
+  const validDates = allTasksAndSubtasks
+    .map((t) => (t.dueDate ? new Date(t.dueDate) : null))
+    .filter((d): d is Date => d !== null);
+
+  let globalDateRangeText = '-';
+  if (validDates.length > 0) {
+    const minDate = new Date(Math.min(...validDates.map((d) => d.getTime())));
+    const maxDate = new Date(Math.max(...validDates.map((d) => d.getTime())));
+    const fmt = (d: Date) => `${d.getDate()}/${d.getMonth() + 1}`;
+    globalDateRangeText = `${fmt(minDate)} - ${fmt(maxDate)}`;
+  }
 
   // Selection checked state
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
@@ -232,6 +264,14 @@ const MyTask = () => {
           )}
           <div className="absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
         </div>
+
+        {/* Global Summary Footer - Aligned with borders */}
+        <SummaryTask
+          globalTodoRatio={globalTodoRatio}
+          globalDoingRatio={globalDoingRatio}
+          globalDoneRatio={globalDoneRatio}
+          globalDateRangeText={globalDateRangeText}
+        />
       </div>
 
       <TaskSidebar

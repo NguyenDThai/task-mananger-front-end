@@ -284,7 +284,7 @@ export const TaskRow = ({
               })
             : '-'}
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[80px] min-w-[80px] max-w-[80px]">
+        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
           <EstimatedPicker
             value={task.estimated || ''}
             onUpdate={async (val) => {
