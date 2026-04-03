@@ -156,22 +156,22 @@ export const TaskRow = ({
         {/* Main Checkbox */}
         <td className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
           {/* Status color indicator bar */}
-          <div
-            className={`absolute left-0 top-0 -bottom-[1px] w-[4px] transition-colors duration-300 ${(() => {
-              if (!subtasks || subtasks.length === 0) return 'bg-gray-200/60';
-              if (subtasks.every((s) => s.status === 'None'))
-                return 'bg-gray-200/60';
-              return subtasks.every((s) => s.status === 'Done')
-                ? 'bg-emerald-500/60'
-                : 'bg-amber-500/60';
-            })()}`}
-          />
           <div className="flex items-center justify-center">
             <input
               type="checkbox"
               className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
             />
           </div>
+          <div
+            className={`absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 ${(() => {
+              if (!subtasks || subtasks.length === 0) return 'bg-gray-200';
+              if (subtasks.every((s) => s.status === 'None'))
+                return 'bg-gray-200';
+              return subtasks.every((s) => s.status === 'Done')
+                ? 'bg-emerald-500'
+                : 'bg-amber-500';
+            })()}`}
+          />
         </td>
 
         {/* Task Name and Toggle */}
@@ -336,25 +336,25 @@ export const TaskRow = ({
           <td colSpan={10} className="p-0 border-b border-gray-200 relative">
             {/* Main Vertical Line (aligned with dropdown icon center) */}
             <div
-              className={`absolute left-0 top-0 bottom-0 w-[1.5px] transition-colors duration-300 ${(() => {
-                if (!subtasks || subtasks.length === 0) return 'bg-gray-200/60';
+              className={`absolute left-[1px] top-0 bottom-0 w-[2px] transition-colors duration-300 ${(() => {
+                if (!subtasks || subtasks.length === 0) return 'bg-gray-200';
                 if (subtasks.every((s) => s.status === 'None'))
-                  return 'bg-gray-200/60';
+                  return 'bg-gray-200';
                 return subtasks.every((s) => s.status === 'Done')
-                  ? 'bg-emerald-500/60'
-                  : 'bg-amber-500/60';
+                  ? 'bg-emerald-500'
+                  : 'bg-amber-500';
               })()}`}
             />
 
             {/* Horizontal Connector Line (Dynamic Position) */}
             <div
-              className={`absolute left-0 w-[45px] h-[1.5px] z-10 transition-all duration-300 ${(() => {
-                if (!subtasks || subtasks.length === 0) return 'bg-gray-200/60';
+              className={`absolute left-[2px] w-[44px] h-[2px] z-10 transition-all duration-300 ${(() => {
+                if (!subtasks || subtasks.length === 0) return 'bg-gray-200';
                 if (subtasks.every((s) => s.status === 'None'))
-                  return 'bg-gray-200/60';
+                  return 'bg-gray-200';
                 return subtasks.every((s) => s.status === 'Done')
-                  ? 'bg-emerald-500/60'
-                  : 'bg-amber-500/60';
+                  ? 'bg-emerald-500'
+                  : 'bg-amber-500';
               })()}`}
               style={{ top: `${dynamicTop}px` }}
             />

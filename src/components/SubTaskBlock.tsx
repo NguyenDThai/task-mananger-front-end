@@ -42,35 +42,47 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
           <table className="w-full text-left border-collapse table-fixed">
             <thead className="bg-gray-50 border-b border-gray-200">
               <tr>
-                <th className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest"></th>
-                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
+                <th className="relative px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                  <div
+                    className={`absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 ${(() => {
+                      if (!subtasks || subtasks.length === 0)
+                        return 'bg-gray-200';
+                      if (subtasks.every((s) => s.status === 'None'))
+                        return 'bg-gray-200';
+                      return subtasks.every((s) => s.status === 'Done')
+                        ? 'bg-emerald-500'
+                        : 'bg-amber-500';
+                    })()}`}
+                  />
+                </th>
+                <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
                   Tên
                 </th>
-                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+                <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
                   Phụ Trách
                 </th>
-                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
+                <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
                   Trạng Thái
                 </th>
-                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+                <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
                   Hạn Chót
                 </th>
-                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+                <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
                   Dự Kiến
                 </th>
-                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+                <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
                   Ưu Tiên
                 </th>
-                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
+                <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
                   Nhãn
                 </th>
-                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
+                <th className="px-3 py-2 border-r border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
                   Hôm Nay
                 </th>
                 <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
               </tr>
             </thead>
-            <tbody className=" divide-y divide-gray-100">
+            <tbody className=" divide-y divide-gray-200">
               {subtasks.map((sub, index) => (
                 <tr
                   key={sub._id || sub.id}
@@ -79,13 +91,13 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                   }}
                   className="hover:bg-gray-50 transition-colors group/sub "
                 >
-                  <td className="px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
+                  <td className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
                     <div
-                      className={`absolute left-0 top-0 -bottom-[1px] w-[4px] transition-colors duration-300 ${
+                      className={`absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 ${
                         sub.status === 'Done'
                           ? 'bg-emerald-500'
                           : sub.status === 'None' || !sub.status
-                            ? 'bg-transparent'
+                            ? 'bg-gray-200'
                             : 'bg-amber-500'
                       }`}
                     />
@@ -97,14 +109,14 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                     </div>
                   </td>
                   <td
-                    className="px-3 py-2 border-r border-gray-100 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
+                    className="px-3 py-2 border-r border-gray-200 text-[13px] text-gray-600 font-medium cursor-pointer hover:text-blue-600 transition-colors"
                     onClick={() =>
                       onSelectTask && onSelectTask(sub as ProjectTask)
                     }
                   >
                     {sub.name}
                   </td>
-                  <td className="px-3 py-2 border-r border-gray-100 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
+                  <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
                     <Avatar user={sub.assignee} />
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
@@ -163,7 +175,7 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
         )}
 
         {/* Footer Quick Add inside block */}
-        <div className="p-2.5 bg-gray-50/20 border-t border-gray-100">
+        <div className="relative p-2.5 bg-gray-50/20 border-t border-gray-100">
           {isAddingSubtask ? (
             <form
               onSubmit={handleQuickAddSubtask}
@@ -192,6 +204,17 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
               <Plus size={14} /> Thêm công việc con...
             </button>
           )}
+
+          <div
+            className={`absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 ${(() => {
+              if (!subtasks || subtasks.length === 0) return 'bg-gray-200';
+              if (subtasks.every((s) => s.status === 'None'))
+                return 'bg-gray-200';
+              return subtasks.every((s) => s.status === 'Done')
+                ? 'bg-emerald-500'
+                : 'bg-amber-500';
+            })()}`}
+          />
         </div>
       </div>
     </div>
