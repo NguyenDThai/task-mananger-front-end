@@ -6,14 +6,34 @@ import TaskSidebar from './TaskSidebar';
 import type { ProjectTask } from '../types';
 import ModalActionTasks from './ModalActionTasks';
 import SummaryTask from './SummaryTask';
+import { useGetMeQuery } from '../redux/api/authApi';
 
 const MyTask = () => {
   const { data, isLoading, error } = useGetTasksQuery();
   const [createTask] = useCreateTaskMutation();
   const tasks = data?.tasks || [];
 
+  const { data: meData } = useGetMeQuery();
+  const me = meData?.user;
+
   // Calculate global summary info
   const allTasksAndSubtasks = tasks.flatMap((t) => [t, ...(t.subtasks || [])]);
+
+  // Calculate selection ownership
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+
+  const selectedTasks = allTasksAndSubtasks.filter((t) =>
+    selectedTaskIds.includes(t._id || t.id || ''),
+  );
+
+  const isOwner =
+    selectedTasks.length > 0 &&
+    selectedTasks.every((t) => {
+      const creatorId =
+        typeof t.createdBy === 'object' ? t.createdBy?._id : t.createdBy;
+      return creatorId === (me?._id || me?.id);
+    });
+
   const totalTasksCount = allTasksAndSubtasks.length;
   const completedTasksCount = allTasksAndSubtasks.filter(
     (t) => t.status === 'Done',
@@ -43,8 +63,7 @@ const MyTask = () => {
     globalDateRangeText = `${fmt(minDate)} - ${fmt(maxDate)}`;
   }
 
-  // Selection checked state
-  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  // Selection logic
   const getAllIds = (taskList: ProjectTask[]): string[] => {
     let ids: string[] = [];
     taskList.forEach((task) => {
@@ -74,10 +93,8 @@ const MyTask = () => {
       const allTargetIds = [taskId, ...childrenIds];
 
       if (isSelected) {
-        // Remove task and all its children
         return prev.filter((id) => !allTargetIds.includes(id));
       } else {
-        // Add task and all its children (avoid duplicates)
         const newIds = [...prev];
         allTargetIds.forEach((id) => {
           if (!newIds.includes(id)) newIds.push(id);
@@ -116,9 +133,6 @@ const MyTask = () => {
     }
   };
 
-  // Close sidebar if task is deleted or data changes?
-  // Actually rtk query handles updates fine.
-  // We need to keep selectedTask synced if it's updated.
   const currentSelectedTask =
     tasks.find((t) => t._id === selectedTask?._id) || selectedTask;
 
@@ -190,7 +204,7 @@ const MyTask = () => {
                     className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
                   />
                 </div>
-                <div className="absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
+                <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
               </th>
               <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
                 Tên
@@ -257,15 +271,14 @@ const MyTask = () => {
           ) : (
             <button
               onClick={() => setIsAdding(true)}
-              className="flex items-center gap-3 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-all tracking-widest group cursor-pointer"
+              className="flex items-center gap-3 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-all tracking-widest group cursor-text"
             >
               Thêm công việc
             </button>
           )}
-          <div className="absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
+          <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
         </div>
 
-        {/* Global Summary Footer - Aligned with borders */}
         <SummaryTask
           globalTodoRatio={globalTodoRatio}
           globalDoingRatio={globalDoingRatio}
@@ -281,11 +294,11 @@ const MyTask = () => {
         onClose={() => setIsSidebarOpen(false)}
       />
 
-      {/* Khi click vào ô check thì hiển thị dòng action này */}
       {selectedTaskIds.length > 0 && (
         <ModalActionTasks
           selectedTaskIds={selectedTaskIds}
           setSelectedTaskIds={setSelectedTaskIds}
+          isOwner={isOwner}
         />
       )}
     </div>

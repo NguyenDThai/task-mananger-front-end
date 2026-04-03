@@ -37,6 +37,7 @@ export interface SubTask {
   priority: 'Low' | 'Medium' | 'High' | string;
   parentTask?: string;
   estimated?: string;
+  createdBy?: TaskUser | string;
 }
 
 export interface ProjectTask extends SubTask {
