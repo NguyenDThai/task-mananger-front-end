@@ -149,7 +149,7 @@ const MyTask = () => {
         </table>
 
         {/* Footer Quick Add */}
-        <div className="p-4 bg-white border-b border-gray-200">
+        <div className="relative p-4 bg-white border-b border-gray-200">
           {isAdding ? (
             <form
               onSubmit={handleQuickAdd}
@@ -178,6 +178,7 @@ const MyTask = () => {
               Thêm công việc
             </button>
           )}
+          <div className="absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
         </div>
       </div>
 
