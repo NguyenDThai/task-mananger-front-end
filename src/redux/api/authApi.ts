@@ -1,11 +1,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { env } from '../../config/configEnv';
 
 import type { User } from '../../types';
 
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:5000/api',
+    baseUrl: env.apiBaseUrl,
     prepareHeaders: (headers) => {
       // In case we want to support token in headers as well
       return headers;

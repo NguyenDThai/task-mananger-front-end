@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import AuthForm from "../../components/auth/AuthForm";
-import { useDispatch } from "react-redux";
-import { setCredentials } from "../../redux/features/auth/authSlide";
-import { useLoginMutation } from "../../redux/api/authApi";
-import { toast } from "react-toastify";
-import { useNavigate } from "react-router-dom";
+import AuthForm from '../../components/auth/AuthForm';
+import { useDispatch } from 'react-redux';
+import { setCredentials } from '../../redux/features/auth/authSlide';
+import { useLoginMutation } from '../../redux/api/authApi';
+import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
   const [loginApi] = useLoginMutation();
@@ -16,12 +16,12 @@ function Login() {
       const res = await loginApi(data).unwrap();
 
       dispatch(setCredentials(res));
-      toast.success(res.message || "Đăng nhập thành công!");
-      navigate("/");
+      toast.success(res.message || 'Đăng nhập thành công!');
+      navigate('/');
     } catch (error: any) {
-      console.error("Login error:", error);
+      console.error('Login error:', error);
 
-      toast.error(error?.data?.message || "Đăng nhập thất bại");
+      toast.error(error?.data?.message || 'Đăng nhập thất bại');
     }
   };
 

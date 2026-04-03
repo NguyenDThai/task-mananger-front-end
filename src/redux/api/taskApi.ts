@@ -1,10 +1,11 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { ProjectTask } from '../../types';
+import { env } from '../../config/configEnv';
 
 export const taskApi = createApi({
   reducerPath: 'taskApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: 'http://localhost:5000/api',
+    baseUrl: env.apiBaseUrl,
     prepareHeaders: (headers) => {
       // In case we need it, but auth middleware handles it through cookies
       return headers;
