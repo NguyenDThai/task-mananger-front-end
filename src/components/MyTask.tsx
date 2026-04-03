@@ -4,11 +4,56 @@ import { TaskRow } from './TaskRow';
 import { useGetTasksQuery, useCreateTaskMutation } from '../redux/api/taskApi';
 import TaskSidebar from './TaskSidebar';
 import type { ProjectTask } from '../types';
+import ModalActionTasks from './ModalActionTasks';
 
 const MyTask = () => {
   const { data, isLoading, error } = useGetTasksQuery();
   const [createTask] = useCreateTaskMutation();
   const tasks = data?.tasks || [];
+
+  // Selection checked state
+  const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
+  const getAllIds = (taskList: ProjectTask[]): string[] => {
+    let ids: string[] = [];
+    taskList.forEach((task) => {
+      const id = task._id || task.id;
+      if (id) {
+        ids.push(id);
+        if (task.subtasks && task.subtasks.length > 0) {
+          ids = [...ids, ...getAllIds(task.subtasks as ProjectTask[])];
+        }
+      }
+    });
+    return ids;
+  };
+
+  const handleToggleSelectAll = () => {
+    const allIds = getAllIds(tasks);
+    if (selectedTaskIds.length === allIds.length && allIds.length > 0) {
+      setSelectedTaskIds([]);
+    } else {
+      setSelectedTaskIds(allIds);
+    }
+  };
+
+  const handleToggleTask = (taskId: string, childrenIds: string[] = []) => {
+    setSelectedTaskIds((prev) => {
+      const isSelected = prev.includes(taskId);
+      const allTargetIds = [taskId, ...childrenIds];
+
+      if (isSelected) {
+        // Remove task and all its children
+        return prev.filter((id) => !allTargetIds.includes(id));
+      } else {
+        // Add task and all its children (avoid duplicates)
+        const newIds = [...prev];
+        allTargetIds.forEach((id) => {
+          if (!newIds.includes(id)) newIds.push(id);
+        });
+        return newIds;
+      }
+    });
+  };
 
   // Sidebar state
   const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
@@ -105,6 +150,11 @@ const MyTask = () => {
                 <div className="flex items-center justify-center">
                   <input
                     type="checkbox"
+                    checked={
+                      tasks.length > 0 &&
+                      selectedTaskIds.length === getAllIds(tasks).length
+                    }
+                    onChange={handleToggleSelectAll}
                     className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
                   />
                 </div>
@@ -143,6 +193,8 @@ const MyTask = () => {
                 key={task._id || task.id}
                 task={task}
                 onSelectTask={handleOpenSidebar}
+                selectedTaskIds={selectedTaskIds}
+                onToggleSelection={handleToggleTask}
               />
             ))}
           </tbody>
@@ -188,6 +240,14 @@ const MyTask = () => {
         isOpen={isSidebarOpen}
         onClose={() => setIsSidebarOpen(false)}
       />
+
+      {/* Khi click vào ô check thì hiển thị dòng action này */}
+      {selectedTaskIds.length > 0 && (
+        <ModalActionTasks
+          selectedTaskIds={selectedTaskIds}
+          setSelectedTaskIds={setSelectedTaskIds}
+        />
+      )}
     </div>
   );
 };

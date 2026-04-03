@@ -66,10 +66,14 @@ export const TaskRow = ({
   task,
   isSubtask = false,
   onSelectTask,
+  selectedTaskIds = [],
+  onToggleSelection,
 }: {
   task: ProjectTask | SubTask;
   isSubtask?: boolean;
   onSelectTask?: (task: ProjectTask) => void;
+  selectedTaskIds?: string[];
+  onToggleSelection?: (taskId: string, childrenIds: string[]) => void;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
@@ -159,6 +163,14 @@ export const TaskRow = ({
           <div className="flex items-center justify-center">
             <input
               type="checkbox"
+              checked={selectedTaskIds.includes(
+                (task as any)._id || (task as any).id,
+              )}
+              onChange={() => {
+                const id = (task as any)._id || (task as any).id;
+                const childrenIds = subtasks?.map((s) => s._id || s.id) || [];
+                onToggleSelection?.(id, childrenIds as string[]);
+              }}
               className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
             />
           </div>
@@ -370,6 +382,8 @@ export const TaskRow = ({
               subtaskName={subtaskName}
               setSubtaskName={setSubtaskName}
               handleQuickAddSubtask={handleQuickAddSubtask}
+              selectedTaskIds={selectedTaskIds}
+              onToggleSelection={onToggleSelection}
             />
           </td>
         </tr>

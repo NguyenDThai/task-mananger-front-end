@@ -18,6 +18,8 @@ interface SubTaskBlockProps {
   subtaskName: string;
   setSubtaskName: (val: string) => void;
   handleQuickAddSubtask: (e?: React.FormEvent) => void;
+  selectedTaskIds: string[];
+  onToggleSelection?: (taskId: string, childrenIds: string[]) => void;
 }
 
 export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
@@ -31,6 +33,8 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
   subtaskName,
   setSubtaskName,
   handleQuickAddSubtask,
+  selectedTaskIds,
+  onToggleSelection,
 }) => {
   const hasSubtasks = !!(subtasks && subtasks.length > 0);
 
@@ -104,6 +108,13 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                     <div className="flex items-center justify-center">
                       <input
                         type="checkbox"
+                        checked={selectedTaskIds.includes(
+                          sub._id || sub.id || '',
+                        )}
+                        onChange={() => {
+                          const id = sub._id || sub.id || '';
+                          onToggleSelection?.(id, []);
+                        }}
                         className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
                       />
                     </div>
