@@ -11,7 +11,7 @@ const KanbanUi = ({ tasks }: { tasks: Task[] }) => {
             Track tasks through different stages of project flow.
           </p>
         </div>
-        <button className="bg-blue-600 text-black px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform">
+        <button className="bg-blue-600 text-white px-5 py-2.5 rounded-2xl font-bold shadow-lg shadow-blue-500/30 hover:scale-105 transition-transform">
           + Add Task
         </button>
       </div>
