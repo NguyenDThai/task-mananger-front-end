@@ -81,6 +81,7 @@ const MyTask = () => {
 
   const handleToggleSelectAll = () => {
     const allIds = getAllIds(tasks);
+    // Nếu đã chon hết thì bỏ chọn
     if (selectedTaskIds.length === allIds.length && allIds.length > 0) {
       setSelectedTaskIds([]);
     } else {

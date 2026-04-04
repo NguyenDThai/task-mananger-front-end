@@ -270,7 +270,7 @@ export const TaskRow = ({
                     className="max-w-3 max-h-3 shrink-0"
                     alt=""
                   />
-                  <span className="ml-2 px-1.5 py-0.5 text-[10px]">
+                  <span className="ml-2 px-1.5 py-0.5 text-sm font-medium text-green-500">
                     {subtasks?.length}
                   </span>
                 </div>
