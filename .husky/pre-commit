@@ -1,2 +1,4 @@
 export PATH="/c/nvm4w/nodejs:$PATH"
+# Chạy kiểm tra tên nhánh trước
+npx validate-branch-name || exit 1
 npx lint-staged
