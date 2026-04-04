@@ -12,7 +12,9 @@ import {
   CheckCircle2,
   Plus,
   Pencil,
+  Flame,
 } from 'lucide-react';
+import { PrioritySelect } from './PrioritySelect';
 import { EstimatedPicker } from './EstimatedPicker';
 import { SubTaskBlock } from './SubTaskBlock';
 import {
@@ -47,13 +49,20 @@ export const Avatar = ({ user }: { user?: TaskUser | string | null }) => {
 
 export const PriorityIcon = ({ priority }: { priority: string }) => {
   const styles: Record<string, string> = {
+    Urgent: 'text-red-500',
     High: 'text-rose-500',
     Medium: 'text-amber-500',
-    Low: 'text-emerald-500',
+    Low: 'text-blue-400',
   };
+
+  const Icon = priority === 'Urgent' ? Flame : Flag;
+
   return (
     <div className="flex items-center gap-1 opacity-80 justify-center">
-      <Flag size={10} className={`fill-current ${styles[priority]}`} />
+      <Icon
+        size={10}
+        className={`fill-current ${styles[priority] || 'text-gray-400'}`}
+      />
       <span className="text-[10px] font-bold text-gray-500 capitalize">
         {priority}
       </span>
@@ -344,7 +353,7 @@ export const TaskRow = ({
           />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-          <PriorityIcon priority={task.priority} />
+          <PrioritySelect initialPriority={task.priority} taskId={task._id} />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]">
           <div className="flex flex-wrap gap-1">

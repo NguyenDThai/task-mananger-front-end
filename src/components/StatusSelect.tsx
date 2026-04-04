@@ -100,7 +100,7 @@ export const StatusSelect = ({
 
       {isOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[2000]">
+          <div className="fixed inset-0 z-2000">
             <div
               className="absolute inset-0 bg-transparent"
               onClick={() => setIsOpen(false)}

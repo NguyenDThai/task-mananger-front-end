@@ -1,6 +1,7 @@
 import React from 'react';
 import type { SubTask, ProjectTask } from '../types';
-import { Avatar, PriorityIcon } from './TaskRow';
+import { Avatar } from './TaskRow';
+import { PrioritySelect } from './PrioritySelect';
 import { EstimatedPicker } from './EstimatedPicker';
 import { Plus, Check, CheckCircle2, Pencil } from 'lucide-react';
 import { StatusSelect } from './StatusSelect';
@@ -222,7 +223,10 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                     />
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-                    <PriorityIcon priority={sub.priority} />
+                    <PrioritySelect
+                      initialPriority={sub.priority}
+                      taskId={sub._id || sub.id || ''}
+                    />
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]"></td>
                   <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
