@@ -35,10 +35,10 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
   const [dueDate, setDueDate] = useState(
     task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
   );
-  const [assigneeId, setAssigneeId] = useState(
-    typeof task?.assignee === 'object' && task?.assignee !== null
-      ? (task?.assignee as TaskUser)._id || ''
-      : (task?.assignee as string) || '',
+  const [creatorId, setCreatorId] = useState(
+    typeof task?.createdBy === 'object' && task?.createdBy !== null
+      ? (task?.createdBy as TaskUser)._id || ''
+      : (task?.createdBy as string) || '',
   );
   const [estimated, setEstimated] = useState(task?.estimated || '');
 
@@ -137,14 +137,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
               <div className="flex items-center group">
                 <div className="w-32 flex items-center gap-2 text-gray-400 text-sm font-medium">
                   <User size={16} />
-                  <span>Assignee</span>
+                  <span>Người Tạo</span>
                 </div>
                 <div className="flex-1">
                   <select
-                    value={assigneeId}
+                    value={creatorId}
                     onChange={(e) => {
-                      setAssigneeId(e.target.value);
-                      handleUpdate({ assignee: e.target.value });
+                      setCreatorId(e.target.value);
+                      handleUpdate({ createdBy: e.target.value });
                     }}
                     className="w-full bg-transparent border-none text-sm text-gray-700 focus:ring-0 font-bold p-0 cursor-pointer"
                   >

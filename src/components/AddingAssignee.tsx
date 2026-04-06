@@ -11,7 +11,7 @@ import type { RootState } from '../redux/store';
 interface AddingAssigneeProps {
   onClose: () => void;
   taskId: string;
-  currentAssigneeId?: string;
+  currentCreatorId?: string;
   triggerRect: DOMRect;
 }
 
@@ -35,17 +35,17 @@ interface UserItemProps {
   user: User;
   isMe?: boolean;
   onSelect: (userId: string) => void;
-  currentAssigneeId?: string;
+  currentCreatorId?: string;
 }
 
 const UserItem: React.FC<UserItemProps> = ({
   user,
   isMe = false,
   onSelect,
-  currentAssigneeId,
+  currentCreatorId,
 }) => {
   const userId = user._id || user.id || '';
-  const isSelected = currentAssigneeId === userId;
+  const isSelected = currentCreatorId === userId;
   const userName = user.name || 'Unknown';
 
   const userEmail = user.email || '';
@@ -96,7 +96,7 @@ const UserItem: React.FC<UserItemProps> = ({
 const AddingAssignee: React.FC<AddingAssigneeProps> = ({
   onClose,
   taskId,
-  currentAssigneeId,
+  currentCreatorId,
   triggerRect,
 }) => {
   const [search, setSearch] = useState('');
@@ -131,11 +131,11 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
     try {
       await updateTask({
         id: taskId,
-        data: { assignee: userId },
+        data: { createdBy: userId },
       }).unwrap();
       onClose();
     } catch (err) {
-      console.error('Failed to update assignee:', err);
+      console.error('Failed to update creator:', err);
     }
   };
 
@@ -187,7 +187,7 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
                     user={me}
                     isMe={true}
                     onSelect={handleSelect}
-                    currentAssigneeId={currentAssigneeId}
+                    currentCreatorId={currentCreatorId}
                   />
                 </div>
               )}
@@ -211,7 +211,7 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
                         key={user._id || user.id}
                         user={user}
                         onSelect={handleSelect}
-                        currentAssigneeId={currentAssigneeId}
+                        currentCreatorId={currentCreatorId}
                       />
                     ))
                 ) : (

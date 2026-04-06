@@ -24,7 +24,6 @@ export interface SubTask {
   _id: string; // From MongoDB
   id?: string; // Some legacy code uses id
   name: string;
-  assignee: TaskUser | string | null; // Allow both object and ID during updates
   status:
     | 'Pending'
     | 'Done'

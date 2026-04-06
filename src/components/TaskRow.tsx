@@ -88,7 +88,7 @@ export const TaskRow = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [subtaskName, setSubtaskName] = useState('');
-  const [isAddingAssignee, setIsAddingAssignee] = useState(false);
+  const [isAddingCreator, setIsAddingCreator] = useState(false);
   const [isDeadlinePickerOpen, setIsDeadlinePickerOpen] = useState(false);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -313,11 +313,11 @@ export const TaskRow = ({
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 setTriggerRect(rect);
-                setIsAddingAssignee(true);
+                setIsAddingCreator(true);
               }}
               className="text-gray-300 hover:text-blue-500 cursor-pointer hidden group-hover:block"
             />
-            <Avatar user={task.assignee} />
+            <Avatar user={task.createdBy} />
           </div>
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
@@ -389,14 +389,14 @@ export const TaskRow = ({
         </td>
       </tr>
 
-      {isAddingAssignee && triggerRect && (
+      {isAddingCreator && triggerRect && (
         <AddingAssignee
-          onClose={() => setIsAddingAssignee(false)}
+          onClose={() => setIsAddingCreator(false)}
           taskId={task._id}
-          currentAssigneeId={
-            typeof task.assignee === 'string'
-              ? task.assignee
-              : (task.assignee as TaskUser)?._id
+          currentCreatorId={
+            typeof task.createdBy === 'string'
+              ? task.createdBy
+              : (task.createdBy as TaskUser)?._id
           }
           triggerRect={triggerRect}
         />
