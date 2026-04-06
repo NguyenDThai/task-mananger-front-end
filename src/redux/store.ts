@@ -1,11 +1,13 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './features/auth/authSlide';
+import taskReducer from './features/task/taskSlide';
 import { authApi } from './api/authApi';
 import { taskApi } from './api/taskApi';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    task: taskReducer,
     [authApi.reducerPath]: authApi.reducer,
     [taskApi.reducerPath]: taskApi.reducer,
   },

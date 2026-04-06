@@ -5,6 +5,7 @@ import { PrioritySelect } from './PrioritySelect';
 import { EstimatedPicker } from './EstimatedPicker';
 import { Plus, Check, CheckCircle2, Pencil } from 'lucide-react';
 import { StatusSelect } from './StatusSelect';
+import { DeadlinePicker } from './DeadlinePicker';
 
 interface SubTaskBlockProps {
   subtasks: SubTask[];
@@ -41,6 +42,10 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
     null,
   );
   const [editedSubtaskName, setEditedSubtaskName] = React.useState('');
+  const [isDeadlinePickerOpen, setIsDeadlinePickerOpen] = React.useState(false);
+  const [triggerRect, setTriggerRect] = React.useState<DOMRect | null>(null);
+  const [activeDeadlineSubtask, setActiveDeadlineSubtask] =
+    React.useState<SubTask | null>(null);
 
   const handleUpdateSubtaskName = async (sub: SubTask) => {
     if (!editedSubtaskName.trim() || editedSubtaskName === sub.name) {
@@ -191,7 +196,7 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                     />
                   </td>
                   <td
-                    className={`px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px] ${(() => {
+                    className={`px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px] cursor-pointer hover:bg-gray-50 transition-colors ${(() => {
                       if (!sub.dueDate || sub.status === 'Done')
                         return 'text-gray-500';
                       const today = new Date();
@@ -199,6 +204,12 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                       const due = new Date(sub.dueDate);
                       return due < today ? 'text-rose-500' : 'text-gray-500';
                     })()}`}
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setTriggerRect(rect);
+                      setActiveDeadlineSubtask(sub);
+                      setIsDeadlinePickerOpen(true);
+                    }}
                   >
                     {sub.dueDate
                       ? new Date(sub.dueDate).toLocaleDateString('en-GB', {
@@ -284,6 +295,28 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
             })()}`}
           />
         </div>
+
+        {isDeadlinePickerOpen && triggerRect && activeDeadlineSubtask && (
+          <DeadlinePicker
+            initialDate={activeDeadlineSubtask.dueDate}
+            triggerRect={triggerRect}
+            onClose={() => {
+              setIsDeadlinePickerOpen(false);
+              setActiveDeadlineSubtask(null);
+            }}
+            onUpdate={async (newDate) => {
+              try {
+                await updateTask({
+                  id:
+                    activeDeadlineSubtask._id || activeDeadlineSubtask.id || '',
+                  data: { dueDate: newDate?.toISOString() },
+                }).unwrap();
+              } catch (err) {
+                console.error('Failed to update deadline:', err);
+              }
+            }}
+          />
+        )}
       </div>
     </div>
   );

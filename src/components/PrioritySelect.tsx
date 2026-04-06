@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import { useUpdateTaskMutation } from '../redux/api/taskApi';
 import { createPortal } from 'react-dom';
-import { Flame, Flag } from 'lucide-react';
+import { Flame, Flag, type LucideIcon } from 'lucide-react';
 
 export const PrioritySelect = ({
   initialPriority,
@@ -26,7 +26,7 @@ export const PrioritySelect = ({
 
   const priorityConfigs: Record<
     string,
-    { label: string; color: string; icon: any; iconColor: string }
+    { label: string; color: string; icon: LucideIcon; iconColor: string }
   > = {
     Urgent: {
       label: 'Urgent',

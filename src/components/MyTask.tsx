@@ -1,28 +1,43 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Plus, Check } from 'lucide-react';
-import { TaskRow } from './TaskRow';
-import { useGetTasksQuery, useCreateTaskMutation } from '../redux/api/taskApi';
-import TaskSidebar from './TaskSidebar';
 import type { ProjectTask } from '../types';
+import { TaskRow } from './TaskRow';
+import TaskSidebar from './TaskSidebar';
 import ModalActionTasks from './ModalActionTasks';
 import SummaryTask from './SummaryTask';
+import { useGetTasksQuery, useCreateTaskMutation } from '../redux/api/taskApi';
 import { useGetMeQuery } from '../redux/api/authApi';
+import { useDispatch, useSelector } from 'react-redux';
+import { setTasks } from '../redux/features/task/taskSlide';
+import type { RootState } from '../redux/store';
 
 const MyTask = () => {
   const { data, isLoading, error } = useGetTasksQuery();
   const [createTask] = useCreateTaskMutation();
-  const tasks = data?.tasks || [];
+  const dispatch = useDispatch();
+  // Lấy data từ redux
+  const tasksFromRedux = useSelector((state: RootState) => state.task.tasks);
+  const tasks: ProjectTask[] = data?.tasks || tasksFromRedux || [];
+  // Đồng bộ state từ rtk
+  useEffect(() => {
+    if (data?.tasks) {
+      dispatch(setTasks(data.tasks));
+    }
+  }, [data, dispatch]);
 
   const { data: meData } = useGetMeQuery();
   const me = meData?.user;
 
   // Calculate global summary info
-  const allTasksAndSubtasks = tasks.flatMap((t) => [t, ...(t.subtasks || [])]);
+  const allTasksAndSubtasks = tasks.flatMap((t: ProjectTask) => [
+    t,
+    ...(t.subtasks || []),
+  ]);
 
   // Calculate selection ownership
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
-  const selectedTasks = allTasksAndSubtasks.filter((t) =>
+  const selectedTasks = allTasksAndSubtasks.filter((t: ProjectTask) =>
     selectedTaskIds.includes(t._id || t.id || ''),
   );
 
@@ -53,8 +68,8 @@ const MyTask = () => {
     totalTasksCount > 0 ? (todoTasksCount / totalTasksCount) * 100 : 0;
 
   const validDates = allTasksAndSubtasks
-    .map((t) => (t.dueDate ? new Date(t.dueDate) : null))
-    .filter((d): d is Date => d !== null);
+    .map((t: ProjectTask) => (t.dueDate ? new Date(t.dueDate) : null))
+    .filter((d: Date | null): d is Date => d !== null);
 
   let globalDateRangeText = '-';
   if (validDates.length > 0) {
@@ -136,7 +151,7 @@ const MyTask = () => {
   };
 
   const currentSelectedTask =
-    tasks.find((t) => t._id === selectedTask?._id) || selectedTask;
+    tasks.find((t: ProjectTask) => t._id === selectedTask?._id) || selectedTask;
 
   if (isLoading) {
     return (
@@ -236,7 +251,7 @@ const MyTask = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {tasks.map((task) => (
+            {tasks.map((task: ProjectTask) => (
               <TaskRow
                 key={task._id || task.id}
                 task={task}

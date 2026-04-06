@@ -25,6 +25,7 @@ import type { ProjectTask, SubTask, TaskUser } from '../types';
 import { StatusSelect } from './StatusSelect';
 import branchIcon from '../assets/branch.png';
 import AddingAssignee from './AddingAssignee';
+import { DeadlinePicker } from './DeadlinePicker';
 
 // --- Sub-components for Row ---
 
@@ -88,6 +89,7 @@ export const TaskRow = ({
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [subtaskName, setSubtaskName] = useState('');
   const [isAddingAssignee, setIsAddingAssignee] = useState(false);
+  const [isDeadlinePickerOpen, setIsDeadlinePickerOpen] = useState(false);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(task.name);
@@ -322,7 +324,12 @@ export const TaskRow = ({
           <StatusSelect initialStatus={task.status} taskId={task._id} />
         </td>
         <td
-          className={`px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px] ${(() => {
+          onClick={(e) => {
+            const rect = e.currentTarget.getBoundingClientRect();
+            setTriggerRect(rect);
+            setIsDeadlinePickerOpen(true);
+          }}
+          className={`px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px] cursor-pointer hover:bg-gray-50 transition-colors ${(() => {
             if (!task.dueDate || task.status === 'Done') return 'text-gray-500';
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -392,6 +399,24 @@ export const TaskRow = ({
               : (task.assignee as TaskUser)?._id
           }
           triggerRect={triggerRect}
+        />
+      )}
+
+      {isDeadlinePickerOpen && triggerRect && (
+        <DeadlinePicker
+          initialDate={task.dueDate}
+          triggerRect={triggerRect}
+          onClose={() => setIsDeadlinePickerOpen(false)}
+          onUpdate={async (newDate) => {
+            try {
+              await updateTask({
+                id: task._id,
+                data: { dueDate: newDate?.toISOString() },
+              }).unwrap();
+            } catch (err) {
+              console.error('Failed to update deadline:', err);
+            }
+          }}
         />
       )}
 
