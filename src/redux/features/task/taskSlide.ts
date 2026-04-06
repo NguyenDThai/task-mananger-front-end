@@ -10,7 +10,7 @@ const initialState: taskState = {
 };
 
 const taskSlide = createSlice({
-  name: 'task',
+  name: 'taskSlide',
   initialState,
   reducers: {
     setTasks: (state, action: PayloadAction<ProjectTask[]>) => {

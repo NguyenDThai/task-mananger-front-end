@@ -1,9 +1,12 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Check } from 'lucide-react';
 import { useGetUsersQuery, useGetMeQuery } from '../redux/api/authApi';
 import { useUpdateTaskMutation } from '../redux/api/taskApi';
+import { setUsers } from '../redux/features/user/userSlide';
 import type { User } from '../types';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '../redux/store';
 
 interface AddingAssigneeProps {
   onClose: () => void;
@@ -97,15 +100,28 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
   triggerRect,
 }) => {
   const [search, setSearch] = useState('');
-  const { data: usersData, isLoading: loadingUsers } = useGetUsersQuery();
+  const { data, isLoading: loadingUsers } = useGetUsersQuery();
+
+  const dispatch = useDispatch();
+
+  // Đồng bộ tất cả user qua redux
+  useEffect(() => {
+    if (data?.users) {
+      dispatch(setUsers(data.users));
+    }
+  }, [data, dispatch]);
+  const usersFromRedux = useSelector((state: RootState) => state.user.users);
+
+  const usersData = data?.users || usersFromRedux;
+
   const { data: meData } = useGetMeQuery();
   const me: User | undefined = meData?.user;
   const [updateTask] = useUpdateTaskMutation();
 
   const filteredUsers = useMemo(() => {
-    const users = usersData?.users || [];
+    const users = usersData || [];
     return users.filter(
-      (user) =>
+      (user: User) =>
         user.name?.toLowerCase().includes(search.toLowerCase()) ||
         user.email?.toLowerCase().includes(search.toLowerCase()),
     );
@@ -187,8 +203,10 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
               <div className="px-1">
                 {filteredUsers.length > 0 ? (
                   filteredUsers
-                    .filter((u) => (u._id || u.id) !== (me?._id || me?.id))
-                    .map((user) => (
+                    .filter(
+                      (u: User) => (u._id || u.id) !== (me?._id || me?.id),
+                    )
+                    .map((user: User) => (
                       <UserItem
                         key={user._id || user.id}
                         user={user}

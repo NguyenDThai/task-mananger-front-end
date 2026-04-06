@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice } from '@reduxjs/toolkit';
 
 type AuthState = {
   user: null | {
@@ -8,20 +8,29 @@ type AuthState = {
   token: string | null;
 };
 
+const savedUser = localStorage.getItem('user');
+
 const initialState: AuthState = {
-  user: null,
+  user: savedUser && savedUser !== 'undefined' ? JSON.parse(savedUser) : null,
   token: null,
 };
 
 const authSlice = createSlice({
-  name: "auth",
+  name: 'authSlide',
   initialState,
   reducers: {
     setCredentials: (state, action) => {
-      state.user = action.payload.user;
+      const user = action.payload.user;
+
+      if (!user) return;
+
+      state.user = user;
+      localStorage.setItem('user', JSON.stringify(user));
     },
     logout: (state) => {
       state.user = null;
+
+      localStorage.removeItem('user');
     },
   },
 });

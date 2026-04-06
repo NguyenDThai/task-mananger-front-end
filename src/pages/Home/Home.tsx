@@ -9,8 +9,10 @@ import type { RootState } from '../../redux/store';
 import type { Task } from '../../types';
 
 const Home = () => {
+  // Dùng redux để lấy user đã được cache
   const { user } = useSelector((state: RootState) => state.auth);
-  const [activeView, setActiveView] = useState('my-tasks'); // dashboard, kanban, my-tasks, profile
+
+  const [activeView, setActiveView] = useState('my-tasks');
 
   const tasks: Task[] = [
     {

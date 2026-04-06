@@ -29,6 +29,7 @@ export const authApi = createApi({
         body: data,
       }),
     }),
+    // Lấy thông tin của chính mình
     getMe: builder.query<{ user: User }, void>({
       query: () => ({
         url: '/auth/me',
@@ -40,6 +41,7 @@ export const authApi = createApi({
         method: 'POST',
       }),
     }),
+    // fetch tất cả thông tin của user
     getUsers: builder.query<{ users: User[] }, void>({
       query: () => ({
         url: '/auth/users',

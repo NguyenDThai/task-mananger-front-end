@@ -15,7 +15,7 @@ function Login() {
     try {
       const res = await loginApi(data).unwrap();
 
-      dispatch(setCredentials(res));
+      dispatch(setCredentials(res.user));
       toast.success(res.message || 'Đăng nhập thành công!');
       navigate('/');
     } catch (error: any) {

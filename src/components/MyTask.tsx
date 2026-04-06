@@ -10,6 +10,7 @@ import { useGetMeQuery } from '../redux/api/authApi';
 import { useDispatch, useSelector } from 'react-redux';
 import { setTasks } from '../redux/features/task/taskSlide';
 import type { RootState } from '../redux/store';
+import { setCredentials } from '../redux/features/auth/authSlide';
 
 const MyTask = () => {
   const { data, isLoading, error } = useGetTasksQuery();
@@ -25,8 +26,17 @@ const MyTask = () => {
     }
   }, [data, dispatch]);
 
+  // fall back user
+  const userFromRedux = useSelector((state: any) => state.auth.user);
+
   const { data: meData } = useGetMeQuery();
-  const me = meData?.user;
+  const me = meData?.user || userFromRedux;
+
+  useEffect(() => {
+    if (meData?.user) {
+      dispatch(setCredentials(meData.user));
+    }
+  }, [meData, dispatch]);
 
   // Calculate global summary info
   const allTasksAndSubtasks = tasks.flatMap((t: ProjectTask) => [
