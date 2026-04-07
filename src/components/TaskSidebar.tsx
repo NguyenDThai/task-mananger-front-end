@@ -17,6 +17,11 @@ import {
 } from '../redux/api/taskApi';
 import { useGetUsersQuery } from '../redux/api/authApi';
 import type { ProjectTask, TaskUser } from '../types';
+import { useDispatch } from 'react-redux';
+import {
+  updateTaskLocal,
+  deleteTaskLocal,
+} from '../redux/slides/task/taskSlide';
 
 interface TaskSidebarProps {
   task: ProjectTask | null;
@@ -25,6 +30,7 @@ interface TaskSidebarProps {
 }
 
 const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
+  const dispatch = useDispatch();
   const [updateTask] = useUpdateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
   const { data: usersData } = useGetUsersQuery();
@@ -35,18 +41,41 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
   const [dueDate, setDueDate] = useState(
     task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
   );
-  const [creatorId, setCreatorId] = useState(
-    typeof task?.createdBy === 'object' && task?.createdBy !== null
-      ? (task?.createdBy as TaskUser)._id || ''
-      : (task?.createdBy as string) || '',
-  );
+  const [creatorId, setCreatorId] = useState('');
   const [estimated, setEstimated] = useState(task?.estimated || '');
+
+  // 패턴: Adjusting state based on props (tránh dùng useEffect để trigger re-render lồng nhau)
+  const [prevTaskId, setPrevTaskId] = useState<string | null>(null);
+  const currentId = task?._id || task?.id || null;
+
+  if (currentId !== prevTaskId) {
+    setPrevTaskId(currentId);
+    if (task) {
+      setName(task?.name || '');
+      setStatus(task?.status || 'None');
+      setPriority(task?.priority || 'Medium');
+      setDueDate(
+        task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      );
+      setCreatorId(
+        typeof task.createdBy === 'object' && task.createdBy !== null
+          ? (task.createdBy as TaskUser)._id || ''
+          : (task.createdBy as string) || '',
+      );
+      setEstimated(task.estimated || '');
+    }
+  }
 
   const handleUpdate = async (fields: Partial<ProjectTask>) => {
     if (!task) return;
+    const taskId = (task._id || task.id) as string;
+
+    // Cập nhật local tức thì để các component khác (như Kanban) đồng bộ ngay
+    dispatch(updateTaskLocal({ id: taskId, data: fields }));
+
     try {
       await updateTask({
-        id: task._id || task.id || '',
+        id: taskId,
         data: fields,
       }).unwrap();
     } catch (err) {
@@ -57,8 +86,13 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
   const handleDelete = async () => {
     if (!task || !window.confirm('Bạn có chắc chắn muốn xóa công việc này?'))
       return;
+    const taskId = (task._id || task.id) as string;
+
+    // Xóa local ngay lập tức
+    dispatch(deleteTaskLocal(taskId));
+
     try {
-      await deleteTask(task._id || task.id || '').unwrap();
+      await deleteTask(taskId).unwrap();
       onClose();
     } catch (err) {
       console.error('Failed to delete task:', err);

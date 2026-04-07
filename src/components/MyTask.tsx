@@ -16,10 +16,11 @@ const MyTask = () => {
   const { data, isLoading, error } = useGetTasksQuery();
   const [createTask] = useCreateTaskMutation();
   const dispatch = useDispatch();
-  // Lấy data từ redux
-  const tasksFromRedux = useSelector((state: RootState) => state.task.tasks);
-  const tasks: ProjectTask[] = data?.tasks || tasksFromRedux || [];
-  // Đồng bộ state từ rtk
+
+  // 1. Luôn sử dụng dữ liệu từ Redux Slide làm nguồn chính
+  const tasks = useSelector((state: RootState) => state.task.tasks);
+
+  // 2. Đồng bộ dữ liệu từ API vào Redux Slide khi load lần đầu hoặc refresh
   useEffect(() => {
     if (data?.tasks) {
       dispatch(setTasks(data.tasks));
@@ -27,7 +28,7 @@ const MyTask = () => {
   }, [data, dispatch]);
 
   // fall back user
-  const userFromRedux = useSelector((state: any) => state.auth.user);
+  const userFromRedux = useSelector((state: RootState) => state.auth.user);
 
   const { data: meData } = useGetMeQuery();
   const me = meData?.user || userFromRedux;

@@ -94,6 +94,8 @@ export const TaskRow = ({
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(task.name);
+
+  // Gọi hàm từ rtk query
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
 

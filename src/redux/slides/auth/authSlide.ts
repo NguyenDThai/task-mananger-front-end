@@ -1,10 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
+import type { User } from '../../../types';
 
 type AuthState = {
-  user: null | {
-    email: string;
-    name?: string;
-  };
+  user: null | User;
   token: string | null;
 };
 

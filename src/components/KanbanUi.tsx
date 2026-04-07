@@ -1,4 +1,4 @@
-import { Cloud, SquarePen, User } from 'lucide-react';
+import { Cloud, SquarePen, User, Calendar } from 'lucide-react';
 import type { ProjectTask } from '../types';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../redux/store';
@@ -63,6 +63,8 @@ const KanbanUi = () => {
       data: { status: newStatus },
     });
   };
+
+  const today = new Date();
 
   return (
     <DndContext
@@ -173,6 +175,28 @@ const KanbanUi = () => {
                               </span>
                             </div>
                           </div>
+
+                          {/* Hiển thị ngày hạn chót */}
+                          {task.dueDate && (
+                            <div
+                              className={`mt-4 flex items-center gap-1.5 text-[10px] font-bold ${
+                                today > new Date(task.dueDate)
+                                  ? 'text-red-500'
+                                  : 'text-gray-400'
+                              }`}
+                            >
+                              <Calendar size={13} strokeWidth={2.5} />
+                              <span>
+                                {new Date(task.dueDate).toLocaleDateString(
+                                  'vi-VN',
+                                  {
+                                    day: '2-digit',
+                                    month: '2-digit',
+                                  },
+                                )}
+                              </span>
+                            </div>
+                          )}
                         </DraggableTask>
                       );
                     })}
