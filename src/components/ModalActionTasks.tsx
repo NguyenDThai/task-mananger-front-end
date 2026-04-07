@@ -1,4 +1,7 @@
 import { Archive, ArrowRight, Copy, Star, Trash2, X } from 'lucide-react';
+import { useDispatch } from 'react-redux';
+import { useBulkDeleteTasksMutation } from '../redux/api/taskApi';
+import { bulkDeleteLocal } from '../redux/slides/task/taskSlide';
 
 const ModalActionTasks = ({
   selectedTaskIds,
@@ -9,6 +12,32 @@ const ModalActionTasks = ({
   setSelectedTaskIds?: (ids: string[]) => void;
   isOwner?: boolean;
 }) => {
+  const dispatch = useDispatch();
+  const [bulkDelete] = useBulkDeleteTasksMutation();
+
+  const handleDelete = async () => {
+    if (
+      !selectedTaskIds.length ||
+      !window.confirm(
+        `Bạn có chắc muốn xóa ${selectedTaskIds.length} mục đã chọn?`,
+      )
+    ) {
+      return;
+    }
+
+    // 1. Cập nhật local ngay lập tức
+    dispatch(bulkDeleteLocal(selectedTaskIds));
+    const idsToClear = [...selectedTaskIds];
+    setSelectedTaskIds?.([]);
+
+    try {
+      // 2. Gọi API để xóa cứng
+      await bulkDelete({ ids: idsToClear }).unwrap();
+    } catch (err) {
+      console.error('Failed to delete tasks:', err);
+    }
+  };
+
   return (
     <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
       <div className="bg-[#2563eb] text-white rounded-xl px-6 py-3 flex items-center shadow-2xl border border-white/10 backdrop-blur-sm">
@@ -61,7 +90,10 @@ const ModalActionTasks = ({
           {isOwner && (
             <>
               <div className="w-px h-4 bg-white/20 mx-1" />
-              <button className="flex items-center gap-2.5 px-4 py-2 rounded-lg hover:bg-red-500/20 text-rose-100 hover:text-white transition-all text-[12px] font-bold group">
+              <button
+                onClick={handleDelete}
+                className="flex items-center gap-2.5 px-4 py-2 rounded-lg hover:bg-red-500/20 text-rose-100 hover:text-white transition-all text-[12px] font-bold group"
+              >
                 <Trash2
                   size={16}
                   className="group-hover:opacity-100 transition-all"

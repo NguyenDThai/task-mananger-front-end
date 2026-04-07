@@ -120,6 +120,14 @@ export const taskApi = createApi({
       }),
       invalidatesTags: ['Task'],
     }),
+    bulkDeleteTasks: builder.mutation<{ message: string }, { ids: string[] }>({
+      query: (data) => ({
+        url: '/task/bulk-delete',
+        method: 'POST',
+        body: data,
+      }),
+      invalidatesTags: ['Task'],
+    }),
   }),
 });
 
@@ -128,4 +136,5 @@ export const {
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useDeleteTaskMutation,
+  useBulkDeleteTasksMutation,
 } = taskApi;

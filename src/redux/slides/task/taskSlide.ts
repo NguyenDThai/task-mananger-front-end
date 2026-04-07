@@ -45,7 +45,14 @@ const taskSlide = createSlice({
     },
 
     deleteTaskLocal: (state, action: PayloadAction<string>) => {
-      state.tasks = state.tasks.filter((t) => t.id !== action.payload);
+      state.tasks = state.tasks.filter(
+        (t) => t._id !== action.payload && t.id !== action.payload,
+      );
+    },
+    bulkDeleteLocal: (state, action: PayloadAction<string[]>) => {
+      state.tasks = state.tasks.filter(
+        (t) => !action.payload.includes((t._id || t.id) as string),
+      );
     },
 
     clearTasks: (state) => {
@@ -59,6 +66,7 @@ export const {
   addTaskLocal,
   updateTaskLocal,
   deleteTaskLocal,
+  bulkDeleteLocal,
   clearTasks,
 } = taskSlide.actions;
 
