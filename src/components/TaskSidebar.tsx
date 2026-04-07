@@ -17,7 +17,8 @@ import {
 } from '../redux/api/taskApi';
 import { useGetUsersQuery } from '../redux/api/authApi';
 import type { ProjectTask, TaskUser } from '../types';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
+import type { RootState } from '../redux/store';
 import {
   updateTaskLocal,
   deleteTaskLocal,
@@ -34,6 +35,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
   const [updateTask] = useUpdateTaskMutation();
   const [deleteTask] = useDeleteTaskMutation();
   const { data: usersData } = useGetUsersQuery();
+  // Lấy user hiện tại
+  const currentUser = useSelector((state: RootState) => state.auth.user);
 
   const [name, setName] = useState(task?.name || '');
   const [status, setStatus] = useState(task?.status || 'None');
@@ -41,6 +44,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
   const [dueDate, setDueDate] = useState(
     task?.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
   );
+  // Lấy id của user tạo task
   const [creatorId, setCreatorId] = useState('');
   const [estimated, setEstimated] = useState(task?.estimated || '');
 
@@ -137,12 +141,14 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <button
-              onClick={handleDelete}
-              className="p-2 text-gray-300 hover:text-red-500 transition-colors"
-            >
-              <Trash2 size={18} />
-            </button>
+            {currentUser && currentUser._id === creatorId && (
+              <button
+                onClick={handleDelete}
+                className="p-2 text-gray-300 hover:text-red-500 transition-colors"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
             <button
               onClick={onClose}
               className="p-2 text-gray-400 hover:bg-gray-100 rounded-full transition-colors"
@@ -355,6 +361,12 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                 + Add Label
               </button>
             </div>
+          </div>
+
+          {/* Mô tả */}
+          <div>
+            <label htmlFor="">Mô tả</label>
+            <textarea className="w-full h-[100px] p-2 border border-gray-200 rounded-lg" />
           </div>
         </div>
       </div>
