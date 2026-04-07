@@ -38,6 +38,7 @@ export interface SubTask {
   estimated?: string;
   createdBy?: TaskUser | string;
   assignees?: (TaskUser | string)[];
+  description?: string;
 }
 
 export interface ProjectTask extends SubTask {

@@ -9,7 +9,10 @@ import {
   Trash2,
   CheckCircle,
   Plus,
+  AlignLeft,
 } from 'lucide-react';
+import RichText from './RichText';
+
 import { EstimatedPicker } from './EstimatedPicker';
 import {
   useUpdateTaskMutation,
@@ -47,6 +50,8 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
   // Lấy id của user tạo task
   const [creatorId, setCreatorId] = useState('');
   const [estimated, setEstimated] = useState(task?.estimated || '');
+  const [description, setDescription] = useState(task?.description || '');
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
 
   // (tránh dùng useEffect để trigger re-render lồng nhau)
   const [prevTaskId, setPrevTaskId] = useState<string | null>(null);
@@ -67,6 +72,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
           : (task.createdBy as string) || '',
       );
       setEstimated(task.estimated || '');
+      setDescription(task.description || '');
     }
   }
 
@@ -364,9 +370,44 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
           </div>
 
           {/* Mô tả */}
-          <div>
-            <label htmlFor="">Mô tả</label>
-            <textarea className="w-full h-[100px] p-2 border border-gray-200 rounded-lg" />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2 text-gray-400 text-xs font-black uppercase tracking-widest">
+              <AlignLeft size={12} />
+              Mô tả
+            </div>
+            <div onClick={() => setIsEditingDescription(true)}>
+              <RichText
+                value={description}
+                onChange={(val) => {
+                  setDescription(val);
+                }}
+                placeholder="Nhập mô tả chi tiết công việc..."
+              />
+              {isEditingDescription && (
+                <div className="flex justify-end gap-2 p-2 bg-white border-t border-gray-50">
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDescription(task?.description || '');
+                      setIsEditingDescription(false);
+                    }}
+                    className="text-[10px] font-bold text-gray-400 hover:text-gray-600 px-3 py-1.5 rounded-md hover:bg-gray-50 transition-colors"
+                  >
+                    Hủy
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleUpdate({ description });
+                      setIsEditingDescription(false);
+                    }}
+                    className="text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-700 px-3 py-1.5 rounded-md shadow-sm transition-colors"
+                  >
+                    Lưu mô tả
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
