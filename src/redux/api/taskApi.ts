@@ -67,13 +67,15 @@ export const taskApi = createApi({
 
             if (!task) return;
 
-            if (data.name !== undefined) {
-              task.name = data.name;
-            }
-
-            if (data.status !== undefined) {
-              task.status = data.status;
-            }
+            // Cập nhật tất cả các trường dữ liệu phổ thông như dueDate, priority, estimated, name, status...
+            Object.assign(
+              task,
+              Object.fromEntries(
+                Object.entries(data).filter(
+                  ([key]) => !['addAssignees', 'removeAssignees'].includes(key),
+                ),
+              ),
+            );
 
             // Update thêm người vào dự án
             if (data.addAssignees) {

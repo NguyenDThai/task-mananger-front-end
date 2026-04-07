@@ -44,7 +44,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
   const [creatorId, setCreatorId] = useState('');
   const [estimated, setEstimated] = useState(task?.estimated || '');
 
-  // 패턴: Adjusting state based on props (tránh dùng useEffect để trigger re-render lồng nhau)
+  // (tránh dùng useEffect để trigger re-render lồng nhau)
   const [prevTaskId, setPrevTaskId] = useState<string | null>(null);
   const currentId = task?._id || task?.id || null;
 

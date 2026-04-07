@@ -7,6 +7,8 @@ import { StatusSelect } from './StatusSelect';
 import { DeadlinePicker } from './DeadlinePicker';
 import { AssigneeGroup } from './AssigneeGroup';
 import AddingAssignee from './AddingAssignee';
+import { useDispatch } from 'react-redux';
+import { updateTaskLocal } from '../redux/slides/task/taskSlide';
 
 interface SubTaskBlockProps {
   subtasks: SubTask[];
@@ -39,6 +41,7 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
   selectedTaskIds,
   onToggleSelection,
 }) => {
+  const dispatch = useDispatch();
   const [editingSubtaskId, setEditingSubtaskId] = React.useState<string | null>(
     null,
   );
@@ -58,8 +61,13 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
     }
 
     try {
+      const taskId = sub._id || sub.id || '';
+      dispatch(
+        updateTaskLocal({ id: taskId, data: { name: editedSubtaskName } }),
+      );
+
       await updateTask({
-        id: sub._id || sub.id || '',
+        id: taskId,
         data: { name: editedSubtaskName },
       }).unwrap();
       setEditingSubtaskId(null);
@@ -243,8 +251,16 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                       value={sub.estimated || ''}
                       onUpdate={async (val: string) => {
                         try {
+                          const taskId = sub._id || sub.id || '';
+                          dispatch(
+                            updateTaskLocal({
+                              id: taskId,
+                              data: { estimated: val },
+                            }),
+                          );
+
                           await updateTask({
-                            id: sub._id || sub.id || '',
+                            id: taskId,
                             data: { estimated: val },
                           }).unwrap();
                         } catch (err) {
@@ -326,9 +342,17 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
             }}
             onUpdate={async (newDate) => {
               try {
+                const taskId =
+                  activeDeadlineSubtask._id || activeDeadlineSubtask.id || '';
+                dispatch(
+                  updateTaskLocal({
+                    id: taskId,
+                    data: { dueDate: newDate?.toISOString() },
+                  }),
+                );
+
                 await updateTask({
-                  id:
-                    activeDeadlineSubtask._id || activeDeadlineSubtask.id || '',
+                  id: taskId,
                   data: { dueDate: newDate?.toISOString() },
                 }).unwrap();
               } catch (err) {
