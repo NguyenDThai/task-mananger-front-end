@@ -1,12 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { Search, Check } from 'lucide-react';
-import { useGetUsersQuery, useGetMeQuery } from '../redux/api/authApi';
+import { Search, Check, CircleX } from 'lucide-react';
+import { useGetUsersQuery } from '../redux/api/authApi';
 import { useUpdateTaskMutation } from '../redux/api/taskApi';
 import { setUsers } from '../redux/slides/user/userSlide';
 import type { ProjectTask, User } from '../types';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../redux/store';
+import { updateTaskLocal } from '../redux/slides/task/taskSlide';
 
 interface AddingAssigneeProps {
   task: ProjectTask;
@@ -58,7 +59,7 @@ const UserItem: React.FC<UserItemProps> = ({
   return (
     <button
       onClick={() => onSelect(userId)}
-      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left group ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
+      className={`relative w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left group ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
     >
       <div className="relative shrink-0">
         {user.avatar ? (
@@ -89,6 +90,21 @@ const UserItem: React.FC<UserItemProps> = ({
         </p>
         <p className="text-[11px] text-gray-400 truncate">{userEmail}</p>
       </div>
+
+      {isSelected && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(userId);
+          }}
+          className="hidden group-hover:block absolute right-3 top-1/2 -translate-y-1/2 transition-all duration-200"
+        >
+          <CircleX
+            size={16}
+            className="text-gray-400 cursor-pointer hover:text-red-500"
+          />
+        </div>
+      )}
     </button>
   );
 };
@@ -111,8 +127,10 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
 
   const usersFromRedux = useSelector((state: RootState) => state.user.users);
   const usersData = data?.users || usersFromRedux;
-  const { data: meData } = useGetMeQuery();
-  const me: User | undefined = meData?.user;
+
+  // Sử dụng trực tiếp dữ liệu user đnag đăng nhập từ Redux Slide (Nguồn chuẩn xác nhất hiện tại)
+  const me = useSelector((state: RootState) => state.auth.user) || undefined;
+
   const [updateTask] = useUpdateTaskMutation();
 
   const assigneeIds = useMemo(() => {
@@ -130,8 +148,21 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
     );
   }, [usersData, search]);
 
+  // Hàm chọn người dùng để thêm hoặc xóa người được giao việc
   const handleSelect = async (userId: string) => {
+    // Nếu là false thì thêm, nếu là true thì xóa
     const isAlreadyAssigned = assigneeIds.includes(userId);
+
+    // Chuẩn bị dữ liệu để dispatch local
+    const newAssignees = isAlreadyAssigned
+      ? assigneeIds.filter((id) => id !== userId) // Remove
+      : [...assigneeIds, userId]; // Add
+
+    // Cập nhật local store ngay lập tức để UI không bị delay
+    dispatch(
+      updateTaskLocal({ id: taskId, data: { assignees: newAssignees } }),
+    );
+
     try {
       await updateTask({
         id: taskId,
@@ -141,6 +172,7 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
       }).unwrap();
     } catch (err) {
       console.error('Failed to update assignees:', err);
+      // Bạn có thể rollback state ở đây nếu cần
     }
   };
 
