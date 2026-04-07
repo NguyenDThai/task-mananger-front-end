@@ -1,8 +1,8 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { useGetMeQuery } from "../../redux/api/authApi";
-import { setCredentials } from "../../redux/features/auth/authSlide";
-import { useNavigate } from "react-router-dom";
+import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { useGetMeQuery } from '../../redux/api/authApi';
+import { setCredentials } from '../../redux/slides/auth/authSlide';
+import { useNavigate } from 'react-router-dom';
 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
@@ -17,7 +17,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     if (isError) {
-      navigate("/login");
+      navigate('/login');
     }
   }, [isError, navigate]);
 

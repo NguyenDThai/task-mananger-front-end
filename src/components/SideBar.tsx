@@ -2,7 +2,7 @@ import { LogOut } from 'lucide-react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { useLogoutMutation } from '../redux/api/authApi';
-import { logout as logoutAction } from '../redux/features/auth/authSlide';
+import { logout as logoutAction } from '../redux/slides/auth/authSlide';
 import { toast } from 'react-toastify';
 
 interface SideBarProps {

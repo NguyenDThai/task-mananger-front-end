@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Search, Check } from 'lucide-react';
 import { useGetUsersQuery, useGetMeQuery } from '../redux/api/authApi';
 import { useUpdateTaskMutation } from '../redux/api/taskApi';
-import { setUsers } from '../redux/features/user/userSlide';
+import { setUsers } from '../redux/slides/user/userSlide';
 import type { ProjectTask, User } from '../types';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../redux/store';

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import AuthForm from '../../components/auth/AuthForm';
 import { useDispatch } from 'react-redux';
-import { setCredentials } from '../../redux/features/auth/authSlide';
+import { setCredentials } from '../../redux/slides/auth/authSlide';
 import { useLoginMutation } from '../../redux/api/authApi';
 import { toast } from 'react-toastify';
 import { useNavigate } from 'react-router-dom';

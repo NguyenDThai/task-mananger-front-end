@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
-import authReducer from './features/auth/authSlide';
-import taskReducer from './features/task/taskSlide';
-import userReducer from './features/user/userSlide';
+import authReducer from './slides/auth/authSlide';
+import taskReducer from './slides/task/taskSlide';
+import userReducer from './slides/user/userSlide';
 import { authApi } from './api/authApi';
 import { taskApi } from './api/taskApi';
 

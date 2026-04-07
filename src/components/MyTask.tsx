@@ -8,9 +8,9 @@ import SummaryTask from './SummaryTask';
 import { useGetTasksQuery, useCreateTaskMutation } from '../redux/api/taskApi';
 import { useGetMeQuery } from '../redux/api/authApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { setTasks } from '../redux/features/task/taskSlide';
+import { setTasks } from '../redux/slides/task/taskSlide';
 import type { RootState } from '../redux/store';
-import { setCredentials } from '../redux/features/auth/authSlide';
+import { setCredentials } from '../redux/slides/auth/authSlide';
 
 const MyTask = () => {
   const { data, isLoading, error } = useGetTasksQuery();
