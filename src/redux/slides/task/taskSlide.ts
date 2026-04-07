@@ -18,7 +18,15 @@ const taskSlide = createSlice({
     },
 
     addTaskLocal: (state, action: PayloadAction<ProjectTask[]>) => {
-      state.tasks.push(...action.payload);
+      action.payload.forEach((newTask) => {
+        const exists = state.tasks.some(
+          (t) =>
+            (t._id && t._id === newTask._id) || (t.id && t.id === newTask.id),
+        );
+        if (!exists) {
+          state.tasks.push(newTask);
+        }
+      });
     },
 
     updateTaskLocal: (

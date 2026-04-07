@@ -2,6 +2,7 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { ProjectTask } from '../../types';
 import { env } from '../../config/configEnv';
+import { addTaskLocal } from '../slides/task/taskSlide';
 
 export const taskApi = createApi({
   reducerPath: 'taskApi',
@@ -27,6 +28,17 @@ export const taskApi = createApi({
         method: 'POST',
         body: data,
       }),
+      // transformResponse để lấy dữ liệu task từ response của API
+      transformResponse: (response: { task: ProjectTask }) => response.task,
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data: newTask } = await queryFulfilled;
+          // Tự động đồng bộ vào Redux Slide bất cứ khi nào tạo task thành công
+          dispatch(addTaskLocal([newTask]));
+        } catch (err) {
+          console.error('Failed to sync created task to Redux Slide:', err);
+        }
+      },
       invalidatesTags: ['Task'],
     }),
     updateTask: builder.mutation<
@@ -67,7 +79,7 @@ export const taskApi = createApi({
 
             if (!task) return;
 
-            // Cập nhật tất cả các trường dữ liệu phổ thông như dueDate, priority, estimated, name, status...
+            // Cập nhật tất cả các trường dữ liệu
             Object.assign(
               task,
               Object.fromEntries(
@@ -77,14 +89,12 @@ export const taskApi = createApi({
               ),
             );
 
-            // Update thêm người vào dự án
             if (data.addAssignees) {
               task.assignees = Array.from(
                 new Set([...(task.assignees || []), ...data.addAssignees]),
               );
             }
 
-            // Delete khỏi dự án
             if (data.removeAssignees) {
               task.assignees = (task.assignees || []).filter(
                 (uid) =>
@@ -97,10 +107,8 @@ export const taskApi = createApi({
         );
 
         try {
-          // Nếu chỉnh sửa thành công thì giữ nguyên
           await queryFulfilled;
         } catch (error) {
-          // Nếu api fail thì rollback về trạng thái cũ
           patchResult.undo();
         }
       },
