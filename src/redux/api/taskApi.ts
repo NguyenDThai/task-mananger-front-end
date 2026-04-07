@@ -48,7 +48,23 @@ export const taskApi = createApi({
         // Update cache ngay lap tuc
         const patchResult = dispatch(
           taskApi.util.updateQueryData('getTasks', undefined, (draft) => {
-            const task = draft.tasks.find((t) => t._id === id);
+            let task = draft.tasks.find((t) => t._id === id);
+
+            // Nếu không phải task cha thì tìm trong task con
+            if (!task) {
+              const parent = draft.tasks.find((t) =>
+                t.subtasks?.some(
+                  (st) => (typeof st === 'string' ? st : st._id) === id,
+                ),
+              );
+
+              if (parent) {
+                task = parent.subtasks?.find(
+                  (st) => (typeof st === 'string' ? st : st._id) === id,
+                );
+              }
+            }
+
             if (!task) return;
 
             if (data.name !== undefined) {
@@ -92,7 +108,19 @@ export const taskApi = createApi({
         url: `/task/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Task'],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        const patchResult = dispatch(
+          taskApi.util.updateQueryData('getTasks', undefined, (draft) => {
+            draft.tasks = draft.tasks.filter((t) => t._id !== id);
+          }),
+        );
+        try {
+          await queryFulfilled;
+        } catch (error) {
+          // Rollback nếu api fail
+          patchResult.undo();
+        }
+      },
     }),
   }),
 });
