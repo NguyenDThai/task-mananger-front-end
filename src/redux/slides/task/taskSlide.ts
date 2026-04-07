@@ -23,9 +23,11 @@ const taskSlide = createSlice({
 
     updateTaskLocal: (
       state,
-      action: PayloadAction<{ id: string; data: Partial<ProjectTask[]> }>,
+      action: PayloadAction<{ id: string; data: Partial<ProjectTask> }>,
     ) => {
-      const index = state.tasks.findIndex((t) => t.id === action.payload.id);
+      const index = state.tasks.findIndex(
+        (t) => t._id === action.payload.id || t.id === action.payload.id,
+      );
       if (index !== -1) {
         state.tasks[index] = {
           ...state.tasks[index],
