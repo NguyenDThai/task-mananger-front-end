@@ -195,7 +195,7 @@ const MyTask = () => {
   return (
     <div className="bg-white min-h-screen relative overflow-x-hidden">
       {/* Minimalistic Header */}
-      <div className="flex items-center justify-between px-6 py-5 border-b border-gray-200">
+      <div className="flex items-center justify-between px-6 py-5  border-gray-200">
         <div>
           <h2 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
             Workspace Dashboard
@@ -223,8 +223,8 @@ const MyTask = () => {
 
       {/* Grid Table Container */}
       <div className="overflow-x-auto p-0 pb-32">
-        <table className="w-full text-left border-collapse border-b border-gray-200 min-w-[1300px] table-fixed">
-          <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-sm shadow-gray-200/50">
+        <table className="w-full text-left border-collapse border-b border-gray-200 min-w-[1300px] table-fixed overflow-hidden rounded-tl-lg shadow-sm">
+          <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-gray-200/50">
             <tr>
               <th className="relative px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest">
                 <div className="flex items-center justify-center">
@@ -281,7 +281,7 @@ const MyTask = () => {
         </table>
 
         {/* Footer Quick Add */}
-        <div className="relative p-4 bg-white border-b border-gray-200">
+        <div className="border-t relative p-4 bg-white border-b border-gray-200 rounded-bl-lg overflow-hidden">
           {isAdding ? (
             <form
               onSubmit={handleQuickAdd}

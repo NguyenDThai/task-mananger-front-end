@@ -12,7 +12,7 @@ const SummaryTask = ({
   globalDateRangeText: string;
 }) => {
   return (
-    <div className="flex min-w-[1300px] border-t border-gray-100">
+    <div className="flex min-w-[1300px]  border-gray-100">
       <div className="w-[48px]" />
       <div className="flex-1" />
       <div className="w-[120px]" />
