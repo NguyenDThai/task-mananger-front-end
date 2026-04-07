@@ -108,19 +108,7 @@ export const taskApi = createApi({
         url: `/task/${id}`,
         method: 'DELETE',
       }),
-      async onQueryStarted(id, { dispatch, queryFulfilled }) {
-        const patchResult = dispatch(
-          taskApi.util.updateQueryData('getTasks', undefined, (draft) => {
-            draft.tasks = draft.tasks.filter((t) => t._id !== id);
-          }),
-        );
-        try {
-          await queryFulfilled;
-        } catch (error) {
-          // Rollback nếu api fail
-          patchResult.undo();
-        }
-      },
+      invalidatesTags: ['Task'],
     }),
   }),
 });

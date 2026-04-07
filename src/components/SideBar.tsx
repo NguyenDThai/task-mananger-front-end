@@ -7,13 +7,22 @@ import { toast } from 'react-toastify';
 
 interface SideBarProps {
   activeView: string;
-  setActiveView: (view: string) => void;
 }
 
-const SideBar = ({ activeView, setActiveView }: SideBarProps) => {
+const SideBar = ({ activeView }: SideBarProps) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [logoutApi] = useLogoutMutation();
+
+  const handleNavClick = (viewId: string) => {
+    const paths: Record<string, string> = {
+      'my-tasks': '/',
+      kanban: '/kanban',
+      dashboard: '/dashboard',
+      profile: '/profile',
+    };
+    navigate(paths[viewId] || '/');
+  };
 
   const handleLogout = async () => {
     try {
@@ -52,7 +61,7 @@ const SideBar = ({ activeView, setActiveView }: SideBarProps) => {
             ].map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActiveView(item.id)}
+                onClick={() => handleNavClick(item.id)}
                 className={`w-full flex items-center space-x-4 px-5 py-4 rounded-3xl transition-all duration-300 font-bold ${
                   activeView === item.id
                     ? 'bg-blue-50 text-blue-600 shadow-sm'
@@ -73,7 +82,7 @@ const SideBar = ({ activeView, setActiveView }: SideBarProps) => {
           </p>
           <div className="space-y-2">
             <button
-              onClick={() => setActiveView('profile')}
+              onClick={() => handleNavClick('profile')}
               className={`w-full flex items-center space-x-4 px-5 py-4 rounded-3xl transition-all duration-300 font-bold ${
                 activeView === 'profile'
                   ? 'bg-blue-50 text-blue-600 shadow-sm'

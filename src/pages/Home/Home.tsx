@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import SideBar from '../../components/SideBar';
 import RenderProfile from '../../components/RenderProfile';
@@ -6,56 +6,30 @@ import KanbanUi from '../../components/KanbanUi';
 import MyTask from '../../components/MyTask';
 import { Bell, Search } from 'lucide-react';
 import type { RootState } from '../../redux/store';
-import type { Task } from '../../types';
 
 const Home = () => {
-  // Dùng redux để lấy user đã được cache
   const { user } = useSelector((state: RootState) => state.auth);
+  const location = useLocation();
 
-  const [activeView, setActiveView] = useState('my-tasks');
+  const getActiveView = (path: string) => {
+    switch (path) {
+      case '/kanban':
+        return 'kanban';
+      case '/dashboard':
+        return 'dashboard';
+      case '/profile':
+        return 'profile';
+      default:
+        return 'my-tasks';
+    }
+  };
 
-  const tasks: Task[] = [
-    {
-      id: 1,
-      title: 'Design High-Fidelity UI',
-      status: 'In Progress',
-      priority: 'High',
-      category: 'Design',
-    },
-    {
-      id: 2,
-      title: 'Implement Auth Flow',
-      status: 'Completed',
-      priority: 'High',
-      category: 'Dev',
-    },
-    {
-      id: 3,
-      title: 'Setup Redux Store',
-      status: 'Completed',
-      priority: 'Medium',
-      category: 'Dev',
-    },
-    {
-      id: 4,
-      title: 'Kanban Board Drag & Drop',
-      status: 'To Do',
-      priority: 'Low',
-      category: 'UI/UX',
-    },
-    {
-      id: 5,
-      title: 'Profile Page Animation',
-      status: 'To Do',
-      priority: 'Medium',
-      category: 'Frontend',
-    },
-  ];
+  const activeView = getActiveView(location.pathname);
 
   return (
     <div className="flex h-screen bg-gray-50/50 font-sans selection:bg-blue-100 selection:text-blue-600">
       {/* Sidebar */}
-      <SideBar activeView={activeView} setActiveView={setActiveView} />
+      <SideBar activeView={activeView} />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
@@ -92,7 +66,7 @@ const Home = () => {
 
         <div className="flex-1 overflow-y-auto px-10 pb-10">
           {activeView === 'my-tasks' && <MyTask />}
-          {activeView === 'kanban' && <KanbanUi tasks={tasks} />}
+          {activeView === 'kanban' && <KanbanUi />}
           {activeView === 'profile' && <RenderProfile user={user} />}
           {activeView === 'dashboard' && (
             <div className="flex flex-col items-center justify-center h-full text-center space-y-4 text-gray-300">
