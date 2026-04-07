@@ -25,7 +25,6 @@ import type { ProjectTask, SubTask, TaskUser } from '../types';
 import { StatusSelect } from './StatusSelect';
 import branchIcon from '../assets/branch.png';
 import AddingAssignee from './AddingAssignee';
-import { DeadlinePicker } from './DeadlinePicker';
 import { AssigneeGroup } from './AssigneeGroup';
 
 // --- Sub-components for Row ---
@@ -90,7 +89,6 @@ export const TaskRow = ({
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [subtaskName, setSubtaskName] = useState('');
   const [isAddingAssignee, setIsAddingAssignee] = useState(false);
-  const [isDeadlinePickerOpen, setIsDeadlinePickerOpen] = useState(false);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState(task.name);
@@ -129,6 +127,23 @@ export const TaskRow = ({
     } else if (e.key === 'Escape') {
       setIsEditingName(false);
       setEditedName(task.name);
+    }
+  };
+
+  // Update ô hạn chót
+  const handleUpdateDueDate = async (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    const val = e.target.value;
+    try {
+      await updateTask({
+        id: task._id,
+        data: {
+          dueDate: val ? new Date(val).toISOString() : undefined,
+        },
+      }).unwrap();
+    } catch (err) {
+      console.error('Failed to update deadline:', err);
     }
   };
 
@@ -333,26 +348,24 @@ export const TaskRow = ({
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
           <StatusSelect initialStatus={task.status} taskId={task._id} />
         </td>
-        <td
-          onClick={(e) => {
-            const rect = e.currentTarget.getBoundingClientRect();
-            setTriggerRect(rect);
-            setIsDeadlinePickerOpen(true);
-          }}
-          className={`px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle text-[12px] font-bold tracking-tight w-[110px] min-w-[110px] max-w-[110px] cursor-pointer hover:bg-gray-50 transition-colors ${(() => {
-            if (!task.dueDate || task.status === 'Done') return 'text-gray-500';
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            const due = new Date(task.dueDate);
-            return due < today ? 'text-rose-500' : 'text-gray-500';
-          })()}`}
-        >
-          {task.dueDate
-            ? new Date(task.dueDate).toLocaleDateString('en-GB', {
-                day: '2-digit',
-                month: 'short',
-              })
-            : '-'}
+        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
+          <input
+            type="date"
+            className={`bg-transparent border-none outline-none text-[12px] font-bold tracking-tight w-full text-center cursor-pointer ${(() => {
+              if (!task.dueDate || task.status === 'Done')
+                return 'text-gray-500';
+              const today = new Date();
+              today.setHours(0, 0, 0, 0);
+              const due = new Date(task.dueDate);
+              return due < today ? 'text-rose-500' : 'text-gray-500';
+            })()}`}
+            value={
+              task.dueDate
+                ? new Date(task.dueDate).toISOString().split('T')[0]
+                : ''
+            }
+            onChange={handleUpdateDueDate}
+          />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
           <EstimatedPicker
@@ -405,24 +418,6 @@ export const TaskRow = ({
           onClose={() => setIsAddingAssignee(false)}
           taskId={task._id}
           triggerRect={triggerRect}
-        />
-      )}
-
-      {isDeadlinePickerOpen && triggerRect && (
-        <DeadlinePicker
-          initialDate={task.dueDate}
-          triggerRect={triggerRect}
-          onClose={() => setIsDeadlinePickerOpen(false)}
-          onUpdate={async (newDate) => {
-            try {
-              await updateTask({
-                id: task._id,
-                data: { dueDate: newDate?.toISOString() },
-              }).unwrap();
-            } catch (err) {
-              console.error('Failed to update deadline:', err);
-            }
-          }}
         />
       )}
 

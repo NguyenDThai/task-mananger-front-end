@@ -52,6 +52,7 @@ const MyTask = () => {
     selectedTaskIds.includes(t._id || t.id || ''),
   );
 
+  // Kiểm tra xem người dùng có phải là chủ sở hữu của tất cả các task được chọn không
   const isOwner =
     selectedTasks.length > 0 &&
     selectedTasks.every((t) => {
@@ -90,7 +91,7 @@ const MyTask = () => {
     globalDateRangeText = `${fmt(minDate)} - ${fmt(maxDate)}`;
   }
 
-  // Selection logic
+  // Lấy tất cả ID của task và subtask
   const getAllIds = (taskList: ProjectTask[]): string[] => {
     let ids: string[] = [];
     taskList.forEach((task) => {
@@ -105,6 +106,7 @@ const MyTask = () => {
     return ids;
   };
 
+  // Chọn tất cả task
   const handleToggleSelectAll = () => {
     const allIds = getAllIds(tasks);
     // Nếu đã chon hết thì bỏ chọn
@@ -115,6 +117,7 @@ const MyTask = () => {
     }
   };
 
+  // Chọn task
   const handleToggleTask = (taskId: string, childrenIds: string[] = []) => {
     setSelectedTaskIds((prev) => {
       const isSelected = prev.includes(taskId);
@@ -140,11 +143,13 @@ const MyTask = () => {
   const [isAdding, setIsAdding] = useState(false);
   const [taskName, setTaskName] = useState('');
 
+  // Mở sidebar
   const handleOpenSidebar = (task: ProjectTask) => {
     setSelectedTask(task);
     setIsSidebarOpen(true);
   };
 
+  // Thêm task cha
   const handleQuickAdd = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!taskName.trim()) {
@@ -161,6 +166,7 @@ const MyTask = () => {
     }
   };
 
+  // Lấy task cha
   const currentSelectedTask =
     tasks.find((t: ProjectTask) => t._id === selectedTask?._id) || selectedTask;
 

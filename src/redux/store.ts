@@ -1,4 +1,8 @@
-import { configureStore, combineReducers } from '@reduxjs/toolkit';
+import {
+  configureStore,
+  combineReducers,
+  type AnyAction,
+} from '@reduxjs/toolkit';
 import authReducer from './slides/auth/authSlide';
 import taskReducer from './slides/task/taskSlide';
 import userReducer from './slides/user/userSlide';
@@ -13,7 +17,10 @@ const appReducer = combineReducers({
   [taskApi.reducerPath]: taskApi.reducer,
 });
 
-const rootReducer = (state: any, action: any) => {
+const rootReducer = (
+  state: ReturnType<typeof appReducer> | undefined,
+  action: AnyAction,
+) => {
   if (action.type === 'authSlide/logout') {
     // Reset toàn bộ store (bao gồm cả Cache của RTK Query) về trạng thái ban đầu
     state = undefined;
