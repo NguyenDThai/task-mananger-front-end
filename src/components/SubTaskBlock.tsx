@@ -1,11 +1,12 @@
 import React from 'react';
 import type { SubTask, ProjectTask } from '../types';
-import { Avatar } from './TaskRow';
 import { PrioritySelect } from './PrioritySelect';
 import { EstimatedPicker } from './EstimatedPicker';
 import { Plus, Check, CheckCircle2, Pencil } from 'lucide-react';
 import { StatusSelect } from './StatusSelect';
 import { DeadlinePicker } from './DeadlinePicker';
+import { AssigneeGroup } from './AssigneeGroup';
+import AddingAssignee from './AddingAssignee';
 
 interface SubTaskBlockProps {
   subtasks: SubTask[];
@@ -45,6 +46,9 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
   const [isDeadlinePickerOpen, setIsDeadlinePickerOpen] = React.useState(false);
   const [triggerRect, setTriggerRect] = React.useState<DOMRect | null>(null);
   const [activeDeadlineSubtask, setActiveDeadlineSubtask] =
+    React.useState<SubTask | null>(null);
+  const [isAddingAssignee, setIsAddingAssignee] = React.useState(false);
+  const [activeAssigneeSubtask, setActiveAssigneeSubtask] =
     React.useState<SubTask | null>(null);
 
   const handleUpdateSubtaskName = async (sub: SubTask) => {
@@ -187,8 +191,22 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                     </div>
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-                    <div className="flex items-center gap-3 justify-center">
-                      <Avatar user={sub.createdBy} />
+                    <div className="flex items-center gap-2 justify-center group/assignee">
+                      <AssigneeGroup
+                        assignees={sub.assignees || []}
+                        className="scale-90"
+                      />
+                      <button
+                        onClick={(e) => {
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          setTriggerRect(rect);
+                          setActiveAssigneeSubtask(sub);
+                          setIsAddingAssignee(true);
+                        }}
+                        className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-all opacity-0 group-hover/sub:opacity-100"
+                      >
+                        <Plus size={12} />
+                      </button>
                     </div>
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
@@ -317,6 +335,19 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                 console.error('Failed to update deadline:', err);
               }
             }}
+          />
+        )}
+        {isAddingAssignee && triggerRect && activeAssigneeSubtask && (
+          <AddingAssignee
+            task={activeAssigneeSubtask as ProjectTask}
+            onClose={() => {
+              setIsAddingAssignee(false);
+              setActiveAssigneeSubtask(null);
+            }}
+            taskId={
+              (activeAssigneeSubtask._id || activeAssigneeSubtask.id) as string
+            }
+            triggerRect={triggerRect}
           />
         )}
       </div>

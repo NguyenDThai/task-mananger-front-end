@@ -37,6 +37,7 @@ export interface SubTask {
   parentTask?: string;
   estimated?: string;
   createdBy?: TaskUser | string;
+  assignees?: (TaskUser | string)[];
 }
 
 export interface ProjectTask extends SubTask {

@@ -26,6 +26,7 @@ import { StatusSelect } from './StatusSelect';
 import branchIcon from '../assets/branch.png';
 import AddingAssignee from './AddingAssignee';
 import { DeadlinePicker } from './DeadlinePicker';
+import { AssigneeGroup } from './AssigneeGroup';
 
 // --- Sub-components for Row ---
 
@@ -88,7 +89,7 @@ export const TaskRow = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [subtaskName, setSubtaskName] = useState('');
-  const [isAddingCreator, setIsAddingCreator] = useState(false);
+  const [isAddingAssignee, setIsAddingAssignee] = useState(false);
   const [isDeadlinePickerOpen, setIsDeadlinePickerOpen] = useState(false);
   const [triggerRect, setTriggerRect] = useState<DOMRect | null>(null);
   const [isEditingName, setIsEditingName] = useState(false);
@@ -109,6 +110,9 @@ export const TaskRow = ({
         id: task._id,
         data: { name: editedName },
       }).unwrap();
+      // Thêm 1 dispatch cho mỗi khi update name chỉ update mỗi 1 field
+      // dùng dấu thăng trên url và khác gì so với dùng params ở trên
+      // không set up dùng cache
       setIsEditingName(false);
     } catch (err) {
       console.error('Failed to update task name:', err);
@@ -307,17 +311,21 @@ export const TaskRow = ({
 
         {/* Standard Columns */}
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-          <div className="flex items-center gap-3 justify-center">
-            <Plus
-              size={15}
+          <div className="flex items-center gap-2 justify-center group/assignee">
+            <button
               onClick={(e) => {
                 const rect = e.currentTarget.getBoundingClientRect();
                 setTriggerRect(rect);
-                setIsAddingCreator(true);
+                setIsAddingAssignee(true);
               }}
-              className="text-gray-300 hover:text-blue-500 cursor-pointer hidden group-hover:block"
+              className="w-7 h-7 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-all opacity-0 group-hover:opacity-100"
+            >
+              <Plus size={14} />
+            </button>
+            <AssigneeGroup
+              assignees={task.assignees || []}
+              className="cursor-pointer"
             />
-            <Avatar user={task.createdBy} />
           </div>
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
@@ -389,15 +397,11 @@ export const TaskRow = ({
         </td>
       </tr>
 
-      {isAddingCreator && triggerRect && (
+      {isAddingAssignee && triggerRect && (
         <AddingAssignee
-          onClose={() => setIsAddingCreator(false)}
+          task={task}
+          onClose={() => setIsAddingAssignee(false)}
           taskId={task._id}
-          currentCreatorId={
-            typeof task.createdBy === 'string'
-              ? task.createdBy
-              : (task.createdBy as TaskUser)?._id
-          }
           triggerRect={triggerRect}
         />
       )}

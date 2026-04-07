@@ -4,14 +4,14 @@ import { Search, Check } from 'lucide-react';
 import { useGetUsersQuery, useGetMeQuery } from '../redux/api/authApi';
 import { useUpdateTaskMutation } from '../redux/api/taskApi';
 import { setUsers } from '../redux/features/user/userSlide';
-import type { User } from '../types';
+import type { ProjectTask, User } from '../types';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../redux/store';
 
 interface AddingAssigneeProps {
+  task: ProjectTask;
   onClose: () => void;
   taskId: string;
-  currentCreatorId?: string;
   triggerRect: DOMRect;
 }
 
@@ -35,19 +35,17 @@ interface UserItemProps {
   user: User;
   isMe?: boolean;
   onSelect: (userId: string) => void;
-  currentCreatorId?: string;
+  isSelected: boolean;
 }
 
 const UserItem: React.FC<UserItemProps> = ({
   user,
   isMe = false,
   onSelect,
-  currentCreatorId,
+  isSelected,
 }) => {
   const userId = user._id || user.id || '';
-  const isSelected = currentCreatorId === userId;
   const userName = user.name || 'Unknown';
-
   const userEmail = user.email || '';
 
   const initials = userName
@@ -60,13 +58,13 @@ const UserItem: React.FC<UserItemProps> = ({
   return (
     <button
       onClick={() => onSelect(userId)}
-      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-gray-50 transition-all text-left group"
+      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-left group ${isSelected ? 'bg-blue-50/50' : 'hover:bg-gray-50'}`}
     >
       <div className="relative shrink-0">
         {user.avatar ? (
           <img
             src={user.avatar}
-            className="w-9 h-9 rounded-full border border-gray-100 shadow-sm"
+            className={`w-9 h-9 rounded-full border shadow-sm transition-all ${isSelected ? 'border-blue-200' : 'border-gray-100'}`}
             alt=""
           />
         ) : (
@@ -77,13 +75,15 @@ const UserItem: React.FC<UserItemProps> = ({
           </div>
         )}
         {isSelected && (
-          <div className="absolute -right-1 -bottom-1 bg-white rounded-full p-0.5 shadow-sm border border-gray-100">
-            <Check size={10} className="text-blue-600 stroke-4" />
+          <div className="absolute -right-1 -bottom-1 bg-blue-600 rounded-full p-0.5 shadow-sm border border-white">
+            <Check size={10} className="text-white stroke-4" />
           </div>
         )}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[13px] font-bold text-gray-700 truncate">
+        <p
+          className={`text-[13px] font-bold truncate ${isSelected ? 'text-blue-700' : 'text-gray-700'}`}
+        >
           {userName}{' '}
           {isMe && <span className="text-gray-400 font-medium">(Tôi)</span>}
         </p>
@@ -94,29 +94,32 @@ const UserItem: React.FC<UserItemProps> = ({
 };
 
 const AddingAssignee: React.FC<AddingAssigneeProps> = ({
+  task,
   onClose,
   taskId,
-  currentCreatorId,
   triggerRect,
 }) => {
   const [search, setSearch] = useState('');
   const { data, isLoading: loadingUsers } = useGetUsersQuery();
-
   const dispatch = useDispatch();
 
-  // Đồng bộ tất cả user qua redux
   useEffect(() => {
     if (data?.users) {
       dispatch(setUsers(data.users));
     }
   }, [data, dispatch]);
+
   const usersFromRedux = useSelector((state: RootState) => state.user.users);
-
   const usersData = data?.users || usersFromRedux;
-
   const { data: meData } = useGetMeQuery();
   const me: User | undefined = meData?.user;
   const [updateTask] = useUpdateTaskMutation();
+
+  const assigneeIds = useMemo(() => {
+    return (task.assignees || []).map((a) =>
+      typeof a === 'string' ? a : a._id || '',
+    );
+  }, [task.assignees]);
 
   const filteredUsers = useMemo(() => {
     const users = usersData || [];
@@ -128,26 +131,25 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
   }, [usersData, search]);
 
   const handleSelect = async (userId: string) => {
+    const isAlreadyAssigned = assigneeIds.includes(userId);
     try {
       await updateTask({
         id: taskId,
-        data: { createdBy: userId },
+        data: isAlreadyAssigned
+          ? { removeAssignees: [userId] }
+          : { addAssignees: [userId] },
       }).unwrap();
-      onClose();
     } catch (err) {
-      console.error('Failed to update creator:', err);
+      console.error('Failed to update assignees:', err);
     }
   };
 
   return createPortal(
     <div className="fixed inset-0 z-1000">
-      <div
-        className="absolute inset-0 bg-black/5 backdrop-blur-[1px]"
-        onClick={onClose}
-      />
+      <div className="absolute inset-0 bg-transparent" onClick={onClose} />
 
       <div
-        className="absolute bg-white rounded-xl shadow-2xl border border-gray-200 w-[300px] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+        className="absolute bg-white rounded-xl shadow-[0_10px_40px_rgba(0,0,0,0.1)] border border-gray-100 w-[300px] overflow-hidden animate-in fade-in zoom-in-95 duration-150"
         style={{
           top: Math.min(triggerRect.bottom + 8, window.innerHeight - 450),
           left: Math.min(triggerRect.left, window.innerWidth - 320),
@@ -155,7 +157,7 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Header */}
-        <div className="p-3 border-b border-gray-100">
+        <div className="p-3 border-b border-gray-50">
           <div className="relative">
             <Search
               className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
@@ -166,8 +168,8 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Tìm kiếm tên người dùng / email"
-              className="w-full bg-gray-50 border border-gray-100 rounded-lg pl-9 pr-3 py-2 text-[12px] placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-100 focus:border-blue-400 transition-all"
+              placeholder="Tìm kiếm người giao việc..."
+              className="w-full bg-gray-50/50 border border-gray-100 rounded-lg pl-9 pr-3 py-2 text-[12px] placeholder:text-gray-400 outline-none focus:ring-2 focus:ring-blue-100/50 focus:border-blue-400 transition-all"
             />
           </div>
         </div>
@@ -187,16 +189,19 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
                     user={me}
                     isMe={true}
                     onSelect={handleSelect}
-                    currentCreatorId={currentCreatorId}
+                    isSelected={assigneeIds.includes(me._id || me.id || '')}
                   />
                 </div>
               )}
 
               {/* Suggestions Header */}
-              <div className="px-3 py-1.5">
-                <p className="text-[11px] font-bold text-gray-400 uppercase tracking-widest">
-                  Thành viên được gợi ý
+              <div className="px-3 py-1.5 flex items-center justify-between">
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+                  Thành viên team
                 </p>
+                <span className="text-[10px] text-gray-300 font-medium">
+                  {assigneeIds.length} đã chọn
+                </span>
               </div>
 
               {/* User List */}
@@ -211,17 +216,31 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
                         key={user._id || user.id}
                         user={user}
                         onSelect={handleSelect}
-                        currentCreatorId={currentCreatorId}
+                        isSelected={assigneeIds.includes(
+                          user._id || user.id || '',
+                        )}
                       />
                     ))
                 ) : (
-                  <div className="p-8 text-center text-gray-400 text-xs">
-                    Không tìm thấy người dùng phù hợp
+                  <div className="p-8 text-center">
+                    <p className="text-gray-400 text-xs">
+                      Không tìm thấy người dùng
+                    </p>
                   </div>
                 )}
               </div>
             </div>
           )}
+        </div>
+
+        {/* Footer */}
+        <div className="p-2 bg-gray-50/50 border-t border-gray-50 flex justify-end">
+          <button
+            onClick={onClose}
+            className="px-4 py-1.5 bg-white border border-gray-200 rounded-lg text-[11px] font-bold text-gray-600 hover:bg-gray-50 transition-colors shadow-sm"
+          >
+            Hoàn tất
+          </button>
         </div>
       </div>
     </div>,
