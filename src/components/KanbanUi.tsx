@@ -16,6 +16,7 @@ import { DroppableColumn } from './DroppableColumn';
 import { DraggableTask } from './DraggableTask';
 import { updateTaskLocal } from '../redux/slides/task/taskSlide';
 import { QuickTaskModal } from './QuickTaskModal';
+import { EditTaskModal } from './EditTaskModal';
 
 const KanbanUi = () => {
   const dispatch = useDispatch();
@@ -28,6 +29,8 @@ const KanbanUi = () => {
   // 2. Hook cập nhật dữ liệu (API)
   const [updateTask] = useUpdateTaskMutation();
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [taskToEdit, setTaskToEdit] = useState<ProjectTask | null>(null);
 
   // 3. Cấu hình 5 cột tương ứng với 5 enum status
   const columns = [
@@ -157,7 +160,13 @@ const KanbanUi = () => {
                               >
                                 {task.priority || 'Low'}
                               </span>
-                              <button className="text-gray-300 hover:text-gray-500 transition-colors">
+                              <button
+                                onClick={() => {
+                                  setTaskToEdit(task);
+                                  setIsEditModalOpen(true);
+                                }}
+                                className="text-gray-300 hover:text-blue-500 transition-colors"
+                              >
                                 <SquarePen size={14} />
                               </button>
                             </div>
@@ -223,6 +232,14 @@ const KanbanUi = () => {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
+      {taskToEdit && (
+        <EditTaskModal
+          isOpen={isEditModalOpen}
+          onClose={() => setIsEditModalOpen(false)}
+          task={taskToEdit}
+          key={taskToEdit._id}
+        />
+      )}
     </>
   );
 };
