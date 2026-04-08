@@ -7,6 +7,7 @@ import {
   updateTaskLocal,
   deleteTaskLocal,
   bulkDeleteLocal,
+  setTasks,
 } from '../slides/task/taskSlide';
 
 export const taskApi = createApi({
@@ -26,6 +27,15 @@ export const taskApi = createApi({
         url: '/task',
       }),
       providesTags: ['Task'],
+      // Đồng bộ dữ liệu từ API về Redux Slide
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          dispatch(setTasks(data.tasks));
+        } catch (error) {
+          console.error('Failed to sync tasks:', error);
+        }
+      },
     }),
     createTask: builder.mutation<ProjectTask, Partial<ProjectTask>>({
       query: (data) => ({

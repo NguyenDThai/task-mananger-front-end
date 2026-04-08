@@ -147,6 +147,7 @@ export const TaskRow = ({
   const subtasks = 'subtasks' in task ? task.subtasks : undefined;
   const hasSubtasks = !!(subtasks && subtasks.length > 0);
 
+  // Tạo task con
   const handleQuickAddSubtask = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!subtaskName.trim()) {

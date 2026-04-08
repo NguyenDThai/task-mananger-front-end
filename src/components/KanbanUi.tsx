@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Cloud, SquarePen, User, Calendar, Plus } from 'lucide-react';
 import type { ProjectTask } from '../types';
-import { useDispatch, useSelector } from 'react-redux';
+import { useSelector } from 'react-redux';
 import type { RootState } from '../redux/store';
 import {
   DndContext,
@@ -14,13 +14,10 @@ import {
 import { useUpdateTaskMutation } from '../redux/api/taskApi';
 import { DroppableColumn } from './DroppableColumn';
 import { DraggableTask } from './DraggableTask';
-import { updateTaskLocal } from '../redux/slides/task/taskSlide';
 import { QuickTaskModal } from './QuickTaskModal';
 import { EditTaskModal } from './EditTaskModal';
 
 const KanbanUi = () => {
-  const dispatch = useDispatch();
-
   // 1. Lấy dữ liệu từ Redux Slide (truyền thống)
   const tasks = useSelector(
     (state: RootState) => state.task.tasks as ProjectTask[],
@@ -58,9 +55,6 @@ const KanbanUi = () => {
 
     const taskId = active.id as string;
     const newStatus = over.id as string;
-
-    // Cập nhật local ngay lập tức trong Redux Slide
-    dispatch(updateTaskLocal({ id: taskId, data: { status: newStatus } }));
 
     // Gọi API cập nhật dữ liệu bền vững
     updateTask({

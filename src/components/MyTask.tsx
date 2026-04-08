@@ -8,24 +8,16 @@ import SummaryTask from './SummaryTask';
 import { useGetTasksQuery, useCreateTaskMutation } from '../redux/api/taskApi';
 import { useGetMeQuery } from '../redux/api/authApi';
 import { useDispatch, useSelector } from 'react-redux';
-import { setTasks } from '../redux/slides/task/taskSlide';
 import type { RootState } from '../redux/store';
 import { setCredentials } from '../redux/slides/auth/authSlide';
 
 const MyTask = () => {
-  const { data, isLoading, error } = useGetTasksQuery();
+  const { isLoading, error } = useGetTasksQuery();
   const [createTask] = useCreateTaskMutation();
   const dispatch = useDispatch();
 
-  // 1. Luôn sử dụng dữ liệu từ Redux Slide làm nguồn chính
+  // Luôn sử dụng dữ liệu từ Redux Slide làm nguồn chính
   const tasks = useSelector((state: RootState) => state.task.tasks);
-
-  // 2. Đồng bộ dữ liệu từ API vào Redux Slide khi load lần đầu hoặc refresh
-  useEffect(() => {
-    if (data?.tasks) {
-      dispatch(setTasks(data.tasks));
-    }
-  }, [data, dispatch]);
 
   // fall back user
   const userFromRedux = useSelector((state: RootState) => state.auth.user);
@@ -55,7 +47,7 @@ const MyTask = () => {
   // Kiểm tra xem người dùng có phải là chủ sở hữu của tất cả các task được chọn không
   const isOwner =
     selectedTasks.length > 0 &&
-    selectedTasks.every((t) => {
+    selectedTasks.every((t: ProjectTask) => {
       const creatorId =
         typeof t.createdBy === 'object' ? t.createdBy?._id : t.createdBy;
       return creatorId === (me?._id || me?.id);
@@ -64,10 +56,10 @@ const MyTask = () => {
   // Tổng số task
   const totalTasksCount = allTasksAndSubtasks.length;
   const completedTasksCount = allTasksAndSubtasks.filter(
-    (t) => t.status === 'Done',
+    (t: ProjectTask) => t.status === 'Done',
   ).length;
   const doingTasksCount = allTasksAndSubtasks.filter(
-    (t) => t.status === 'Doing' || t.status === 'In Progress',
+    (t: ProjectTask) => t.status === 'Doing' || t.status === 'In Progress',
   ).length;
   const todoTasksCount =
     totalTasksCount - (completedTasksCount + doingTasksCount);
@@ -85,8 +77,12 @@ const MyTask = () => {
 
   let globalDateRangeText = '-';
   if (validDates.length > 0) {
-    const minDate = new Date(Math.min(...validDates.map((d) => d.getTime())));
-    const maxDate = new Date(Math.max(...validDates.map((d) => d.getTime())));
+    const minDate = new Date(
+      Math.min(...validDates.map((d: Date) => d.getTime())),
+    );
+    const maxDate = new Date(
+      Math.max(...validDates.map((d: Date) => d.getTime())),
+    );
     const fmt = (d: Date) => `${d.getDate()}/${d.getMonth() + 1}`;
     globalDateRangeText = `${fmt(minDate)} - ${fmt(maxDate)}`;
   }

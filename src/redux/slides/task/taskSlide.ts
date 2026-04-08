@@ -88,6 +88,7 @@ const taskSlide = createSlice({
         }
       });
     },
+
     bulkDeleteLocal: (state, action: PayloadAction<string[]>) => {
       state.tasks = state.tasks.filter(
         (t) => !action.payload.includes((t._id || t.id) as string),
