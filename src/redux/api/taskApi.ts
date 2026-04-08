@@ -2,7 +2,12 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { ProjectTask } from '../../types';
 import { env } from '../../config/configEnv';
-import { addTaskLocal } from '../slides/task/taskSlide';
+import {
+  addTaskLocal,
+  updateTaskLocal,
+  deleteTaskLocal,
+  bulkDeleteLocal,
+} from '../slides/task/taskSlide';
 
 export const taskApi = createApi({
   reducerPath: 'taskApi',
@@ -33,13 +38,29 @@ export const taskApi = createApi({
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
           const { data: newTask } = await queryFulfilled;
-          // Tự động đồng bộ vào Redux Slide bất cứ khi nào tạo task thành công
+          // 1. Tự động đồng bộ vào Redux Slide cho UI đang hiển thị
           dispatch(addTaskLocal([newTask]));
+
+          // 2. Cập nhật cache thủ công cho RTK Query (chống xung đột khi sync lại)
+          dispatch(
+            taskApi.util.updateQueryData('getTasks', undefined, (draft) => {
+              if (newTask.parentTask) {
+                const parent = draft.tasks.find(
+                  (t) => (t._id || t.id) === newTask.parentTask,
+                );
+                if (parent) {
+                  if (!parent.subtasks) parent.subtasks = [];
+                  parent.subtasks.push(newTask);
+                }
+              } else {
+                draft.tasks.push(newTask);
+              }
+            }),
+          );
         } catch (err) {
-          console.error('Failed to sync created task to Redux Slide:', err);
+          console.error('Failed to sync created task:', err);
         }
       },
-      invalidatesTags: ['Task'],
     }),
     updateTask: builder.mutation<
       ProjectTask,
@@ -57,22 +78,27 @@ export const taskApi = createApi({
         body: data,
       }),
       async onQueryStarted({ id, data }, { dispatch, queryFulfilled }) {
-        // Update cache ngay lap tuc
+        // 1. Cập nhật Redux Slide ngay lập tức cho UI
+        dispatch(updateTaskLocal({ id, data }));
+
+        // 2. Cập nhật cache ngay lap tuc cho RTK Query
         const patchResult = dispatch(
           taskApi.util.updateQueryData('getTasks', undefined, (draft) => {
-            let task = draft.tasks.find((t) => t._id === id);
+            let task = draft.tasks.find((t) => (t._id || t.id) === id);
 
             // Nếu không phải task cha thì tìm trong task con
             if (!task) {
               const parent = draft.tasks.find((t) =>
                 t.subtasks?.some(
-                  (st) => (typeof st === 'string' ? st : st._id) === id,
+                  (st) =>
+                    (typeof st === 'string' ? st : st._id || st.id) === id,
                 ),
               );
 
               if (parent) {
                 task = parent.subtasks?.find(
-                  (st) => (typeof st === 'string' ? st : st._id) === id,
+                  (st) =>
+                    (typeof st === 'string' ? st : st._id || st.id) === id,
                 );
               }
             }
@@ -96,12 +122,10 @@ export const taskApi = createApi({
             }
 
             if (data.removeAssignees) {
-              task.assignees = (task.assignees || []).filter(
-                (uid) =>
-                  !data.removeAssignees?.includes(
-                    typeof uid === 'string' ? uid : uid._id || '',
-                  ),
-              );
+              task.assignees = (task.assignees || []).filter((uid) => {
+                const userId = typeof uid === 'string' ? uid : uid._id || '';
+                return !data.removeAssignees?.includes(userId);
+              });
             }
           }),
         );
@@ -110,6 +134,7 @@ export const taskApi = createApi({
           await queryFulfilled;
         } catch (error) {
           patchResult.undo();
+          // Log lỗi nếu cần
         }
       },
     }),
@@ -118,7 +143,18 @@ export const taskApi = createApi({
         url: `/task/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Task'],
+      async onQueryStarted(id, { dispatch, queryFulfilled }) {
+        // 1. Xóa trong Redux Slide ngay lập tức
+        dispatch(deleteTaskLocal(id));
+
+        try {
+          await queryFulfilled;
+        } catch (error) {
+          // Nếu xóa lỗi thì ta phải fetch lại để đảm bảo dữ liệu đúng
+          // (Dùng invalidatesTags ở đây là an toàn nhất để sửa lỗi)
+        }
+      },
+      // invalidatesTags: ['Task'],
     }),
     bulkDeleteTasks: builder.mutation<{ message: string }, { ids: string[] }>({
       query: (data) => ({
@@ -126,7 +162,17 @@ export const taskApi = createApi({
         method: 'POST',
         body: data,
       }),
-      invalidatesTags: ['Task'],
+      async onQueryStarted({ ids }, { dispatch, queryFulfilled }) {
+        // 1. Xóa trong Redux Slide
+        dispatch(bulkDeleteLocal(ids));
+
+        try {
+          await queryFulfilled;
+        } catch (error) {
+          // Log lỗi
+        }
+      },
+      // invalidatesTags: ['Task'],
     }),
   }),
 });

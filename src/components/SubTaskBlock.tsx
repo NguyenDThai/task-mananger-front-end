@@ -58,9 +58,6 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
 
     try {
       const taskId = sub._id || sub.id || '';
-      dispatch(
-        updateTaskLocal({ id: taskId, data: { name: editedSubtaskName } }),
-      );
 
       await updateTask({
         id: taskId,
