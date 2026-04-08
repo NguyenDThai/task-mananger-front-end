@@ -78,20 +78,20 @@ const KanbanUi = () => {
         onDragEnd={handleDragEnd}
         collisionDetection={closestCenter}
       >
-        <div className="h-full flex flex-col space-y-6 animate-fade-in overflow-hidden">
-          {/* Header Board */}
-          <div className="flex justify-between items-center px-4">
+        <div className="h-full flex flex-col space-y-4 md:space-y-6 animate-fade-in overflow-hidden">
+          {/* Header Board - Responsive Layout */}
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 md:px-6">
             <div>
-              <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
                 Project Board
               </h2>
-              <p className="text-gray-500 font-medium italic">
+              <p className="text-gray-500 text-xs md:text-sm font-medium italic">
                 Kéo thả các thẻ để cập nhật tiến độ công việc.
               </p>
             </div>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="flex items-center gap-3 bg-blue-600 text-white px-7 py-3 rounded-[1.25rem] font-black text-[13px] uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 group"
+              className="w-full sm:w-auto flex items-center justify-center gap-2 bg-blue-600 text-white px-5 md:px-7 py-2.5 md:py-3 rounded-[1.25rem] font-black text-[12px] md:text-[13px] uppercase tracking-widest shadow-xl shadow-blue-500/30 hover:bg-blue-700 hover:scale-105 transition-all active:scale-95 group"
             >
               <Plus
                 size={18}
@@ -101,9 +101,9 @@ const KanbanUi = () => {
             </button>
           </div>
 
-          {/* Board content */}
-          <div className="flex-1 pb-8 custom-scrollbar overflow-hidden">
-            <div className="flex gap-4 h-full w-full px-2 lg:px-4">
+          {/* Board content - Horizontal Scroll on Mobile */}
+          <div className="flex-1 pb-4 md:pb-8 overflow-hidden">
+            <div className="flex gap-4 h-full w-full px-4 md:px-6 overflow-x-auto custom-scrollbar pb-4 snap-x">
               {columns.map((column) => {
                 const filteredTasks = tasks.filter(
                   (task) => task.status === column.status,
@@ -113,13 +113,13 @@ const KanbanUi = () => {
                   <DroppableColumn
                     id={column.status}
                     key={column.status}
-                    className="flex-1 min-w-[200px] bg-gray-100/40 rounded-4xl p-4 flex flex-col border border-gray-200/50 backdrop-blur-sm"
+                    className="flex-1 min-w-[280px] max-w-[350px] md:min-w-[300px] h-full bg-gray-100/40 rounded-[2.5rem] p-3 md:p-4 flex flex-col border border-gray-200/50 backdrop-blur-sm snap-center"
                   >
                     {/* Header Cột */}
-                    <div className="flex items-center justify-between mb-5 px-1">
+                    <div className="flex items-center justify-between mb-4 md:mb-5 px-1">
                       <div className="flex items-center space-x-2.5">
                         <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-                        <h3 className="font-extrabold text-gray-700 uppercase tracking-widest text-[11px]">
+                        <h3 className="font-extrabold text-gray-700 uppercase tracking-widest text-[10px] md:text-[11px]">
                           {column.title}
                         </h3>
                         <span className="bg-white text-gray-400 px-2.5 py-0.5 rounded-full text-[10px] font-black border border-gray-100 shadow-sm">
@@ -128,8 +128,8 @@ const KanbanUi = () => {
                       </div>
                     </div>
 
-                    {/* Danh sách Task */}
-                    <div className="space-y-4 flex-1 overflow-y-auto no-scrollbar py-1">
+                    {/* Danh sách Task - Vertical Scroll inner column */}
+                    <div className="space-y-3 md:space-y-4 flex-1 overflow-y-auto no-scrollbar py-1">
                       {filteredTasks.map((task) => {
                         const firstAssignee = task.assignees?.[0];
                         const avatarContent = firstAssignee ? (
@@ -146,11 +146,11 @@ const KanbanUi = () => {
                           <DraggableTask
                             key={task._id || task.id}
                             id={(task._id || task.id) as string}
-                            className="group bg-white p-5 rounded-3xl shadow-sm border border-transparent hover:border-blue-200 hover:shadow-xl transition-shadow cursor-grab active:cursor-grabbing"
+                            className="group bg-white p-4 md:p-5 rounded-3xl shadow-sm border border-transparent hover:border-blue-200 hover:shadow-xl transition-shadow cursor-grab active:cursor-grabbing"
                           >
-                            <div className="flex justify-between items-start mb-4">
+                            <div className="flex justify-between items-start mb-3 md:mb-4">
                               <span
-                                className={`text-[9px] uppercase font-black tracking-widest px-2.5 py-1 rounded-lg ${
+                                className={`text-[8px] md:text-[9px] uppercase font-black tracking-widest px-2.5 py-1 rounded-lg ${
                                   task.priority === 'High'
                                     ? 'bg-rose-50 text-rose-500 border border-rose-100'
                                     : task.priority === 'Medium'
@@ -171,26 +171,26 @@ const KanbanUi = () => {
                               </button>
                             </div>
 
-                            <h4 className="font-bold text-gray-800 text-[14px] leading-snug mb-5 group-hover:text-blue-600 transition-colors">
+                            <h4 className="font-bold text-gray-800 text-[13px] md:text-[14px] leading-snug mb-4 md:mb-5 group-hover:text-blue-600 transition-colors line-clamp-2">
                               {task.name}
                             </h4>
 
-                            <div className="flex items-center justify-between pt-4 border-t border-gray-50">
-                              <div className="flex items-center -space-x-2.5">
-                                <div className="w-7 h-7 rounded-full border-2 border-white bg-blue-50 flex items-center justify-center text-[10px] text-blue-500 font-bold shadow-sm">
+                            <div className="flex items-center justify-between pt-3 md:pt-4 border-t border-gray-50">
+                              <div className="flex items-center -space-x-2">
+                                <div className="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-white bg-blue-50 flex items-center justify-center text-[9px] md:text-[10px] text-blue-500 font-bold shadow-sm">
                                   {avatarContent}
                                 </div>
                                 {task.assignees &&
                                   task.assignees.length > 1 && (
-                                    <div className="w-7 h-7 rounded-full border-2 border-white bg-purple-50 flex items-center justify-center text-[10px] text-purple-500 font-bold shadow-sm">
+                                    <div className="w-6 h-6 md:w-7 md:h-7 rounded-full border-2 border-white bg-purple-50 flex items-center justify-center text-[9px] md:text-[10px] text-purple-500 font-bold shadow-sm">
                                       +{task.assignees.length - 1}
                                     </div>
                                   )}
                               </div>
 
-                              <div className="flex items-center gap-2 text-gray-400">
-                                <Cloud size={14} className="text-blue-300" />
-                                <span className="text-[10px] font-bold">
+                              <div className="flex items-center gap-1.5 md:gap-2 text-gray-400">
+                                <Cloud size={12} className="text-blue-300" />
+                                <span className="text-[9px] md:text-[10px] font-bold">
                                   {task.subtasks?.length || 0}
                                 </span>
                               </div>
@@ -199,13 +199,13 @@ const KanbanUi = () => {
                             {/* Hiển thị ngày hạn chót */}
                             {task.dueDate && (
                               <div
-                                className={`mt-4 flex items-center gap-1.5 text-[10px] font-bold ${
+                                className={`mt-3 md:mt-4 flex items-center gap-1.5 text-[9px] md:text-[10px] font-bold ${
                                   today > new Date(task.dueDate)
                                     ? 'text-red-500'
                                     : 'text-gray-400'
                                 }`}
                               >
-                                <Calendar size={13} strokeWidth={2.5} />
+                                <Calendar size={12} strokeWidth={2.5} />
                                 <span>
                                   {new Date(task.dueDate).toLocaleDateString(
                                     'vi-VN',

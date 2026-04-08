@@ -74,7 +74,7 @@ export const EstimatedPicker: React.FC<EstimatedPickerProps> = ({
 
       {isOpen &&
         createPortal(
-          <div className="fixed inset-0 z-[100]">
+          <div className="fixed inset-0 z-9999">
             {/* Transparent backdrop to catch clicks */}
             <div
               className="absolute inset-0 bg-transparent"

@@ -110,9 +110,6 @@ export const TaskRow = ({
         id: task._id,
         data: { name: editedName },
       }).unwrap();
-      // Thêm 1 dispatch cho mỗi khi update name chỉ update mỗi 1 field
-      // dùng dấu thăng trên url và khác gì so với dùng params ở trên
-      // không set up dùng cache
       setIsEditingName(false);
     } catch (err) {
       console.error('Failed to update task name:', err);
