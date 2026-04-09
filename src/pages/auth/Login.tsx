@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import AuthForm from '../../components/auth/AuthForm';
+import { AuthForm } from '../../components';
 import { useDispatch } from 'react-redux';
 import { setCredentials } from '../../redux/slides/auth/authSlide';
 import { useLoginMutation } from '../../redux/api/authApi';

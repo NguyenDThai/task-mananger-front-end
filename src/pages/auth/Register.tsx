@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import AuthForm from "../../components/auth/AuthForm";
-import { useNavigate } from "react-router-dom";
-import { useRegisterMutation } from "../../redux/api/authApi";
-import { toast } from "react-toastify";
+import { AuthForm } from '../../components';
+import { useNavigate } from 'react-router-dom';
+import { useRegisterMutation } from '../../redux/api/authApi';
+import { toast } from 'react-toastify';
 
 export default function Register() {
   const [registerApi] = useRegisterMutation();
@@ -11,11 +11,11 @@ export default function Register() {
   const handleRegister = async (data: any) => {
     try {
       const res = await registerApi(data).unwrap();
-      toast.success(res.message || "Đăng ký thành công!");
-      navigate("/login");
+      toast.success(res.message || 'Đăng ký thành công!');
+      navigate('/login');
     } catch (error: any) {
-      console.error("Register error:", error);
-      toast.error(error?.data?.message || "Đăng ký thất bại");
+      console.error('Register error:', error);
+      toast.error(error?.data?.message || 'Đăng ký thất bại');
     }
   };
 
