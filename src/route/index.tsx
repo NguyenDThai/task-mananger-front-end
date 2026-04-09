@@ -2,7 +2,7 @@ import { createBrowserRouter } from 'react-router-dom';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
 import Home from '../pages/Home/Home';
-import AuthWrapper from '../components/auth/AuthWrapper';
+import { AuthWrapper } from '../components';
 
 export const router = createBrowserRouter([
   {

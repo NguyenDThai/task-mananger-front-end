@@ -1,9 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import SideBar from '../../components/share/SideBar';
-import RenderProfile from '../../components/profile/RenderProfile';
-import KanbanUi from '../../components/kanban/KanbanUi';
-import MyTask from '../../components/list/MyTask';
+import { SideBar, RenderProfile, KanbanUi, MyTask } from '../../components';
 import { Bell, Search } from 'lucide-react';
 import type { RootState } from '../../redux/store';
 
