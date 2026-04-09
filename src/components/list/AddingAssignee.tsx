@@ -1,13 +1,13 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Search, Check, CircleX } from 'lucide-react';
-import { useGetUsersQuery } from '../redux/api/authApi';
-import { useUpdateTaskMutation } from '../redux/api/taskApi';
-import { setUsers } from '../redux/slides/user/userSlide';
-import type { ProjectTask, User } from '../types';
+import { useGetUsersQuery } from '../../redux/api/authApi';
+import { useUpdateTaskMutation } from '../../redux/api/taskApi';
+import { setUsers } from '../../redux/slides/user/userSlide';
+import type { ProjectTask, User } from '../../types';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../redux/store';
-import { updateTaskLocal } from '../redux/slides/task/taskSlide';
+import type { RootState } from '../../redux/store';
+import { updateTaskLocal } from '../../redux/slides/task/taskSlide';
 
 interface AddingAssigneeProps {
   task: ProjectTask;

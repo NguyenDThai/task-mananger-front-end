@@ -1,7 +1,7 @@
 import { Archive, ArrowRight, Copy, Star, Trash2, X } from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { useBulkDeleteTasksMutation } from '../redux/api/taskApi';
-import { bulkDeleteLocal } from '../redux/slides/task/taskSlide';
+import { useBulkDeleteTasksMutation } from '../../redux/api/taskApi';
+import { bulkDeleteLocal } from '../../redux/slides/task/taskSlide';
 
 const ModalActionTasks = ({
   selectedTaskIds,

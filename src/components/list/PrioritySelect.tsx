@@ -1,14 +1,16 @@
 import { useRef, useState } from 'react';
-import { useUpdateTaskMutation } from '../redux/api/taskApi';
+import { useUpdateTaskMutation } from '../../redux/api/taskApi';
 import { createPortal } from 'react-dom';
 import { Flame, Flag, type LucideIcon } from 'lucide-react';
 
 export const PrioritySelect = ({
   initialPriority,
   taskId,
+  canEdit = true,
 }: {
   initialPriority: string;
   taskId: string;
+  canEdit?: boolean;
 }) => {
   const [priority, setPriority] = useState(initialPriority);
   const [prevInitialPriority, setPrevInitialPriority] =
@@ -58,6 +60,7 @@ export const PrioritySelect = ({
   const CurrentIcon = current.icon;
 
   const handleOpen = () => {
+    if (!canEdit) return;
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setCoords({
@@ -76,7 +79,7 @@ export const PrioritySelect = ({
         <button
           ref={triggerRef}
           onClick={handleOpen}
-          className="flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-50 transition-all active:scale-95 group"
+          className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all active:scale-95 group ${canEdit ? 'hover:bg-gray-50' : 'cursor-not-allowed'}`}
         >
           <CurrentIcon
             size={14}

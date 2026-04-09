@@ -20,10 +20,10 @@ import { SubTaskBlock } from './SubTaskBlock';
 import {
   useUpdateTaskMutation,
   useCreateTaskMutation,
-} from '../redux/api/taskApi';
-import type { ProjectTask, SubTask, TaskUser } from '../types';
+} from '../../redux/api/taskApi';
+import type { ProjectTask, SubTask, TaskUser } from '../../types';
 import { StatusSelect } from './StatusSelect';
-import branchIcon from '../assets/branch.png';
+import branchIcon from '../../assets/branch.png';
 import AddingAssignee from './AddingAssignee';
 import { AssigneeGroup } from './AssigneeGroup';
 
@@ -237,7 +237,7 @@ export const TaskRow = ({
             />
           </div>
           <div
-            className={`absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 ${(() => {
+            className={`absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 ${(() => {
               if (!subtasks || subtasks.length === 0) return 'bg-gray-200';
               if (subtasks.every((s) => s.status === 'None'))
                 return 'bg-gray-200';
@@ -346,12 +346,17 @@ export const TaskRow = ({
           </div>
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
-          <StatusSelect initialStatus={task.status} taskId={task._id} />
+          <StatusSelect
+            initialStatus={task.status}
+            taskId={task._id}
+            canEdit={canEdit}
+          />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
           <input
             type="date"
-            className={`bg-transparent border-none outline-none text-[12px] font-bold tracking-tight w-full text-center cursor-pointer ${(() => {
+            disabled={!canEdit}
+            className={`bg-transparent border-none outline-none text-[12px] font-bold tracking-tight w-full text-center ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed'} ${(() => {
               if (!task.dueDate || task.status === 'Done')
                 return 'text-gray-500';
               const today = new Date();
@@ -384,7 +389,11 @@ export const TaskRow = ({
           />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
-          <PrioritySelect initialPriority={task.priority} taskId={task._id} />
+          <PrioritySelect
+            initialPriority={task.priority}
+            taskId={task._id}
+            canEdit={canEdit}
+          />
         </td>
         <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]">
           <div className="flex flex-wrap gap-1">
@@ -464,6 +473,7 @@ export const TaskRow = ({
               handleQuickAddSubtask={handleQuickAddSubtask}
               selectedTaskIds={selectedTaskIds}
               onToggleSelection={onToggleSelection}
+              canEdit={canEdit}
             />
           </td>
         </tr>

@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SubTask, ProjectTask } from '../types';
+import type { SubTask, ProjectTask } from '../../types';
 import { PrioritySelect } from './PrioritySelect';
 import { EstimatedPicker } from './EstimatedPicker';
 import { Plus, Check, CheckCircle2, Pencil } from 'lucide-react';
@@ -7,7 +7,7 @@ import { StatusSelect } from './StatusSelect';
 import { AssigneeGroup } from './AssigneeGroup';
 import AddingAssignee from './AddingAssignee';
 import { useDispatch } from 'react-redux';
-import { updateTaskLocal } from '../redux/slides/task/taskSlide';
+import { updateTaskLocal } from '../../redux/slides/task/taskSlide';
 
 interface SubTaskBlockProps {
   subtasks: SubTask[];
@@ -24,6 +24,7 @@ interface SubTaskBlockProps {
   handleQuickAddSubtask: (e?: React.FormEvent) => void;
   selectedTaskIds: string[];
   onToggleSelection?: (taskId: string, childrenIds: string[]) => void;
+  canEdit: boolean;
 }
 
 export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
@@ -39,6 +40,7 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
   handleQuickAddSubtask,
   selectedTaskIds,
   onToggleSelection,
+  canEdit,
 }) => {
   const dispatch = useDispatch();
   const [editingSubtaskId, setEditingSubtaskId] = React.useState<string | null>(
@@ -195,15 +197,17 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                           >
                             {sub.name}
                           </span>
-                          <Pencil
-                            size={11}
-                            className="text-gray-300 hover:text-blue-500 cursor-pointer opacity-0 group-hover/cell:opacity-100 transition-opacity ml-2 shrink-0"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingSubtaskId(sub._id || sub.id || null);
-                              setEditedSubtaskName(sub.name);
-                            }}
-                          />
+                          {canEdit && (
+                            <Pencil
+                              size={11}
+                              className="text-gray-300 hover:text-blue-500 cursor-pointer opacity-0 group-hover/cell:opacity-100 transition-opacity ml-2 shrink-0"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setEditingSubtaskId(sub._id || sub.id || null);
+                                setEditedSubtaskName(sub.name);
+                              }}
+                            />
+                          )}
                         </>
                       )}
                     </div>
@@ -214,23 +218,27 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                         assignees={sub.assignees || []}
                         className="scale-90"
                       />
-                      <button
-                        onClick={(e) => {
-                          const rect = e.currentTarget.getBoundingClientRect();
-                          setTriggerRect(rect);
-                          setActiveAssigneeSubtask(sub);
-                          setIsAddingAssignee(true);
-                        }}
-                        className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-all opacity-0 group-hover/sub:opacity-100"
-                      >
-                        <Plus size={12} />
-                      </button>
+                      {canEdit && (
+                        <button
+                          onClick={(e) => {
+                            const rect =
+                              e.currentTarget.getBoundingClientRect();
+                            setTriggerRect(rect);
+                            setActiveAssigneeSubtask(sub);
+                            setIsAddingAssignee(true);
+                          }}
+                          className="w-6 h-6 rounded-full border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-500 transition-all opacity-0 group-hover/sub:opacity-100"
+                        >
+                          <Plus size={12} />
+                        </button>
+                      )}
                     </div>
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
                     <StatusSelect
                       initialStatus={sub.status}
                       taskId={sub._id || sub.id || ''}
+                      canEdit={canEdit}
                     />
                   </td>
                   <td
@@ -245,7 +253,8 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                   >
                     <input
                       type="date"
-                      className="bg-transparent border-none outline-none text-[12px] font-bold tracking-tight w-full text-center cursor-pointer text-inherit"
+                      readOnly={!canEdit}
+                      className={`bg-transparent border-none outline-none text-[12px] font-bold tracking-tight w-full text-center text-inherit ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed'}`}
                       value={
                         sub.dueDate
                           ? new Date(sub.dueDate).toISOString().split('T')[0]
@@ -256,6 +265,7 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
                     <EstimatedPicker
+                      canEdit={canEdit}
                       value={sub.estimated || ''}
                       onUpdate={async (val: string) => {
                         try {
@@ -281,6 +291,7 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
                     <PrioritySelect
                       initialPriority={sub.priority}
                       taskId={sub._id || sub.id || ''}
+                      canEdit={canEdit}
                     />
                   </td>
                   <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]"></td>
@@ -299,37 +310,41 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
 
         {/* Footer Quick Add inside block */}
         <div className="relative p-2.5 bg-gray-50/20 border-t border-gray-100">
-          {isAddingSubtask ? (
-            <form
-              onSubmit={handleQuickAddSubtask}
-              className="flex gap-2 items-center pl-8"
-            >
-              <input
-                autoFocus
-                value={subtaskName}
-                onChange={(e) => setSubtaskName(e.target.value)}
-                onBlur={() => handleQuickAddSubtask()}
-                placeholder="Thêm công việc con mới..."
-                className="flex-1 bg-white border-gray-200 outline-none rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
-              />
-              <button
-                type="submit"
-                className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Check size={14} />
-              </button>
-            </form>
-          ) : (
-            <button
-              onClick={() => setIsAddingSubtask(true)}
-              className="flex items-center gap-2 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-colors pl-8"
-            >
-              <Plus size={14} /> Thêm công việc con...
-            </button>
+          {canEdit && (
+            <>
+              {isAddingSubtask ? (
+                <form
+                  onSubmit={handleQuickAddSubtask}
+                  className="flex gap-2 items-center pl-8"
+                >
+                  <input
+                    autoFocus
+                    value={subtaskName}
+                    onChange={(e) => setSubtaskName(e.target.value)}
+                    onBlur={() => handleQuickAddSubtask()}
+                    placeholder="Thêm công việc con mới..."
+                    className="flex-1 bg-white border-gray-200 outline-none rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
+                  />
+                  <button
+                    type="submit"
+                    className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                  >
+                    <Check size={14} />
+                  </button>
+                </form>
+              ) : (
+                <button
+                  onClick={() => setIsAddingSubtask(true)}
+                  className="flex items-center gap-2 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-colors pl-8"
+                >
+                  <Plus size={14} /> Thêm công việc con...
+                </button>
+              )}
+            </>
           )}
 
           <div
-            className={`absolute left-0 top-0 -bottom-[1px] w-[4px] z-10 transition-colors duration-300 ${(() => {
+            className={`absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 ${(() => {
               if (!subtasks || subtasks.length === 0) return 'bg-gray-200';
               if (subtasks.every((s) => s.status === 'None'))
                 return 'bg-gray-200';
