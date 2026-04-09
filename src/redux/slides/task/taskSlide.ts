@@ -19,28 +19,32 @@ const taskSlide = createSlice({
 
     addTaskLocal: (state, action: PayloadAction<ProjectTask[]>) => {
       action.payload.forEach((newTask) => {
-        // Kiểm tra xem đã tồn tại chưa (ở cấp gốc)
-        const existsRoot = state.tasks.some(
-          (t) => (t._id || t.id) === (newTask._id || newTask.id),
-        );
+        const newId = newTask._id || newTask.id;
 
-        // Có cách viết gọn
+        // Trường hợp subtask
         if (newTask.parentTask) {
-          // Nếu là subtask, tìm cha và nhét vào
           const parent = state.tasks.find(
             (t) => (t._id || t.id) === newTask.parentTask,
           );
-          if (parent) {
-            if (!parent.subtasks) parent.subtasks = [];
-            const subExists = parent.subtasks.some(
-              (st) => (st._id || st.id) === (newTask._id || newTask.id),
-            );
-            if (!subExists) {
-              parent.subtasks.push(newTask);
-            }
-          }
-        } else if (!existsRoot) {
-          // Nếu là task cha và chưa tồn tại
+
+          if (!parent) return;
+
+          parent.subtasks ??= [];
+
+          const isExisted = parent.subtasks.some(
+            (st) => (st._id || st.id) === newId,
+          );
+
+          if (!isExisted) parent.subtasks.push(newTask);
+          return;
+        }
+
+        // Task cha
+        const isExistedRoot = state.tasks.some(
+          (t) => (t._id || t.id) === newId,
+        );
+
+        if (!isExistedRoot) {
           state.tasks.push(newTask);
         }
       });
@@ -53,41 +57,52 @@ const taskSlide = createSlice({
       const { id, data } = action.payload;
 
       // 1. Tìm ở cấp gốc (Task cha)
-      const rootIndex = state.tasks.findIndex((t) => (t._id || t.id) === id);
-      if (rootIndex !== -1) {
-        state.tasks[rootIndex] = { ...state.tasks[rootIndex], ...data };
+      const rootTask = state.tasks.find((t) => (t._id || t.id) === id);
+
+      if (rootTask) {
+        // Cập nhật trực tiếp vào state
+        Object.assign(rootTask, data);
         return;
       }
 
-      // 2. Nếu không thấy, tìm trong Subtasks của từng task cha
-      state.tasks.forEach((parent) => {
-        if (parent.subtasks) {
-          const subIndex = parent.subtasks.findIndex(
-            (st) => (st._id || st.id) === id,
-          );
-          if (subIndex !== -1) {
-            parent.subtasks[subIndex] = {
-              ...parent.subtasks[subIndex],
-              ...data,
-            };
-          }
+      // 2. Tìm trong subtasks
+      for (const parent of state.tasks) {
+        // Nếu task cha không có subtask thì bỏ qua
+        if (!parent.subtasks) continue;
+
+        const subTask = parent.subtasks.find((st) => (st._id || st.id) === id);
+
+        if (subTask) {
+          Object.assign(subTask, data);
+
+          return;
         }
-      });
+      }
     },
 
     deleteTaskLocal: (state, action: PayloadAction<string>) => {
       const id = action.payload;
       // 1. Xóa ở cấp gốc
-      state.tasks = state.tasks.filter((t) => (t._id || t.id) !== id);
+      const rootIndex = state.tasks.findIndex((t) => (t._id || t.id) === id);
 
-      // 2. Xóa trong mảng subtasks của bất kỳ task cha nào
-      state.tasks.forEach((parent) => {
-        if (parent.subtasks) {
-          parent.subtasks = parent.subtasks.filter(
-            (st) => (st._id || st.id) !== id,
-          );
+      // Đã tìm thấy vị trí nào đó trong mảng
+      if (rootIndex !== -1) {
+        state.tasks.splice(rootIndex, 1);
+        return;
+      }
+
+      for (const parent of state.tasks) {
+        if (!parent.subtasks) continue;
+
+        const subIndex = parent.subtasks.findIndex(
+          (t) => (t._id || t.id) === id,
+        );
+
+        if (subIndex !== -1) {
+          parent.subtasks.splice(subIndex, 1);
+          return;
         }
-      });
+      }
     },
 
     bulkDeleteLocal: (state, action: PayloadAction<string[]>) => {

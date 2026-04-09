@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { ProjectTask } from '../../types';
 import {
   addTaskLocal,
@@ -15,7 +14,6 @@ export const taskApi = baseApi.injectEndpoints({
       query: () => ({
         url: '/task',
       }),
-      providesTags: ['Task'],
       // Đồng bộ dữ liệu từ API về Redux Slide
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
         try {
@@ -39,23 +37,6 @@ export const taskApi = baseApi.injectEndpoints({
           const { data: newTask } = await queryFulfilled;
           // 1. Tự động đồng bộ vào Redux Slide cho UI đang hiển thị
           dispatch(addTaskLocal([newTask]));
-
-          // 2. Cập nhật cache thủ công cho RTK Query (chống xung đột khi sync lại)
-          dispatch(
-            taskApi.util.updateQueryData('getTasks', undefined, (draft) => {
-              if (newTask.parentTask) {
-                const parent = draft.tasks.find(
-                  (t) => (t._id || t.id) === newTask.parentTask,
-                );
-                if (parent) {
-                  if (!parent.subtasks) parent.subtasks = [];
-                  parent.subtasks.push(newTask);
-                }
-              } else {
-                draft.tasks.push(newTask);
-              }
-            }),
-          );
         } catch (err) {
           console.error('Failed to sync created task:', err);
         }
@@ -80,60 +61,11 @@ export const taskApi = baseApi.injectEndpoints({
         // 1. Cập nhật Redux Slide ngay lập tức cho UI
         dispatch(updateTaskLocal({ id, data }));
 
-        // 2. Cập nhật cache ngay lap tuc cho RTK Query
-        const patchResult = dispatch(
-          taskApi.util.updateQueryData('getTasks', undefined, (draft) => {
-            let task = draft.tasks.find((t) => (t._id || t.id) === id);
-
-            // Nếu không phải task cha thì tìm trong task con
-            if (!task) {
-              const parent = draft.tasks.find((t) =>
-                t.subtasks?.some(
-                  (st) =>
-                    (typeof st === 'string' ? st : st._id || st.id) === id,
-                ),
-              );
-
-              if (parent) {
-                task = parent.subtasks?.find(
-                  (st) =>
-                    (typeof st === 'string' ? st : st._id || st.id) === id,
-                );
-              }
-            }
-
-            if (!task) return;
-
-            // Cập nhật tất cả các trường dữ liệu
-            Object.assign(
-              task,
-              Object.fromEntries(
-                Object.entries(data).filter(
-                  ([key]) => !['addAssignees', 'removeAssignees'].includes(key),
-                ),
-              ),
-            );
-
-            if (data.addAssignees) {
-              task.assignees = Array.from(
-                new Set([...(task.assignees || []), ...data.addAssignees]),
-              );
-            }
-
-            if (data.removeAssignees) {
-              task.assignees = (task.assignees || []).filter((uid) => {
-                const userId = typeof uid === 'string' ? uid : uid._id || '';
-                return !data.removeAssignees?.includes(userId);
-              });
-            }
-          }),
-        );
-
         try {
           await queryFulfilled;
         } catch (error) {
-          patchResult.undo();
           // Log lỗi nếu cần
+          console.error('Failed to sync updated task:', error);
         }
       },
     }),
@@ -151,9 +83,9 @@ export const taskApi = baseApi.injectEndpoints({
         } catch (error) {
           // Nếu xóa lỗi thì ta phải fetch lại để đảm bảo dữ liệu đúng
           // (Dùng invalidatesTags ở đây là an toàn nhất để sửa lỗi)
+          console.error('Failed to sync deleted task:', error);
         }
       },
-      // invalidatesTags: ['Task'],
     }),
     bulkDeleteTasks: builder.mutation<{ message: string }, { ids: string[] }>({
       query: (data) => ({
@@ -169,9 +101,9 @@ export const taskApi = baseApi.injectEndpoints({
           await queryFulfilled;
         } catch (error) {
           // Log lỗi
+          console.error('Failed to sync bulk deleted tasks:', error);
         }
       },
-      // invalidatesTags: ['Task'],
     }),
   }),
 });
