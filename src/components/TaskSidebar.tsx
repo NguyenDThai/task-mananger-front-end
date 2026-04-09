@@ -76,7 +76,13 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
     }
   }
 
+  const isOwnerOfThisTask = !!(
+    currentUser &&
+    (creatorId === currentUser._id || creatorId === currentUser.id)
+  );
+
   const handleUpdate = async (fields: Partial<ProjectTask>) => {
+    if (!isOwnerOfThisTask) return;
     if (!task) return;
     const taskId = (task._id || task.id) as string;
 
@@ -188,11 +194,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                 <div className="flex-1">
                   <select
                     value={creatorId}
+                    disabled={!isOwnerOfThisTask}
                     onChange={(e) => {
                       setCreatorId(e.target.value);
                       handleUpdate({ createdBy: e.target.value });
                     }}
-                    className="w-full bg-transparent border-none text-sm text-gray-700 focus:ring-0 font-bold p-0 cursor-pointer"
+                    className={`w-full bg-transparent border-none text-sm text-gray-700 focus:ring-0 font-bold p-0 ${
+                      isOwnerOfThisTask
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed'
+                    }`}
                   >
                     <option value="">Unassigned</option>
                     {usersData?.users.map((u) => (
@@ -213,11 +224,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                 <div className="flex-1">
                   <select
                     value={status}
+                    disabled={!isOwnerOfThisTask}
                     onChange={(e) => {
                       setStatus(e.target.value);
                       handleUpdate({ status: e.target.value });
                     }}
-                    className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 cursor-pointer outline-none"
+                    className={`w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 ${
+                      isOwnerOfThisTask
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed'
+                    }`}
                   >
                     <option value="None">None</option>
                     <option value="Doing">Doing</option>
@@ -238,11 +254,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                   <input
                     type="date"
                     value={dueDate}
+                    disabled={!isOwnerOfThisTask}
                     onChange={(e) => {
                       setDueDate(e.target.value);
                       handleUpdate({ dueDate: e.target.value });
                     }}
-                    className="w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 cursor-pointer outline-none"
+                    className={`w-full bg-transparent border-none text-sm font-bold text-gray-700 focus:ring-0 p-0 ${
+                      isOwnerOfThisTask
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed'
+                    }`}
                   />
                 </div>
               </div>
@@ -256,11 +277,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                 <div className="flex-1 text-center">
                   <select
                     value={priority}
+                    disabled={!isOwnerOfThisTask}
                     onChange={(e) => {
                       setPriority(e.target.value);
                       handleUpdate({ priority: e.target.value });
                     }}
-                    className="w-full bg-transparent border-none text-sm font-bold focus:ring-0 p-0 text-gray-700 cursor-pointer outline-none"
+                    className={`w-full bg-transparent border-none text-sm font-bold focus:ring-0 p-0 ${
+                      isOwnerOfThisTask
+                        ? 'cursor-pointer'
+                        : 'cursor-not-allowed'
+                    }`}
                   >
                     <option value="Low">Low</option>
                     <option value="Medium">Medium</option>
@@ -277,6 +303,7 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                 </div>
                 <div className="flex-1">
                   <EstimatedPicker
+                    canEdit={isOwnerOfThisTask}
                     value={estimated}
                     variant="sidebar"
                     onUpdate={(val) => {
@@ -334,13 +361,16 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
               <div className="group flex items-center gap-3 bg-gray-50/50 border border-dashed border-gray-200 rounded-lg p-2.5 focus-within:border-blue-400 focus-within:bg-white transition-all cursor-text mt-2">
                 <Plus size={14} className="text-gray-300" />
                 <input
+                  disabled={!isOwnerOfThisTask}
                   type="text"
                   placeholder={
                     task.parentTask
                       ? 'Thêm mục checklist...'
                       : 'Thêm công việc con mới...'
                   }
-                  className="flex-1 bg-transparent border-none outline-none text-[12px] placeholder:text-gray-300 font-medium"
+                  className={`flex-1 bg-transparent border-none outline-none text-[12px] placeholder:text-gray-300 font-medium ${
+                    isOwnerOfThisTask ? '' : 'cursor-not-allowed'
+                  }`}
                 />
               </div>
             </div>
@@ -376,13 +406,6 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
               Mô tả
             </div>
             <div onClick={() => setIsEditingDescription(true)}>
-              <RichText
-                value={description}
-                onChange={(val) => {
-                  setDescription(val);
-                }}
-                placeholder="Nhập mô tả chi tiết công việc..."
-              />
               {isEditingDescription && (
                 <div className="flex justify-end gap-2 p-2 bg-white border-t border-gray-50">
                   <button
@@ -407,6 +430,13 @@ const TaskSidebar: React.FC<TaskSidebarProps> = ({ task, isOpen, onClose }) => {
                   </button>
                 </div>
               )}
+              <RichText
+                value={description}
+                onChange={(val) => {
+                  setDescription(val);
+                }}
+                placeholder="Nhập mô tả chi tiết công việc..."
+              />
             </div>
           </div>
         </div>

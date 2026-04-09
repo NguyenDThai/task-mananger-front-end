@@ -6,12 +6,14 @@ interface EstimatedPickerProps {
   value: string;
   onUpdate: (newValue: string) => void;
   variant?: 'table' | 'sidebar';
+  canEdit: boolean;
 }
 
 export const EstimatedPicker: React.FC<EstimatedPickerProps> = ({
   value,
   onUpdate,
   variant = 'table',
+  canEdit,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [customValue, setCustomValue] = useState('');
@@ -29,6 +31,7 @@ export const EstimatedPicker: React.FC<EstimatedPickerProps> = ({
 
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!canEdit) return;
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       // Calculate position relative to viewport
@@ -65,8 +68,9 @@ export const EstimatedPicker: React.FC<EstimatedPickerProps> = ({
         ref={triggerRef}
         onClick={handleOpen}
         className={`
-          w-full transition-colors cursor-pointer outline-none hover:bg-gray-100/50 rounded px-1 py-0.5
+          w-full transition-colors outline-none hover:bg-gray-100/50 rounded px-1 py-0.5
           ${variant === 'table' ? 'text-[11px] font-mono text-gray-500 text-center' : 'text-sm font-bold text-gray-700 text-left'}
+          ${canEdit ? 'cursor-pointer' : 'cursor-not-allowed'}
         `}
       >
         {value || (variant === 'table' ? '-' : 'Chọn...')}

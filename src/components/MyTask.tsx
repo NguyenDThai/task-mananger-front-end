@@ -162,7 +162,7 @@ const MyTask = () => {
     }
   };
 
-  // Lấy task cha
+  // Lấy task để hiển thị sidebar
   const currentSelectedTask =
     tasks.find((t: ProjectTask) => t._id === selectedTask?._id) || selectedTask;
 
@@ -264,15 +264,25 @@ const MyTask = () => {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {tasks.map((task: ProjectTask) => (
-              <TaskRow
-                key={task._id || task.id}
-                task={task}
-                onSelectTask={handleOpenSidebar}
-                selectedTaskIds={selectedTaskIds}
-                onToggleSelection={handleToggleTask}
-              />
-            ))}
+            {tasks.map((task: ProjectTask) => {
+              const creatorId =
+                typeof task.createdBy === 'string'
+                  ? task.createdBy
+                  : task.createdBy?._id;
+
+              const isOwnerOfThisTask = creatorId === (me?._id || me?.id);
+
+              return (
+                <TaskRow
+                  key={task._id || task.id}
+                  task={task}
+                  onSelectTask={handleOpenSidebar}
+                  selectedTaskIds={selectedTaskIds}
+                  onToggleSelection={handleToggleTask}
+                  canEdit={!!isOwnerOfThisTask}
+                />
+              );
+            })}
           </tbody>
         </table>
 

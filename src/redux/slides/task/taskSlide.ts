@@ -24,6 +24,7 @@ const taskSlide = createSlice({
           (t) => (t._id || t.id) === (newTask._id || newTask.id),
         );
 
+        // Có cách viết gọn
         if (newTask.parentTask) {
           // Nếu là subtask, tìm cha và nhét vào
           const parent = state.tasks.find(

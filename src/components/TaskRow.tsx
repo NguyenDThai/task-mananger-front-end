@@ -78,12 +78,14 @@ export const TaskRow = ({
   onSelectTask,
   selectedTaskIds = [],
   onToggleSelection,
+  canEdit,
 }: {
   task: ProjectTask | SubTask;
   isSubtask?: boolean;
   onSelectTask?: (task: ProjectTask) => void;
   selectedTaskIds?: string[];
   onToggleSelection?: (taskId: string, childrenIds: string[]) => void;
+  canEdit: boolean;
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
@@ -298,8 +300,8 @@ export const TaskRow = ({
               )}
             </div>
 
-            {/* Quick Actions */}
-            {!isSubtask && (
+            {/* Quick Actions, nếu canEdit === true thì cho sửa và hiển thị 2 icon */}
+            {!isSubtask && canEdit && (
               <div className="flex items-center gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap ml-4">
                 <Pencil
                   size={11}
@@ -367,6 +369,7 @@ export const TaskRow = ({
         </td>
         <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
           <EstimatedPicker
+            canEdit={canEdit}
             value={task.estimated || ''}
             onUpdate={async (val) => {
               try {
