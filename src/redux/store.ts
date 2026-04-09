@@ -6,15 +6,13 @@ import {
 import authReducer from './slides/auth/authSlide';
 import taskReducer from './slides/task/taskSlide';
 import userReducer from './slides/user/userSlide';
-import { authApi } from './api/authApi';
-import { taskApi } from './api/taskApi';
+import { baseApi } from './api/baseApi';
 
 const appReducer = combineReducers({
   auth: authReducer,
   task: taskReducer,
   user: userReducer,
-  [authApi.reducerPath]: authApi.reducer,
-  [taskApi.reducerPath]: taskApi.reducer,
+  [baseApi.reducerPath]: baseApi.reducer,
 });
 
 const rootReducer = (
@@ -31,10 +29,7 @@ const rootReducer = (
 export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) => {
-    return getDefaultMiddleware().concat(
-      authApi.middleware,
-      taskApi.middleware,
-    );
+    return getDefaultMiddleware().concat(baseApi.middleware);
   },
 });
 
