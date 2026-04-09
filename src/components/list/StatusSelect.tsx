@@ -5,9 +5,11 @@ import { createPortal } from 'react-dom';
 export const StatusSelect = ({
   initialStatus,
   taskId,
+  canEdit = true,
 }: {
   initialStatus: string;
   taskId: string;
+  canEdit?: boolean;
 }) => {
   const [status, setStatus] = useState(initialStatus);
   const [prevInitialStatus, setPrevInitialStatus] = useState(initialStatus);
@@ -65,6 +67,7 @@ export const StatusSelect = ({
   const current = statusConfigs[status] || statusConfigs['None'];
 
   const handleOpen = () => {
+    if (!canEdit) return;
     if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       setCoords({
@@ -85,6 +88,7 @@ export const StatusSelect = ({
           className={`
             w-[85px] flex items-center justify-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold transition-all shadow-sm active:scale-95
             ${current.bg} ${current.text}
+            ${canEdit ? '' : 'cursor-not-allowed'}
           `}
         >
           {current.dot && (
