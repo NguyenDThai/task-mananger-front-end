@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react';
 import { Plus, Check } from 'lucide-react';
-import type { ProjectTask } from '../types';
+import type { ProjectTask } from '../../types';
 import { TaskRow } from './TaskRow';
 import TaskSidebar from './TaskSidebar';
 import ModalActionTasks from './ModalActionTasks';
 import SummaryTask from './SummaryTask';
-import { useGetTasksQuery, useCreateTaskMutation } from '../redux/api/taskApi';
-import { useGetMeQuery } from '../redux/api/authApi';
+import {
+  useGetTasksQuery,
+  useCreateTaskMutation,
+} from '../../redux/api/taskApi';
+import { useGetMeQuery } from '../../redux/api/authApi';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../redux/store';
-import { setCredentials } from '../redux/slides/auth/authSlide';
+import type { RootState } from '../../redux/store';
+import { setCredentials } from '../../redux/slides/auth/authSlide';
 
 const MyTask = () => {
   const { isLoading, error } = useGetTasksQuery();

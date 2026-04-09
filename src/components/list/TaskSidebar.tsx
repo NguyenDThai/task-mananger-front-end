@@ -17,15 +17,15 @@ import { EstimatedPicker } from './EstimatedPicker';
 import {
   useUpdateTaskMutation,
   useDeleteTaskMutation,
-} from '../redux/api/taskApi';
-import { useGetUsersQuery } from '../redux/api/authApi';
-import type { ProjectTask, TaskUser } from '../types';
+} from '../../redux/api/taskApi';
+import { useGetUsersQuery } from '../../redux/api/authApi';
+import type { ProjectTask, TaskUser } from '../../types';
 import { useDispatch, useSelector } from 'react-redux';
-import type { RootState } from '../redux/store';
+import type { RootState } from '../../redux/store';
 import {
   updateTaskLocal,
   deleteTaskLocal,
-} from '../redux/slides/task/taskSlide';
+} from '../../redux/slides/task/taskSlide';
 
 interface TaskSidebarProps {
   task: ProjectTask | null;

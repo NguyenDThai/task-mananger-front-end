@@ -1,5 +1,5 @@
 import React from 'react';
-import type { SubTask, ProjectTask } from '../types';
+import type { SubTask, ProjectTask } from '../../types';
 import { PrioritySelect } from './PrioritySelect';
 import { EstimatedPicker } from './EstimatedPicker';
 import { Plus, Check, CheckCircle2, Pencil } from 'lucide-react';
@@ -7,7 +7,7 @@ import { StatusSelect } from './StatusSelect';
 import { AssigneeGroup } from './AssigneeGroup';
 import AddingAssignee from './AddingAssignee';
 import { useDispatch } from 'react-redux';
-import { updateTaskLocal } from '../redux/slides/task/taskSlide';
+import { updateTaskLocal } from '../../redux/slides/task/taskSlide';
 
 interface SubTaskBlockProps {
   subtasks: SubTask[];

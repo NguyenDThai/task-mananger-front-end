@@ -1,5 +1,5 @@
 import React from 'react';
-import type { TaskUser } from '../types';
+import type { TaskUser } from '../../types';
 
 interface AssigneeGroupProps {
   assignees: (TaskUser | string)[];

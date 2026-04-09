@@ -20,10 +20,10 @@ import { SubTaskBlock } from './SubTaskBlock';
 import {
   useUpdateTaskMutation,
   useCreateTaskMutation,
-} from '../redux/api/taskApi';
-import type { ProjectTask, SubTask, TaskUser } from '../types';
+} from '../../redux/api/taskApi';
+import type { ProjectTask, SubTask, TaskUser } from '../../types';
 import { StatusSelect } from './StatusSelect';
-import branchIcon from '../assets/branch.png';
+import branchIcon from '../../assets/branch.png';
 import AddingAssignee from './AddingAssignee';
 import { AssigneeGroup } from './AssigneeGroup';
 

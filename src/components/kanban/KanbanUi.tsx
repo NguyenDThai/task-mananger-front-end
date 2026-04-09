@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Cloud, SquarePen, User, Calendar, Plus } from 'lucide-react';
-import type { ProjectTask } from '../types';
+import type { ProjectTask } from '../../types';
 import { useSelector } from 'react-redux';
-import type { RootState } from '../redux/store';
+import type { RootState } from '../../redux/store';
 import {
   DndContext,
   closestCenter,
@@ -11,7 +11,7 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
-import { useUpdateTaskMutation } from '../redux/api/taskApi';
+import { useUpdateTaskMutation } from '../../redux/api/taskApi';
 import { DroppableColumn } from './DroppableColumn';
 import { DraggableTask } from './DraggableTask';
 import { QuickTaskModal } from './QuickTaskModal';
