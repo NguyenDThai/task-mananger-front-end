@@ -1,18 +1,7 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
-import { env } from '../../config/configEnv';
-
 import type { User } from '../../types';
+import { baseApi } from './baseApi';
 
-export const authApi = createApi({
-  reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: env.apiBaseUrl,
-    prepareHeaders: (headers) => {
-      // In case we want to support token in headers as well
-      return headers;
-    },
-    credentials: 'include',
-  }),
+export const authApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     // login api
     login: builder.mutation({

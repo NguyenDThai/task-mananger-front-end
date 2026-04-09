@@ -1,7 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { ProjectTask } from '../../types';
-import { env } from '../../config/configEnv';
 import {
   addTaskLocal,
   updateTaskLocal,
@@ -9,18 +7,9 @@ import {
   bulkDeleteLocal,
   setTasks,
 } from '../slides/task/taskSlide';
+import { baseApi } from './baseApi';
 
-export const taskApi = createApi({
-  reducerPath: 'taskApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: env.apiBaseUrl,
-    prepareHeaders: (headers) => {
-      // In case we need it, but auth middleware handles it through cookies
-      return headers;
-    },
-    credentials: 'include',
-  }),
-  tagTypes: ['Task'],
+export const taskApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
     getTasks: builder.query<{ tasks: ProjectTask[] }, void>({
       query: () => ({
