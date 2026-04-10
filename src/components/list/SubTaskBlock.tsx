@@ -94,7 +94,7 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
   return (
     <div ref={containerRef} className="flex pl-[44px] py-4 relative">
       {/* Nested Table Card Container */}
-      <div className="flex-1 bg-white border border-gray-200 shadow-sm animate-in slide-in-from-top-1 duration-200 overflow-hidden">
+      <div className="flex-1 bg-white border border-gray-200 animate-in slide-in-from-top-1 duration-200 overflow-hidden">
         {hasSubtasks && (
           <table className="w-full text-left border-collapse table-fixed">
             <thead className="bg-gray-50 border-b border-gray-200">

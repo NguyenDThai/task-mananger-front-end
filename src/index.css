@@ -6,4 +6,10 @@
   --color-status-stuck: rgba(255, 12, 12, 0.125);
   --color-status-pedding: rgba(255, 99, 51, 0.125);
   --color-status-done: rgba(16, 185, 129, 0.125);
+
+  /* Priority Colors */
+  --color-priority-urgent: rgba(220, 38, 38, 0.1);
+  --color-priority-high: rgba(244, 63, 94, 0.1);
+  --color-priority-medium: rgba(245, 158, 11, 0.1);
+  --color-priority-low: rgba(96, 165, 250, 0.1);
 }
