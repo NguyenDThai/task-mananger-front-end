@@ -235,76 +235,78 @@ const MyTask = () => {
       </div>
 
       {/* Grid Table Container */}
-      <div className="overflow-x-auto p-0 pb-32">
-        <table className="w-full text-left border-collapse border-b border-gray-200 min-w-[1300px] table-fixed overflow-hidden rounded-tl-lg shadow-sm">
-          <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-gray-200/50">
-            <tr>
-              <th className="relative px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest">
-                <div className="flex items-center justify-center">
-                  <input
-                    type="checkbox"
-                    checked={
-                      tasks.length > 0 &&
-                      selectedTaskIds.length === getAllIds(tasks).length
-                    }
-                    onChange={handleToggleSelectAll}
-                    className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
+      <div className="p-0 pb-32">
+        <div className="overflow-x-hidden">
+          <table className="w-full text-left border-collapse border-gray-200 min-w-[1300px] table-fixed overflow-hidden rounded-tl-lg shadow-sm">
+            <thead className="bg-gray-50 border-b border-gray-200 sticky top-0 z-10 shadow-gray-200/50">
+              <tr>
+                <th className="relative px-3 py-2 border-r border-gray-100 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest">
+                  <div className="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={
+                        tasks.length > 0 &&
+                        selectedTaskIds.length === getAllIds(tasks).length
+                      }
+                      onChange={handleToggleSelectAll}
+                      className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
+                    />
+                  </div>
+                  <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
+                </th>
+                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
+                  Tên
+                </th>
+                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+                  Phụ Trách
+                </th>
+                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
+                  Trạng Thái
+                </th>
+                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+                  Hạn Chót
+                </th>
+                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+                  Dự Kiến
+                </th>
+                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+                  Ưu Tiên
+                </th>
+                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
+                  Nhãn
+                </th>
+                <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
+                  Hôm Nay
+                </th>
+                <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {sortedTasks.map((task: ProjectTask) => {
+                const creatorId =
+                  typeof task.createdBy === 'string'
+                    ? task.createdBy
+                    : task.createdBy?._id;
+
+                const isOwnerOfThisTask = creatorId === (me?._id || me?.id);
+
+                return (
+                  <TaskRow
+                    key={task._id || task.id}
+                    task={task}
+                    onSelectTask={handleOpenSidebar}
+                    selectedTaskIds={selectedTaskIds}
+                    onToggleSelection={handleToggleTask}
+                    canEdit={!!isOwnerOfThisTask}
                   />
-                </div>
-                <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
-              </th>
-              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
-                Tên
-              </th>
-              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
-                Phụ Trách
-              </th>
-              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
-                Trạng Thái
-              </th>
-              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
-                Hạn Chót
-              </th>
-              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
-                Dự Kiến
-              </th>
-              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
-                Ưu Tiên
-              </th>
-              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
-                Nhãn
-              </th>
-              <th className="px-3 py-2 border-r border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
-                Hôm Nay
-              </th>
-              <th className="px-3 py-2 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px]"></th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-200">
-            {sortedTasks.map((task: ProjectTask) => {
-              const creatorId =
-                typeof task.createdBy === 'string'
-                  ? task.createdBy
-                  : task.createdBy?._id;
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
 
-              const isOwnerOfThisTask = creatorId === (me?._id || me?.id);
-
-              return (
-                <TaskRow
-                  key={task._id || task.id}
-                  task={task}
-                  onSelectTask={handleOpenSidebar}
-                  selectedTaskIds={selectedTaskIds}
-                  onToggleSelection={handleToggleTask}
-                  canEdit={!!isOwnerOfThisTask}
-                />
-              );
-            })}
-          </tbody>
-        </table>
-
-        {/* Footer Quick Add */}
-        <div className="border-t relative p-4 bg-white border-b border-gray-200 rounded-bl-lg overflow-hidden">
+        {/* Thêm nhanh công việc */}
+        <div className="relative p-4 bg-white border-b border-gray-200 rounded-bl-lg overflow-hidden">
           {isAdding ? (
             <form
               onSubmit={handleQuickAdd}

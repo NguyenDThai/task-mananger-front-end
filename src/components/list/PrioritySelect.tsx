@@ -28,29 +28,39 @@ export const PrioritySelect = ({
 
   const priorityConfigs: Record<
     string,
-    { label: string; color: string; icon: LucideIcon; iconColor: string }
+    {
+      label: string;
+      bg: string;
+      text: string;
+      icon: LucideIcon;
+      iconColor: string;
+    }
   > = {
     Urgent: {
       label: 'Urgent',
-      color: 'text-gray-700',
+      bg: 'bg-priority-urgent',
+      text: 'text-red-700',
       iconColor: 'text-red-600',
       icon: Flame,
     },
     High: {
       label: 'High',
-      color: 'text-gray-700',
+      bg: 'bg-priority-high',
+      text: 'text-rose-700',
       iconColor: 'text-rose-500',
       icon: Flag,
     },
     Medium: {
       label: 'Medium',
-      color: 'text-gray-700',
+      bg: 'bg-priority-medium',
+      text: 'text-amber-700',
       iconColor: 'text-amber-500',
       icon: Flag,
     },
     Low: {
       label: 'Low',
-      color: 'text-gray-700',
+      bg: 'bg-priority-low',
+      text: 'text-blue-700',
       iconColor: 'text-blue-400',
       icon: Flag,
     },
@@ -79,15 +89,17 @@ export const PrioritySelect = ({
         <button
           ref={triggerRef}
           onClick={handleOpen}
-          className={`flex items-center gap-1.5 px-2 py-1 rounded transition-all active:scale-95 group ${canEdit ? 'hover:bg-gray-50' : 'cursor-not-allowed'}`}
+          className={`
+            w-[85px] flex items-center justify-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold transition-all shadow-sm active:scale-95 group
+            ${current.bg} ${current.text}
+            ${canEdit ? '' : 'cursor-not-allowed'}
+          `}
         >
           <CurrentIcon
-            size={14}
+            size={12}
             className={`fill-current ${current.iconColor} opacity-80 group-hover:opacity-100 transition-opacity`}
           />
-          <span className="text-[11px] font-bold text-gray-500 capitalize">
-            {current.label}
-          </span>
+          <span className="truncate">{current.label}</span>
         </button>
       </div>
 
@@ -137,7 +149,7 @@ export const PrioritySelect = ({
                       w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all
                       hover:bg-gray-50 active:scale-[0.98]
                       ${priority === key ? 'bg-blue-50/50 text-blue-600' : 'text-slate-600'}
-                    `}
+                      `}
                     >
                       <Icon
                         size={16}
