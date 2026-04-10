@@ -1,32 +1,16 @@
-import { useLocation } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
-import { SideBar, RenderProfile, KanbanUi, MyTask } from '../../components';
+import { SideBar } from '../../components';
 import { Bell, Search } from 'lucide-react';
 import type { RootState } from '../../redux/store';
 
 const Home = () => {
   const { user } = useSelector((state: RootState) => state.auth);
-  const location = useLocation();
-
-  const getActiveView = (path: string) => {
-    switch (path) {
-      case '/kanban':
-        return 'kanban';
-      case '/dashboard':
-        return 'dashboard';
-      case '/profile':
-        return 'profile';
-      default:
-        return 'my-tasks';
-    }
-  };
-
-  const activeView = getActiveView(location.pathname);
 
   return (
     <div className="flex h-screen bg-gray-50/50 font-sans selection:bg-blue-100 selection:text-blue-600">
       {/* Sidebar */}
-      <SideBar activeView={activeView} />
+      <SideBar />
 
       {/* Main Content */}
       <main className="flex-1 flex flex-col overflow-hidden">
@@ -62,18 +46,7 @@ const Home = () => {
         </header>
 
         <div className="flex-1 overflow-y-auto px-10 pb-10">
-          {activeView === 'my-tasks' && <MyTask />}
-          {activeView === 'kanban' && <KanbanUi />}
-          {activeView === 'profile' && <RenderProfile user={user} />}
-          {activeView === 'dashboard' && (
-            <div className="flex flex-col items-center justify-center h-full text-center space-y-4 text-gray-300">
-              <span className="text-8xl">📊</span>
-              <h3 className="text-2xl font-black">Dashboard View</h3>
-              <p className="font-bold">
-                Summary statistics will be displayed here.
-              </p>
-            </div>
-          )}
+          <Outlet />
         </div>
       </main>
     </div>

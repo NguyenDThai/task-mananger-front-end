@@ -1,18 +1,36 @@
-import { LogOut } from 'lucide-react';
+import {
+  CircleUserRound,
+  Landmark,
+  LayoutDashboard,
+  LogOut,
+  Zap,
+} from 'lucide-react';
 import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useLogoutMutation } from '../../redux/api/authApi';
 import { logout as logoutAction } from '../../redux/slides/auth/authSlide';
 import { toast } from 'react-toastify';
 
-interface SideBarProps {
-  activeView: string;
-}
-
-const SideBar = ({ activeView }: SideBarProps) => {
+const SideBar = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [logoutApi] = useLogoutMutation();
+  const location = useLocation();
+
+  const getActiveView = (pathName: string) => {
+    switch (pathName) {
+      case '/kanban':
+        return 'kanban';
+      case '/dashboard':
+        return 'dashboard';
+      case '/profile':
+        return 'profile';
+      default:
+        return 'my-tasks';
+    }
+  };
+
+  const activeView = getActiveView(location.pathname);
 
   const handleNavClick = (viewId: string) => {
     const paths: Record<string, string> = {
@@ -55,9 +73,13 @@ const SideBar = ({ activeView }: SideBarProps) => {
           </p>
           <div className="space-y-2">
             {[
-              { id: 'my-tasks', label: 'My Tasks', icon: '🏢' },
-              { id: 'kanban', label: 'Kanban Board', icon: '📋' },
-              { id: 'dashboard', label: 'General View', icon: '⚡' },
+              { id: 'my-tasks', label: 'My Tasks', icon: <Landmark /> },
+              {
+                id: 'kanban',
+                label: 'Kanban Board',
+                icon: <LayoutDashboard />,
+              },
+              { id: 'dashboard', label: 'General View', icon: <Zap /> },
             ].map((item) => (
               <button
                 key={item.id}
@@ -89,7 +111,9 @@ const SideBar = ({ activeView }: SideBarProps) => {
                   : 'text-gray-400 hover:bg-gray-50 hover:text-gray-700'
               }`}
             >
-              <span className="text-xl">👤</span>
+              <span className="text-xl">
+                <CircleUserRound />
+              </span>
               <span>Profile Settings</span>
             </button>
             <button
