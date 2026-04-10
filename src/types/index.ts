@@ -44,4 +44,5 @@ export interface SubTask {
 export interface ProjectTask extends SubTask {
   subtasks?: SubTask[];
   labels?: string[];
+  position?: number;
 }
