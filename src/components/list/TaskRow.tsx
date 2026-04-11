@@ -222,7 +222,7 @@ export const TaskRow = ({
         className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors ${isSubtask ? 'bg-white' : 'bg-white'}`}
       >
         {/* Main Checkbox */}
-        <td className="px-3 py-2 border-r border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
+        <td className="px-3 py-2 border-r border-b border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
           {/* Status color indicator bar */}
           <div className="flex items-center justify-center">
             <input
@@ -249,7 +249,7 @@ export const TaskRow = ({
         </td>
 
         {/* Task Name and Toggle */}
-        <td className="px-3 py-2 border-r border-gray-200">
+        <td className="px-3 py-2 border-r border-b border-gray-200">
           <div className="flex items-center justify-between group/cell h-full pr-2">
             <div className="flex items-center gap-2">
               {hasSubtasks && (
@@ -327,7 +327,7 @@ export const TaskRow = ({
         </td>
 
         {/* Standard Columns */}
-        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
+        <td className="px-3 py-2 border-r border-b border-gray-200 whitespace-nowrap text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
           <div className="flex items-center gap-2 justify-center group/assignee">
             <button
               onClick={(e) => {
@@ -345,14 +345,14 @@ export const TaskRow = ({
             />
           </div>
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
+        <td className="px-3 py-2 border-r border-b border-gray-200 whitespace-nowrap align-middle w-[140px] min-w-[140px] max-w-[140px]">
           <StatusSelect
             initialStatus={task.status}
             taskId={task._id}
             canEdit={canEdit}
           />
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 whitespace-nowrap text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
+        <td className="px-3 py-2 border-r border-b border-gray-200 whitespace-nowrap text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
           <input
             type="date"
             disabled={!canEdit}
@@ -372,7 +372,7 @@ export const TaskRow = ({
             onChange={handleUpdateDueDate}
           />
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
+        <td className="px-3 py-2 border-r border-b border-gray-200 text-center align-middle w-[110px] min-w-[110px] max-w-[110px]">
           <EstimatedPicker
             canEdit={canEdit}
             value={task.estimated || ''}
@@ -388,14 +388,14 @@ export const TaskRow = ({
             }}
           />
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
+        <td className="px-3 py-2 border-r border-b border-gray-200 text-center align-middle w-[120px] min-w-[120px] max-w-[120px]">
           <PrioritySelect
             initialPriority={task.priority}
             taskId={task._id}
             canEdit={canEdit}
           />
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]">
+        <td className="px-3 py-2 border-r border-b border-gray-200 align-middle w-[160px] min-w-[160px] max-w-[160px]">
           <div className="flex flex-wrap gap-1">
             {'labels' in task &&
               task.labels?.map((l) => (
@@ -408,13 +408,13 @@ export const TaskRow = ({
               ))}
           </div>
         </td>
-        <td className="px-3 py-2 border-r border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
+        <td className="px-3 py-2 border-r border-b border-gray-200 text-center align-middle w-[60px] min-w-[60px] max-w-[60px]">
           <CheckCircle2
             size={16}
             className={`mx-auto ${task.status === 'Done' ? 'text-emerald-500' : 'text-gray-100'}`}
           />
         </td>
-        <td className="px-3 py-2 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]">
+        <td className="px-3 py-2 border-b border-gray-200 text-center text-gray-300 align-middle w-[40px] min-w-[40px] max-w-[40px]">
           <MoreHorizontal
             size={14}
             className="mx-auto opacity-0 group-hover:opacity-100 cursor-pointer"
