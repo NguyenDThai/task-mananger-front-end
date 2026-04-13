@@ -40,19 +40,19 @@ const RenderProfile = ({ user }: { user: User | null }) => {
         </div>
       </div>
 
-      <div className="mt-12 grid grid-cols-3 gap-8 pt-8 px-6">
+      <div className="mt-12 pt-8 px-6">
         <div className="col-span-2 space-y-8">
           <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl space-y-8">
             <h3 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <span className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-blue-600">
                 👤
               </span>
-              Personal Information
+              Thông tin của bạn
             </h3>
             <div className="grid grid-cols-2 gap-10">
               <div className="space-y-2">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                  Full Name
+                  Họ và tên
                 </label>
                 <p className="text-lg font-bold text-gray-800 bg-gray-50 px-4 py-3 rounded-2xl">
                   {user?.name || 'N/A'}
@@ -60,62 +60,12 @@ const RenderProfile = ({ user }: { user: User | null }) => {
               </div>
               <div className="space-y-2">
                 <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                  Email Address
+                  Địa chỉ email
                 </label>
                 <p className="text-lg font-bold text-gray-800 bg-gray-50 px-4 py-3 rounded-2xl">
                   {user?.email || 'N/A'}
                 </p>
               </div>
-              <div className="space-y-2">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                  Phone Number
-                </label>
-                <p className="text-lg font-bold text-gray-800 bg-gray-50 px-4 py-3 rounded-2xl">
-                  +84 987 654 321
-                </p>
-              </div>
-              <div className="space-y-2">
-                <label className="text-xs font-black text-gray-400 uppercase tracking-widest">
-                  Total Achievements
-                </label>
-                <div className="flex gap-2">
-                  <span className="bg-yellow-100 text-yellow-700 px-3 py-1 rounded-lg text-xs font-bold">
-                    Top 5%
-                  </span>
-                  <span className="bg-indigo-100 text-indigo-700 px-3 py-1 rounded-lg text-xs font-bold">
-                    Fast Learner
-                  </span>
-                </div>
-              </div>
-            </div>
-            <button className="w-full bg-linear-to-r from-blue-600 to-blue-700 text-white py-4 rounded-3xl font-black shadow-xl shadow-blue-500/30 hover:scale-[1.02] active:scale-95 transition-all">
-              Update Profile Data
-            </button>
-          </div>
-        </div>
-
-        <div className="space-y-8">
-          <div className="bg-white p-10 rounded-[3rem] border border-gray-100 shadow-xl">
-            <h3 className="text-2xl font-bold text-gray-900 mb-6">Stats</h3>
-            <div className="space-y-6">
-              {[
-                { l: 'Tasks Completed', v: '85%', c: 'bg-blue-600' },
-                { l: 'Work Efficiency', v: '92%', c: 'bg-emerald-500' },
-                { l: 'Team Feedback', v: '100%', c: 'bg-amber-500' },
-              ].map((s) => (
-                <div key={s.l} className="space-y-2">
-                  <div className="flex justify-between text-xs font-black text-gray-500 uppercase tracking-widest">
-                    <span>{s.l}</span>
-                    <span>{s.v}</span>
-                  </div>
-                  <div className="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className={`h-full ${s.c}`}
-                      style={{ width: s.v }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
             </div>
           </div>
         </div>

@@ -35,11 +35,11 @@ const KanbanUi = () => {
 
   // 3. Cấu hình 5 cột tương ứng với 5 enum status
   const columns = [
-    { title: 'Backlog', status: 'None' },
-    { title: 'To Do', status: 'Pending' },
-    { title: 'In Progress', status: 'Doing' },
-    { title: 'Review', status: 'Stuck' },
-    { title: 'Done', status: 'Done' },
+    { title: 'Tồn đọng', status: 'None' },
+    { title: 'Phải làm', status: 'Pending' },
+    { title: 'Đang tiến hành', status: 'Doing' },
+    { title: 'Chờ phê duyệt', status: 'Stuck' },
+    { title: 'Hoàn thành', status: 'Done' },
   ];
 
   // Cấu hình sensor để tránh xung đột với click sự kiện khác
@@ -140,7 +140,7 @@ const KanbanUi = () => {
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 px-4 md:px-6">
             <div>
               <h2 className="text-2xl md:text-3xl font-bold text-gray-900 tracking-tight">
-                Project Board
+                Tất cả nhiệm vụ
               </h2>
               <p className="text-gray-500 text-xs md:text-sm font-medium italic">
                 Kéo thả các thẻ để cập nhật tiến độ công việc.
@@ -154,7 +154,7 @@ const KanbanUi = () => {
                 size={18}
                 className="group-hover:rotate-90 transition-transform duration-300"
               />
-              Quick Task
+              Tạo nhiệm vụ
             </button>
           </div>
 
