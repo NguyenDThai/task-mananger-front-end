@@ -1,25 +1,29 @@
 import { useState } from 'react';
 import type { User } from '../../types';
 import { useUpdateAvatarMutation } from '../../redux/api/userApi';
+import AvatarAdjustmentModal from './AvatarAdjustmentModal';
 
 const RenderProfile = ({ user }: { user: User | null }) => {
-  const [updateAvatar, { isLoading }] = useUpdateAvatarMutation();
+  const [, { isLoading }] = useUpdateAvatarMutation();
   const [isHovered, setIsHovered] = useState(false);
+  const [isAdjustmentModalOpen, setIsAdjustmentModalOpen] = useState(false);
+  const [selectedImageSource, setSelectedImageSource] = useState<string>('');
 
   const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?._id) return;
 
     try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-
-      await updateAvatar({
-        userId: user._id,
-        file: formData,
-      }).unwrap();
+      // Create a data URL for the image preview
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const imageSource = event.target?.result as string;
+        setSelectedImageSource(imageSource);
+        setIsAdjustmentModalOpen(true);
+      };
+      reader.readAsDataURL(file);
     } catch (error) {
-      console.error('Failed to update avatar:', error);
+      console.error('Failed to load image:', error);
     }
   };
 
@@ -27,7 +31,7 @@ const RenderProfile = ({ user }: { user: User | null }) => {
     <div className="max-w-4xl mx-auto py-8 animate-fade-in space-y-8">
       <div className="relative h-64 bg-linear-to-br from-blue-600 to-indigo-700 rounded-[3rem] shadow-2xl shadow-blue-500/20 overflow-hidden">
         <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-10"></div>
-        <div className="absolute -bottom-16 left-12 flex items-end space-x-8">
+        <div className="absolute top-1/2 -translate-y-1/2 left-12 flex items-end space-x-8">
           <div className="group relative">
             {/* Interactive Avatar Area */}
             <input
@@ -56,10 +60,10 @@ const RenderProfile = ({ user }: { user: User | null }) => {
                 </div>
               )}
               <div
-                className={`absolute inset-0 bg-black/40 ${isHovered || isLoading ? 'opacity-100' : 'opacity-0'} flex items-center justify-center transition-opacity rounded-4xl`}
+                className={`absolute inset-0 bg-black/40 ${isHovered ? 'opacity-100' : 'opacity-0'} flex items-center justify-center transition-opacity rounded-4xl`}
               >
                 <span className="text-white text-xs font-bold uppercase tracking-widest">
-                  {isLoading ? '⏳ Uploading...' : '📷 Change Avatar'}
+                  📷 Change Avatar
                 </span>
               </div>
             </label>
@@ -79,7 +83,7 @@ const RenderProfile = ({ user }: { user: User | null }) => {
             </h2>
             <p className="text-blue-100 font-semibold tracking-wide flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
-              Online Status • Senior Developer
+              Online Status • Handsome Developer
             </p>
           </div>
         </div>
@@ -115,6 +119,13 @@ const RenderProfile = ({ user }: { user: User | null }) => {
           </div>
         </div>
       </div>
+
+      <AvatarAdjustmentModal
+        isOpen={isAdjustmentModalOpen}
+        onClose={() => setIsAdjustmentModalOpen(false)}
+        user={user}
+        imageSource={selectedImageSource}
+      />
     </div>
   );
 };
