@@ -4,7 +4,7 @@ import { Search, Check, CircleX } from 'lucide-react';
 import { useGetUsersQuery } from '../../redux/api/authApi';
 import { useUpdateTaskMutation } from '../../redux/api/taskApi';
 import { setUsers } from '../../redux/slides/user/userSlide';
-import type { ProjectTask, User } from '../../types';
+import type { ProjectTask, User, TaskUser } from '../../types';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
 import { updateTaskLocal } from '../../redux/slides/task/taskSlide';
@@ -154,14 +154,36 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
     // Nếu là false thì thêm, nếu là true thì xóa
     const isAlreadyAssigned = assigneeIds.includes(userId);
 
-    // Chuẩn bị dữ liệu để dispatch local
-    const newAssignees = isAlreadyAssigned
-      ? assigneeIds.filter((id) => id !== userId) // Remove
-      : [...assigneeIds, userId]; // Add
+    // Tìm user được chọn để lấy avatar
+    const selectedUser = usersData?.find(
+      (u: User) => (u._id || u.id) === userId,
+    );
+
+    let newAssignees: (string | TaskUser)[];
+
+    if (isAlreadyAssigned) {
+      // Remove: lọc ra những assignee không phải userId này
+      newAssignees = (task.assignees || []).filter((a) => {
+        const aId = typeof a === 'string' ? a : a._id;
+        return aId !== userId;
+      }) as (string | TaskUser)[];
+    } else {
+      // Add: thêm user object (kèm avatar) vào danh sách
+      const taskUser: TaskUser = {
+        _id: selectedUser?._id || selectedUser?.id,
+        name: selectedUser?.name || 'Unknown',
+        avatar: selectedUser?.avatar || '',
+      };
+
+      newAssignees = [...(task.assignees || []), taskUser];
+    }
 
     // Cập nhật local store ngay lập tức để UI không bị delay
     dispatch(
-      updateTaskLocal({ id: taskId, data: { assignees: newAssignees } }),
+      updateTaskLocal({
+        id: taskId,
+        data: { assignees: newAssignees },
+      }),
     );
 
     try {

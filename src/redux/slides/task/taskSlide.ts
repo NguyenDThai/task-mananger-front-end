@@ -178,6 +178,38 @@ const taskSlide = createSlice({
     clearTasks: (state) => {
       state.tasks = [];
     },
+
+    updateAssigneeAvatarLocal: (
+      state,
+      action: PayloadAction<{ userId: string; avatar: string }>,
+    ) => {
+      const { userId, avatar } = action.payload;
+
+      // Cập nhật avatar trong tất cả tasks
+      state.tasks.forEach((task) => {
+        // Cập nhật assignees của task cha
+        if (task.assignees && Array.isArray(task.assignees)) {
+          task.assignees.forEach((assignee) => {
+            if (typeof assignee === 'object' && assignee._id === userId) {
+              assignee.avatar = avatar;
+            }
+          });
+        }
+
+        // Cập nhật assignees của subtasks
+        if (task.subtasks && Array.isArray(task.subtasks)) {
+          task.subtasks.forEach((subtask) => {
+            if (subtask.assignees && Array.isArray(subtask.assignees)) {
+              subtask.assignees.forEach((assignee) => {
+                if (typeof assignee === 'object' && assignee._id === userId) {
+                  assignee.avatar = avatar;
+                }
+              });
+            }
+          });
+        }
+      });
+    },
   },
 });
 
@@ -190,6 +222,7 @@ export const {
   deleteTaskLocal,
   bulkDeleteLocal,
   clearTasks,
+  updateAssigneeAvatarLocal,
 } = taskSlide.actions;
 
 export default taskSlide.reducer;
