@@ -1,11 +1,8 @@
 import { useState } from 'react';
-import { useDispatch } from 'react-redux';
 import type { User } from '../../types';
-import { useUpdateAvatarMutation } from '../../redux/api/authApi';
-import { setCredentials } from '../../redux/slides/auth/authSlide';
+import { useUpdateAvatarMutation } from '../../redux/api/userApi';
 
 const RenderProfile = ({ user }: { user: User | null }) => {
-  const dispatch = useDispatch();
   const [updateAvatar, { isLoading }] = useUpdateAvatarMutation();
   const [isHovered, setIsHovered] = useState(false);
 
@@ -17,13 +14,10 @@ const RenderProfile = ({ user }: { user: User | null }) => {
       const formData = new FormData();
       formData.append('avatar', file);
 
-      const result = await updateAvatar({
+      await updateAvatar({
         userId: user._id,
         file: formData,
       }).unwrap();
-
-      // Cập nhật Redux state với user mới
-      dispatch(setCredentials({ user: result.user }));
     } catch (error) {
       console.error('Failed to update avatar:', error);
     }
