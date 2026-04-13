@@ -48,6 +48,11 @@ export const taskApi = baseApi.injectEndpoints({
         }
       },
     }),
+
+    getTaskStats: builder.query<Record<string, number>, void>({
+      query: () => '/task/stats',
+      providesTags: ['Task'],
+    }),
     createTask: builder.mutation<ProjectTask, Partial<ProjectTask>>({
       query: (data) => ({
         url: '/task',
@@ -134,6 +139,7 @@ export const taskApi = baseApi.injectEndpoints({
 
 export const {
   useGetTasksQuery,
+  useGetTaskStatsQuery,
   useCreateTaskMutation,
   useUpdateTaskMutation,
   useDeleteTaskMutation,
