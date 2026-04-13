@@ -191,10 +191,11 @@ const MyTask = () => {
     );
   }
 
+  /* Tạm thời ẩn
   // Định nghĩa thứ tự trạng thái giống như bên Kanban để đồng nhất việc sắp xếp
   const statusOrder = ['None', 'Pending', 'Doing', 'Stuck', 'Done'];
 
-  // Sắp xếp tasks: ưu tiên theo trạng thái, sau đó mới đến position
+  // // Sắp xếp tasks: ưu tiên theo trạng thái, sau đó mới đến position
   const sortedTasks = [...tasks].sort((a, b) => {
     const aStatusIndex = statusOrder.indexOf(a.status);
     const bStatusIndex = statusOrder.indexOf(b.status);
@@ -204,6 +205,7 @@ const MyTask = () => {
     }
     return (a.position || 0) - (b.position || 0);
   });
+  */
 
   return (
     <div className="bg-white min-h-screen relative overflow-x-hidden">
@@ -279,7 +281,7 @@ const MyTask = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200">
-              {sortedTasks.map((task: ProjectTask) => {
+              {tasks.map((task: ProjectTask) => {
                 const creatorId =
                   typeof task.createdBy === 'string'
                     ? task.createdBy

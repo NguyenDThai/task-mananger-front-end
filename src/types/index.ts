@@ -45,4 +45,6 @@ export interface ProjectTask extends SubTask {
   subtasks?: SubTask[];
   labels?: string[];
   position?: number;
+  prevPos?: number | null;
+  nextPos?: number | null;
 }

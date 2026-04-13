@@ -4,6 +4,10 @@ import type { ProjectTask } from '../../types';
 import { useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
 import {
+  calculateNewPosition,
+  roundPosition,
+} from '../../utils/positionCalculator';
+import {
   DndContext,
   closestCenter,
   type DragEndEvent,
@@ -73,14 +77,16 @@ const KanbanUi = () => {
     const newStatus = overTask ? overTask.status : overId;
 
     // Lấy danh sách task trong column đích
-    const columnTasks = tasks
-      .filter((t) => t.status === newStatus && getId(t) !== activeId)
-      .sort((a, b) => (a.position || 0) - (b.position || 0));
+    const columnTasks = tasks.filter(
+      (t) => t.status === newStatus && getId(t) !== activeId,
+    );
 
     // Nếu thả vào vùng trống thì xuống dưới
     if (!overTask) {
       const last = columnTasks[columnTasks.length - 1];
-      const newPosition = last ? (last.position || 0) + 1 : 1;
+      // Sử dụng calculateNewPosition với prevPos = last position, nextPos = null
+      const prevPos = last ? last.position || null : null;
+      const newPosition = roundPosition(calculateNewPosition(prevPos, null));
 
       updateTask({
         id: activeId,
@@ -95,33 +101,23 @@ const KanbanUi = () => {
     );
     if (overIndex === -1) return;
 
-    // Lấy prev/next
+    // Lấy task trước và sau task được hover
     const prev = columnTasks[overIndex - 1];
+    const next = columnTasks[overIndex];
 
-    const next = columnTasks[overIndex + 1];
+    // Tính vị trí mới dựa trên prev/next position
+    const prevPos = prev ? prev.position || null : null;
+    const nextPos = next ? next.position || null : null;
+    const newPosition = roundPosition(calculateNewPosition(prevPos, nextPos));
 
-    const isSameColumn = activeTask.status === newStatus;
-
-    const isMovingDown =
-      isSameColumn && (activeTask.position || 0) < (overTask.position || 0);
-
-    let newPosition: number;
-    // Tính vị trí
-    if (isMovingDown) {
-      newPosition = next
-        ? ((overTask.position || 0) + (next.position || 0)) / 2
-        : (overTask.position || 0) + 1;
-    } else {
-      newPosition = prev
-        ? ((prev.position || 0) + (overTask.position || 0)) / 2
-        : (overTask.position || 0) - 1;
-    }
-
+    // Gửi dữ liệu lên API với prevPos, nextPos để backend kiểm tra rebalance
     updateTask({
       id: activeId,
       data: {
         status: newStatus,
         position: newPosition,
+        prevPos: prevPos,
+        nextPos: nextPos,
       },
     });
   };
