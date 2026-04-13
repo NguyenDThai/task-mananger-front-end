@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Plus, Check } from 'lucide-react';
 import type { ProjectTask } from '../../types';
 import { TaskRow } from './TaskRow';
@@ -32,13 +32,40 @@ import {
 } from '../../utils/positionCalculator';
 
 const MyTask = () => {
-  const { isLoading, error } = useGetTasksQuery();
+  const [page, setPage] = useState(1);
+
+  const { data, isLoading, error, isFetching } = useGetTasksQuery({
+    page,
+    limit: 20,
+  });
+
+  // Derived State: Tính toán trực tiếp, không dùng useEffect để tránh cascading renders
+  const hasMore = data?.pagination?.hasMore ?? true;
+
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
   const dispatch = useDispatch();
 
   // Luôn sử dụng dữ liệu từ Redux Slide làm nguồn chính
   const tasks = useSelector((state: RootState) => state.task.tasks);
+
+  // Observer để nạp thêm dữ liệu (Infinite Scroll)
+  const observer = useRef<IntersectionObserver | null>(null);
+  const lastTaskRef = useCallback(
+    (node: HTMLTableRowElement) => {
+      if (isFetching) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver((entries) => {
+        if (entries[0].isIntersecting && hasMore) {
+          setPage((prevPage) => prevPage + 1);
+        }
+      });
+
+      if (node) observer.current.observe(node);
+    },
+    [isFetching, hasMore],
+  );
 
   // fall back user
   const userFromRedux = useSelector((state: RootState) => state.auth.user);
@@ -271,7 +298,7 @@ const MyTask = () => {
   const currentSelectedTask =
     tasks.find((t: ProjectTask) => t._id === selectedTask?._id) || selectedTask;
 
-  if (isLoading) {
+  if (isLoading && page === 1) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -411,6 +438,20 @@ const MyTask = () => {
                       />
                     );
                   })}
+
+                  {/* Thẻ Sentinel kín đáo ở cuối tbody để kích hoạt load thêm */}
+                  <tr ref={lastTaskRef} className="">
+                    <td colSpan={10} className="text-center border-none">
+                      {isFetching && (
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full font-bold"></div>
+                          <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
+                            Đang tải tiếp...
+                          </span>
+                        </div>
+                      )}
+                    </td>
+                  </tr>
                 </tbody>
               </table>
             </SortableContext>

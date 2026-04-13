@@ -4,21 +4,45 @@ import {
   updateTaskLocal,
   deleteTaskLocal,
   bulkDeleteLocal,
+  appendTasks,
   setTasks,
 } from '../slides/task/taskSlide';
 import { baseApi } from './baseApi';
 
+export interface Pagination {
+  currentPage: number;
+  totalTasks: number;
+  hasMore: boolean;
+}
+
 export const taskApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
-    getTasks: builder.query<{ tasks: ProjectTask[] }, void>({
-      query: () => ({
+    getTasks: builder.query<
+      {
+        tasks: ProjectTask[];
+        pagination: Pagination;
+      },
+      {
+        page?: number;
+        limit?: number;
+      } | void
+    >({
+      query: (params) => ({
         url: '/task',
+        params: {
+          page: params?.page || 1,
+          limit: params?.limit || 20,
+        },
       }),
       // Đồng bộ dữ liệu từ API về Redux Slide
-      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+      async onQueryStarted(params, { dispatch, queryFulfilled }) {
         try {
           const { data } = await queryFulfilled;
-          dispatch(setTasks(data.tasks));
+          if (!params || params.page === 1) {
+            dispatch(setTasks(data.tasks));
+          } else {
+            dispatch(appendTasks(data.tasks));
+          }
         } catch (error) {
           console.error('Failed to sync tasks:', error);
         }

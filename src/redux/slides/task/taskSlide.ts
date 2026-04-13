@@ -40,6 +40,17 @@ const taskSlide = createSlice({
   name: 'taskSlide',
   initialState,
   reducers: {
+    appendTasks: (state, action: PayloadAction<ProjectTask[]>) => {
+      const newTasks = action.payload;
+      const filteredTasks = newTasks.filter(
+        (newTask) =>
+          !state.tasks.some(
+            (existing) =>
+              (existing._id || existing.id) === (newTask._id || newTask.id),
+          ),
+      );
+      state.tasks = [...state.tasks, ...filteredTasks];
+    },
     updatePriorityColor: (
       state,
       action: PayloadAction<{ key: string; color: PriorityColor }>,
@@ -171,6 +182,7 @@ const taskSlide = createSlice({
 });
 
 export const {
+  appendTasks,
   updatePriorityColor,
   setTasks,
   addTaskLocal,
