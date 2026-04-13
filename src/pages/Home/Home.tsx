@@ -30,9 +30,17 @@ const Home = () => {
               <Bell />
             </button>
             <div className="flex items-center gap-3 bg-white p-2 pr-6 rounded-full border border-gray-100 shadow-sm hover:shadow-md transition-shadow cursor-pointer group">
-              <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-black group-hover:rotate-6 transition-transform">
-                {user?.name?.[0].toUpperCase() || 'A'}
-              </div>
+              {user?.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={user.name}
+                  className="w-10 h-10 rounded-full object-cover group-hover:rotate-6 transition-transform"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-black group-hover:rotate-6 transition-transform">
+                  {user?.name?.[0].toUpperCase() || 'A'}
+                </div>
+              )}
               <div>
                 <p className="text-xs font-black text-gray-800">
                   {user?.name || 'User'}

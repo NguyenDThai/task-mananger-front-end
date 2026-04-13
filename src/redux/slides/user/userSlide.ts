@@ -16,9 +16,19 @@ const userSlide = createSlice({
     setUsers: (state, action) => {
       state.users = action.payload;
     },
+    updateUserLocal: (state, action) => {
+      const updatedUser = action.payload;
+      const userIndex = state.users.findIndex(
+        (u) => (u._id || u.id) === (updatedUser._id || updatedUser.id),
+      );
+
+      if (userIndex !== -1) {
+        state.users[userIndex] = { ...state.users[userIndex], ...updatedUser };
+      }
+    },
   },
 });
 
-export const { setUsers } = userSlide.actions;
+export const { setUsers, updateUserLocal } = userSlide.actions;
 
 export default userSlide.reducer;
