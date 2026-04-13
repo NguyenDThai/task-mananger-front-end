@@ -1,18 +1,56 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import type { ProjectTask } from '../../../types';
 
+export type PriorityColor = {
+  bg: string;
+  text: string;
+  icon: string;
+};
+
 type taskState = {
   tasks: ProjectTask[];
+  priorityColors: Record<string, PriorityColor>;
+};
+
+const DEFAULT_PRIORITY_COLORS: Record<string, PriorityColor> = {
+  Urgent: { bg: '#fee2e2', text: '#991b1b', icon: '#dc2626' },
+  High: { bg: '#ffedd5', text: '#9a3412', icon: '#f97316' },
+  Medium: { bg: '#fef3c7', text: '#92400e', icon: '#f59e0b' },
+  Low: { bg: '#dbeafe', text: '#1e40af', icon: '#2563eb' },
+};
+
+// Khi ứng dụng vừa khởi động, kiểm tra xem có dữ liệu màu sắc trong localStorage không
+// Nếu có thì lấy dữ liệu đó, nếu không có thì lấy dữ liệu mặc định
+const getInitialPriorityColors = (): Record<string, PriorityColor> => {
+  const saved = localStorage.getItem('priority_colors');
+  if (!saved) return DEFAULT_PRIORITY_COLORS;
+  try {
+    return { ...DEFAULT_PRIORITY_COLORS, ...JSON.parse(saved) };
+  } catch {
+    return DEFAULT_PRIORITY_COLORS;
+  }
 };
 
 const initialState: taskState = {
   tasks: [],
+  priorityColors: getInitialPriorityColors(),
 };
 
 const taskSlide = createSlice({
   name: 'taskSlide',
   initialState,
   reducers: {
+    updatePriorityColor: (
+      state,
+      action: PayloadAction<{ key: string; color: PriorityColor }>,
+    ) => {
+      const { key, color } = action.payload;
+      state.priorityColors[key] = color;
+      localStorage.setItem(
+        'priority_colors',
+        JSON.stringify(state.priorityColors),
+      );
+    },
     setTasks: (state, action: PayloadAction<ProjectTask[]>) => {
       state.tasks = action.payload;
     },
@@ -133,6 +171,7 @@ const taskSlide = createSlice({
 });
 
 export const {
+  updatePriorityColor,
   setTasks,
   addTaskLocal,
   updateTaskLocal,
