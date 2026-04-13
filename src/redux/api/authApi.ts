@@ -36,6 +36,24 @@ export const authApi = baseApi.injectEndpoints({
         url: '/auth/users',
       }),
     }),
+    // update avatar
+    updateAvatar: builder.mutation<
+      { message: string; user: User },
+      { userId: string; file: FormData }
+    >({
+      query: ({ userId, file }) => ({
+        url: `/auth/update-avatar/${userId}`,
+        method: 'POST',
+        body: file,
+      }),
+      async onQueryStarted(_, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } catch (error) {
+          console.error('Failed to update avatar:', error);
+        }
+      },
+    }),
   }),
 });
 
@@ -45,4 +63,5 @@ export const {
   useGetMeQuery,
   useLogoutMutation,
   useGetUsersQuery,
+  useUpdateAvatarMutation,
 } = authApi;
