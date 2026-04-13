@@ -31,7 +31,7 @@ export const taskApi = baseApi.injectEndpoints({
         url: '/task',
         params: {
           page: params?.page || 1,
-          limit: params?.limit || 15,
+          limit: params?.limit || 20,
         },
       }),
       // Đồng bộ dữ liệu từ API về Redux Slide
