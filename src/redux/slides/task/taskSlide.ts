@@ -62,6 +62,14 @@ const taskSlide = createSlice({
       if (rootTask) {
         // Cập nhật trực tiếp vào state
         Object.assign(rootTask, data);
+
+        // Nếu có cập nhật position, sắp xếp lại danh sách
+        if (data.position !== undefined) {
+          state.tasks.sort((a, b) => {
+            // Sắp xếp theo position
+            return (a.position || 0) - (b.position || 0);
+          });
+        }
         return;
       }
 
@@ -74,6 +82,13 @@ const taskSlide = createSlice({
 
         if (subTask) {
           Object.assign(subTask, data);
+
+          // Nếu có cập nhật position, sắp xếp lại subtasks
+          if (data.position !== undefined) {
+            parent.subtasks.sort(
+              (a, b) => (a.position || 0) - (b.position || 0),
+            );
+          }
 
           return;
         }
