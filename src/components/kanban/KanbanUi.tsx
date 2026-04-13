@@ -58,7 +58,7 @@ const KanbanUi = () => {
   // 4. Xử lý khi kết thúc kéo thả
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
-    if (!over) return;
+    if (!over || active.id === over.id) return;
 
     const getId = (t: ProjectTask) => t._id || t.id;
     // Task đang kéo
@@ -76,38 +76,53 @@ const KanbanUi = () => {
     // Xác định column đích
     const newStatus = overTask ? overTask.status : overId;
 
-    // Lấy danh sách task trong column đích
-    const columnTasks = tasks.filter(
-      (t) => t.status === newStatus && getId(t) !== activeId,
-    );
+    // Lấy và SẮP XẾP danh sách task của cột đích (Bắt buộc phải sort)
+    // Bao gồm cả task đang kéo nếu nó đã ở sẵn trong cột này
+    const sortedColumnTasks = tasks
+      .filter((t) => t.status === newStatus)
+      .sort((a, b) => (a.position || 0) - (b.position || 0));
+
+    let prevPos: number | null = null;
+    let nextPos: number | null = null;
 
     // Nếu thả vào vùng trống thì xuống dưới
     if (!overTask) {
-      const last = columnTasks[columnTasks.length - 1];
-      // Sử dụng calculateNewPosition với prevPos = last position, nextPos = null
-      const prevPos = last ? last.position || null : null;
-      const newPosition = roundPosition(calculateNewPosition(prevPos, null));
+      // TH1: Thả vào vùng trống của cột (Xuống cuối cùng)
+      const lastTask = sortedColumnTasks[sortedColumnTasks.length - 1];
+      prevPos = lastTask?.position ? lastTask.position : null;
+      nextPos = null;
+    } else {
+      // TH2: Thả lên một task khác
+      const oldIndex = sortedColumnTasks.findIndex(
+        (t) => (t._id || t.id) === activeId,
+      );
+      const newIndex = sortedColumnTasks.findIndex(
+        (t) => (t._id || t.id) === overId,
+      );
 
-      updateTask({
-        id: activeId,
-        data: { status: newStatus, position: newPosition },
-      });
-      return;
+      // Sử dụng logic arrayMove để giả lập danh sách mới
+      // Nếu activeTask chưa có trong cột này (đổi cột), ta chèn nó vào vị trí của overTask
+      const newOrderedList = [...sortedColumnTasks];
+      if (oldIndex !== -1) {
+        // Di chuyển nội bộ cột
+        const [movedTask] = newOrderedList.splice(oldIndex, 1);
+        newOrderedList.splice(newIndex, 0, movedTask);
+      } else {
+        // Từ cột khác chuyển sang
+        newOrderedList.splice(newIndex, 0, activeTask);
+      }
+
+      // Tìm vị trí của activeTask trong danh sách giả lập để lấy prev/next thực tế
+      const finalIndex = newOrderedList.findIndex(
+        (t) => (t._id || t.id) === activeId,
+      );
+      const prevTask = newOrderedList[finalIndex - 1];
+      const nextTask = newOrderedList[finalIndex + 1];
+
+      prevPos = prevTask?.position ? prevTask.position : null;
+      nextPos = nextTask?.position ? nextTask.position : null;
     }
 
-    // Tìm index của task bị hover
-    const overIndex = columnTasks.findIndex(
-      (t) => getId(t) === getId(overTask),
-    );
-    if (overIndex === -1) return;
-
-    // Lấy task trước và sau task được hover
-    const prev = columnTasks[overIndex - 1];
-    const next = columnTasks[overIndex];
-
-    // Tính vị trí mới dựa trên prev/next position
-    const prevPos = prev ? prev.position || null : null;
-    const nextPos = next ? next.position || null : null;
     const newPosition = roundPosition(calculateNewPosition(prevPos, nextPos));
 
     // Gửi dữ liệu lên API với prevPos, nextPos để backend kiểm tra rebalance

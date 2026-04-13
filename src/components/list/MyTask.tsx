@@ -8,15 +8,33 @@ import SummaryTask from './SummaryTask';
 import {
   useGetTasksQuery,
   useCreateTaskMutation,
+  useUpdateTaskMutation,
 } from '../../redux/api/taskApi';
 import { useGetMeQuery } from '../../redux/api/authApi';
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../../redux/store';
 import { setCredentials } from '../../redux/slides/auth/authSlide';
+import {
+  DndContext,
+  closestCenter,
+  type DragEndEvent,
+  PointerSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
+import {
+  calculateNewPosition,
+  roundPosition,
+} from '../../utils/positionCalculator';
 
 const MyTask = () => {
   const { isLoading, error } = useGetTasksQuery();
   const [createTask] = useCreateTaskMutation();
+  const [updateTask] = useUpdateTaskMutation();
   const dispatch = useDispatch();
 
   // Luôn sử dụng dữ liệu từ Redux Slide làm nguồn chính
@@ -27,6 +45,90 @@ const MyTask = () => {
 
   const { data: meData } = useGetMeQuery();
   const me = meData?.user || userFromRedux;
+
+  // Cấu hình sensor để tránh xung đột với click sự kiện khác
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8, // Chỉ bắt đầu kéo sau khi di chuyển 8px
+      },
+    }),
+  );
+
+  // Xử lý khi kết thúc kéo thả
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const getId = (t: ProjectTask) => t._id || t.id;
+    // Task đang kéo
+    const activeId = active.id as string;
+    // Task đích
+    const overId = over.id as string;
+
+    // Tìm task đang kéo
+    const activeTask = tasks.find((t) => getId(t) === activeId);
+    if (!activeTask) return;
+
+    // Xác định task đích
+    const overTask = tasks.find((t) => getId(t) === overId);
+
+    // Trong MyTask, không có status column, nên sắp xếp theo position
+    // Lấy và SẮP XẾP danh sách task (Bắt buộc phải sort theo position)
+    const sortedTasks = [...tasks].sort(
+      (a, b) => (a.position || 0) - (b.position || 0),
+    );
+
+    let prevPos: number | null = null;
+    let nextPos: number | null = null;
+
+    // Nếu thả vào vùng trống thì xuống dưới
+    if (!overTask) {
+      // TH1: Thả vào vùng trống (Xuống cuối cùng)
+      const lastTask = sortedTasks[sortedTasks.length - 1];
+      prevPos = lastTask?.position ? lastTask.position : null;
+      nextPos = null;
+    } else {
+      // TH2: Thả lên một task khác
+      const oldIndex = sortedTasks.findIndex(
+        (t) => (t._id || t.id) === activeId,
+      );
+      const newIndex = sortedTasks.findIndex((t) => (t._id || t.id) === overId);
+
+      // Sử dụng logic arrayMove để giả lập danh sách mới
+      const newOrderedList = [...sortedTasks];
+      if (oldIndex !== -1) {
+        // Di chuyển nội bộ
+        const [movedTask] = newOrderedList.splice(oldIndex, 1);
+        newOrderedList.splice(newIndex, 0, movedTask);
+      } else {
+        // Từ vị trí khác chuyển sang
+        newOrderedList.splice(newIndex, 0, activeTask);
+      }
+
+      // Tìm vị trí của activeTask trong danh sách giả lập để lấy prev/next thực tế
+      const finalIndex = newOrderedList.findIndex(
+        (t) => (t._id || t.id) === activeId,
+      );
+      const prevTask = newOrderedList[finalIndex - 1];
+      const nextTask = newOrderedList[finalIndex + 1];
+
+      prevPos = prevTask?.position ? prevTask.position : null;
+      nextPos = nextTask?.position ? nextTask.position : null;
+    }
+
+    const newPosition = roundPosition(calculateNewPosition(prevPos, nextPos));
+
+    // Gửi dữ liệu lên API
+    updateTask({
+      id: activeId,
+      data: {
+        position: newPosition,
+        prevPos: prevPos,
+        nextPos: nextPos,
+      },
+    });
+  };
 
   useEffect(() => {
     if (meData?.user) {
@@ -208,158 +310,169 @@ const MyTask = () => {
   */
 
   return (
-    <div className="bg-white min-h-screen relative overflow-x-hidden">
-      {/* Minimalistic Header */}
-      <div className="flex items-center justify-between px-6 py-5  border-gray-200">
-        <div>
-          <h2 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            Tổng quan không gian làm việc
-            <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase font-black tracking-widest border border-slate-200">
-              Pro
-            </span>
-          </h2>
-          <p className="text-xs text-gray-400 font-medium mt-0.5">
-            Quản lý và theo dõi tiến độ dự án theo thời gian thực
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setIsAdding(true)}
-            className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm transition-all active:scale-95 font-bold text-[12px]"
-          >
-            <Plus size={16} />
-            Thêm nhiệm vụ
-          </button>
-        </div>
-      </div>
-
-      {/* Grid Table Container */}
-      <div className="p-0 pb-32">
-        <div className="overflow-auto max-h-[calc(100vh-200px)] rounded-tl-lg shadow-sm">
-          <table className="w-full text-left border-separate border-spacing-0 min-w-[1300px] table-fixed">
-            <thead className="bg-gray-50 shadow-gray-200/50">
-              <tr>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest rounded-tl-lg">
-                  <div className="flex items-center justify-center">
-                    <input
-                      type="checkbox"
-                      checked={
-                        tasks.length > 0 &&
-                        selectedTaskIds.length === getAllIds(tasks).length
-                      }
-                      onChange={handleToggleSelectAll}
-                      className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
-                    />
-                  </div>
-                  <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
-                  Tên
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
-                  Phụ Trách
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
-                  Trạng Thái
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
-                  Hạn Chót
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
-                  Dự Kiến
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
-                  Ưu Tiên
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
-                  Nhãn
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
-                  Hôm Nay
-                </th>
-                <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px] rounded-tr-lg"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-200">
-              {tasks.map((task: ProjectTask) => {
-                const creatorId =
-                  typeof task.createdBy === 'string'
-                    ? task.createdBy
-                    : task.createdBy?._id;
-
-                const isOwnerOfThisTask = creatorId === (me?._id || me?.id);
-
-                return (
-                  <TaskRow
-                    key={task._id || task.id}
-                    task={task}
-                    onSelectTask={handleOpenSidebar}
-                    selectedTaskIds={selectedTaskIds}
-                    onToggleSelection={handleToggleTask}
-                    canEdit={!!isOwnerOfThisTask}
-                  />
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Thêm nhanh công việc */}
-        <div className="relative p-4 bg-white border-b border-gray-200 rounded-bl-lg overflow-hidden">
-          {isAdding ? (
-            <form
-              onSubmit={handleQuickAdd}
-              className="flex gap-2 items-center pl-8"
-            >
-              <input
-                autoFocus
-                value={taskName}
-                onChange={(e) => setTaskName(e.target.value)}
-                onBlur={() => handleQuickAdd()}
-                placeholder="What needs to be done?"
-                className="flex-1 bg-blue-50/50 border-none outline-none rounded px-3 py-1.5 text-[13px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
-              />
-              <button
-                type="submit"
-                className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
-              >
-                <Check size={14} />
-              </button>
-            </form>
-          ) : (
+    <DndContext
+      sensors={sensors}
+      onDragEnd={handleDragEnd}
+      collisionDetection={closestCenter}
+    >
+      <div className="bg-white min-h-screen relative overflow-x-hidden">
+        {/* Minimalistic Header */}
+        <div className="flex items-center justify-between px-6 py-5  border-gray-200">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
+              Tổng quan không gian làm việc
+              <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase font-black tracking-widest border border-slate-200">
+                Pro
+              </span>
+            </h2>
+            <p className="text-xs text-gray-400 font-medium mt-0.5">
+              Quản lý và theo dõi tiến độ dự án theo thời gian thực
+            </p>
+          </div>
+          <div className="flex gap-2">
             <button
               onClick={() => setIsAdding(true)}
-              className="flex items-center gap-3 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-all tracking-widest group cursor-text"
+              className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm transition-all active:scale-95 font-bold text-[12px]"
             >
-              Thêm công việc
+              <Plus size={16} />
+              Thêm nhiệm vụ
             </button>
-          )}
-          <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
+          </div>
         </div>
 
-        <SummaryTask
-          globalTodoRatio={globalTodoRatio}
-          globalDoingRatio={globalDoingRatio}
-          globalDoneRatio={globalDoneRatio}
-          globalDateRangeText={globalDateRangeText}
+        {/* Grid Table Container */}
+        <div className="p-0 pb-32">
+          <div className="overflow-auto max-h-[calc(100vh-200px)] rounded-tl-lg shadow-sm">
+            <SortableContext
+              items={tasks.map((t) => (t._id || t.id) as string)}
+              strategy={verticalListSortingStrategy}
+            >
+              <table className="w-full text-left border-separate border-spacing-0 min-w-[1300px] table-fixed">
+                <thead className="bg-gray-50 shadow-gray-200/50">
+                  <tr>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest rounded-tl-lg">
+                      <div className="flex items-center justify-center">
+                        <input
+                          type="checkbox"
+                          checked={
+                            tasks.length > 0 &&
+                            selectedTaskIds.length === getAllIds(tasks).length
+                          }
+                          onChange={handleToggleSelectAll}
+                          className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
+                        />
+                      </div>
+                      <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
+                      Tên
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+                      Phụ Trách
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[140px] min-w-[140px] max-w-[140px]">
+                      Trạng Thái
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+                      Hạn Chót
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[110px] min-w-[110px] max-w-[110px]">
+                      Dự Kiến
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[120px] min-w-[120px] max-w-[120px]">
+                      Ưu Tiên
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-left w-[160px] min-w-[160px] max-w-[160px]">
+                      Nhãn
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[60px] min-w-[60px] max-w-[60px]">
+                      Hôm Nay
+                    </th>
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest text-center w-[40px] min-w-[40px] max-w-[40px] rounded-tr-lg"></th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {tasks.map((task: ProjectTask) => {
+                    const creatorId =
+                      typeof task.createdBy === 'string'
+                        ? task.createdBy
+                        : task.createdBy?._id;
+
+                    const isOwnerOfThisTask = creatorId === (me?._id || me?.id);
+
+                    return (
+                      <TaskRow
+                        key={task._id || task.id}
+                        task={task}
+                        onSelectTask={handleOpenSidebar}
+                        selectedTaskIds={selectedTaskIds}
+                        onToggleSelection={handleToggleTask}
+                        canEdit={!!isOwnerOfThisTask}
+                      />
+                    );
+                  })}
+                </tbody>
+              </table>
+            </SortableContext>
+          </div>
+
+          {/* Thêm nhanh công việc */}
+          <div className="relative p-4 bg-white border-b border-gray-200 rounded-bl-lg overflow-hidden">
+            {isAdding ? (
+              <form
+                onSubmit={handleQuickAdd}
+                className="flex gap-2 items-center pl-8"
+              >
+                <input
+                  autoFocus
+                  value={taskName}
+                  onChange={(e) => setTaskName(e.target.value)}
+                  onBlur={() => handleQuickAdd()}
+                  placeholder="What needs to be done?"
+                  className="flex-1 bg-blue-50/50 border-none outline-none rounded px-3 py-1.5 text-[13px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
+                />
+                <button
+                  type="submit"
+                  className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <Check size={14} />
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setIsAdding(true)}
+                className="flex items-center gap-3 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-all tracking-widest group cursor-text"
+              >
+                Thêm công việc
+              </button>
+            )}
+            <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
+          </div>
+
+          <SummaryTask
+            globalTodoRatio={globalTodoRatio}
+            globalDoingRatio={globalDoingRatio}
+            globalDoneRatio={globalDoneRatio}
+            globalDateRangeText={globalDateRangeText}
+          />
+        </div>
+
+        <TaskSidebar
+          key={currentSelectedTask?._id || currentSelectedTask?.id || 'none'}
+          task={currentSelectedTask}
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
         />
+
+        {selectedTaskIds.length > 0 && (
+          <ModalActionTasks
+            selectedTaskIds={selectedTaskIds}
+            setSelectedTaskIds={setSelectedTaskIds}
+            isOwner={isOwner}
+          />
+        )}
       </div>
-
-      <TaskSidebar
-        key={currentSelectedTask?._id || currentSelectedTask?.id || 'none'}
-        task={currentSelectedTask}
-        isOpen={isSidebarOpen}
-        onClose={() => setIsSidebarOpen(false)}
-      />
-
-      {selectedTaskIds.length > 0 && (
-        <ModalActionTasks
-          selectedTaskIds={selectedTaskIds}
-          setSelectedTaskIds={setSelectedTaskIds}
-          isOwner={isOwner}
-        />
-      )}
-    </div>
+    </DndContext>
   );
 };
 

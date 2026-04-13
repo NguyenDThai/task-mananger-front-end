@@ -39,6 +39,9 @@ export interface SubTask {
   createdBy?: TaskUser | string;
   assignees?: (TaskUser | string)[];
   description?: string;
+  position?: number;
+  prevPos?: number | null;
+  nextPos?: number | null;
 }
 
 export interface ProjectTask extends SubTask {

@@ -26,6 +26,8 @@ import { StatusSelect } from './StatusSelect';
 import branchIcon from '../../assets/branch.png';
 import AddingAssignee from './AddingAssignee';
 import { AssigneeGroup } from './AssigneeGroup';
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 // --- Sub-components for Row ---
 
@@ -87,6 +89,17 @@ export const TaskRow = ({
   onToggleSelection?: (taskId: string, childrenIds: string[]) => void;
   canEdit: boolean;
 }) => {
+  // Drag and drop setup
+  const { listeners, setNodeRef, transform, isDragging } = useSortable({
+    id: (task._id || task.id) as string,
+    disabled: isSubtask, // Chỉ cho phép kéo task cha, không kéo subtask
+  });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+  };
+
   const [isExpanded, setIsExpanded] = useState(false);
   const [isAddingSubtask, setIsAddingSubtask] = useState(false);
   const [subtaskName, setSubtaskName] = useState('');
@@ -219,7 +232,10 @@ export const TaskRow = ({
   return (
     <>
       <tr
-        className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors ${isSubtask ? 'bg-white' : 'bg-white'}`}
+        ref={setNodeRef}
+        style={style}
+        className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-grab active:cursor-grabbing ${isSubtask ? 'bg-white' : 'bg-white'} ${isDragging ? 'opacity-50 bg-blue-50' : ''}`}
+        {...listeners}
       >
         {/* Main Checkbox */}
         <td className="px-3 py-2 border-r border-b border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center relative font-mono">
