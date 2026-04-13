@@ -7,7 +7,7 @@ import { updatePriorityColor } from '../../redux/slides/task/taskSlide';
 import type { RootState } from '../../redux/store';
 
 // 1. Định nghĩa các màu mẫu sang trọng (Pastel & Vibrant)
-export const PRESET_COLORS = [
+const PRESET_COLORS = [
   { bg: '#fee2e2', text: '#991b1b', icon: '#dc2626' }, // Red
   { bg: '#ffedd5', text: '#9a3412', icon: '#f97316' }, // Orange
   { bg: '#fef3c7', text: '#92400e', icon: '#f59e0b' }, // Amber
