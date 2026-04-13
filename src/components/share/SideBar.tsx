@@ -73,13 +73,17 @@ const SideBar = () => {
           </p>
           <div className="space-y-2">
             {[
-              { id: 'my-tasks', label: 'My Tasks', icon: <Landmark /> },
+              {
+                id: 'my-tasks',
+                label: 'Công việc của bạn',
+                icon: <Landmark />,
+              },
               {
                 id: 'kanban',
                 label: 'Kanban Board',
                 icon: <LayoutDashboard />,
               },
-              { id: 'dashboard', label: 'General View', icon: <Zap /> },
+              { id: 'dashboard', label: 'Thống kê', icon: <Zap /> },
             ].map((item) => (
               <button
                 key={item.id}
@@ -100,7 +104,7 @@ const SideBar = () => {
         {/* Account User */}
         <div>
           <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 px-4">
-            Account
+            Tài khoản
           </p>
           <div className="space-y-2">
             <button
@@ -114,7 +118,7 @@ const SideBar = () => {
               <span className="text-xl">
                 <CircleUserRound />
               </span>
-              <span>Profile Settings</span>
+              <span>Cài đặt tài khoản</span>
             </button>
             <button
               onClick={handleLogout}
@@ -124,7 +128,7 @@ const SideBar = () => {
                 size={20}
                 className="group-hover:rotate-12 transition-transform"
               />
-              <span>Log out</span>
+              <span>Đăng xuất</span>
             </button>
           </div>
         </div>

@@ -38,7 +38,7 @@ const Home = () => {
                   {user?.name || 'User'}
                 </p>
                 <p className="text-[10px] font-bold text-gray-400">
-                  Pro Member
+                  {user?.email || 'Email'}
                 </p>
               </div>
             </div>

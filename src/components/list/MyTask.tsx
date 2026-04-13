@@ -211,7 +211,7 @@ const MyTask = () => {
       <div className="flex items-center justify-between px-6 py-5  border-gray-200">
         <div>
           <h2 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
-            Workspace Dashboard
+            Tổng quan không gian làm việc
             <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded uppercase font-black tracking-widest border border-slate-200">
               Pro
             </span>
@@ -221,15 +221,12 @@ const MyTask = () => {
           </p>
         </div>
         <div className="flex gap-2">
-          <button className="px-4 py-2 text-gray-500 font-bold text-[12px] hover:text-gray-900 transition-all">
-            Export Excel
-          </button>
           <button
             onClick={() => setIsAdding(true)}
             className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm transition-all active:scale-95 font-bold text-[12px]"
           >
             <Plus size={16} />
-            New Task
+            Thêm nhiệm vụ
           </button>
         </div>
       </div>
