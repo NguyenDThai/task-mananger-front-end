@@ -309,51 +309,50 @@ export const SubTaskBlock: React.FC<SubTaskBlockProps> = ({
         )}
 
         {/* Footer Quick Add inside block */}
-        <div className="relative p-2.5 bg-gray-50/20 border-t border-gray-100">
-          {canEdit && (
-            <>
-              {isAddingSubtask ? (
-                <form
-                  onSubmit={handleQuickAddSubtask}
-                  className="flex gap-2 items-center pl-8"
-                >
-                  <input
-                    autoFocus
-                    value={subtaskName}
-                    onChange={(e) => setSubtaskName(e.target.value)}
-                    onBlur={() => handleQuickAddSubtask()}
-                    placeholder="Thêm công việc con mới..."
-                    className="flex-1 bg-white border-gray-200 outline-none rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
-                  />
-                  <button
-                    type="submit"
-                    className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
-                  >
-                    <Check size={14} />
-                  </button>
-                </form>
-              ) : (
-                <button
-                  onClick={() => setIsAddingSubtask(true)}
-                  className="flex items-center gap-2 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-colors pl-8"
-                >
-                  <Plus size={14} /> Thêm công việc con...
-                </button>
-              )}
-            </>
-          )}
 
-          <div
-            className={`absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 ${(() => {
-              if (!subtasks || subtasks.length === 0) return 'bg-gray-200';
-              if (subtasks.every((s) => s.status === 'None'))
-                return 'bg-gray-200';
-              return subtasks.every((s) => s.status === 'Done')
-                ? 'bg-emerald-500'
-                : 'bg-amber-500';
-            })()}`}
-          />
-        </div>
+        {canEdit && (
+          <div className="relative p-2.5 bg-gray-50/20 border-t border-gray-100">
+            {isAddingSubtask ? (
+              <form
+                onSubmit={handleQuickAddSubtask}
+                className="flex gap-2 items-center pl-8"
+              >
+                <input
+                  autoFocus
+                  value={subtaskName}
+                  onChange={(e) => setSubtaskName(e.target.value)}
+                  onBlur={() => handleQuickAddSubtask()}
+                  placeholder="Thêm công việc con mới..."
+                  className="flex-1 bg-white border-gray-200 outline-none rounded px-3 py-1.5 text-[12px] font-medium text-gray-700 focus:ring-1 focus:ring-blue-400 ring-offset-0 transition-all placeholder:text-gray-300"
+                />
+                <button
+                  type="submit"
+                  className="p-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors shadow-sm"
+                >
+                  <Check size={14} />
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setIsAddingSubtask(true)}
+                className="flex items-center gap-2 text-[11px] font-bold text-gray-400 hover:text-blue-600 transition-colors pl-8"
+              >
+                <Plus size={14} /> Thêm công việc con...
+              </button>
+            )}
+
+            <div
+              className={`absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 ${(() => {
+                if (!subtasks || subtasks.length === 0) return 'bg-gray-200';
+                if (subtasks.every((s) => s.status === 'None'))
+                  return 'bg-gray-200';
+                return subtasks.every((s) => s.status === 'Done')
+                  ? 'bg-emerald-500'
+                  : 'bg-amber-500';
+              })()}`}
+            />
+          </div>
+        )}
 
         {isAddingAssignee && triggerRect && activeAssigneeSubtask && (
           <AddingAssignee
