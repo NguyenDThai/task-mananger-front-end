@@ -303,7 +303,7 @@ const MyTask = () => {
       collisionDetection={closestCenter}
       modifiers={[restrictToVerticalAxis]}
     >
-      <div className="bg-white min-h-screen relative overflow-x-hidden">
+      <div className="bg-white max-h-screen relative overflow-x-hidden">
         <div className="flex items-center justify-between px-6 py-5 border-gray-200">
           <div>
             <h2 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
