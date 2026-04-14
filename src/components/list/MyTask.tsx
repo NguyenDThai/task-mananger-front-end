@@ -341,6 +341,13 @@ const MyTask = () => {
       sensors={sensors}
       onDragEnd={handleDragEnd}
       collisionDetection={closestCenter}
+      autoScroll={{
+        threshold: { x: 0, y: 0.1 },
+        acceleration: 3,
+        canScroll: () => {
+          return true;
+        },
+      }}
     >
       <div className="bg-white min-h-screen relative overflow-x-hidden">
         {/* Minimalistic Header */}
@@ -369,7 +376,7 @@ const MyTask = () => {
 
         {/* Grid Table Container */}
         <div className="p-0 pb-32">
-          <div className="overflow-auto max-h-[calc(100vh-200px)] rounded-tl-lg shadow-sm">
+          <div className="overflow-x-auto overflow-y-hidden rounded-tl-lg shadow-sm">
             <SortableContext
               items={tasks.map((t) => (t._id || t.id) as string)}
               strategy={verticalListSortingStrategy}
