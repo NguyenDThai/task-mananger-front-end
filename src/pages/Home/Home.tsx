@@ -53,7 +53,7 @@ const Home = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-10 pb-10">
+        <div className="flex-1 overflow-y-auto px-10 pb-10 has-[.hidden-y]:overflow-y-hidden">
           <Outlet />
         </div>
       </main>
