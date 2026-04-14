@@ -13,3 +13,41 @@
   --color-priority-medium: rgba(245, 158, 11, 0.1);
   --color-priority-low: rgba(96, 165, 250, 0.1);
 }
+
+/* Custom Hue Slider */
+.hue-slider {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.hue-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: white;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.hue-slider::-webkit-slider-thumb:active {
+  transform: scale(1.2);
+}
+
+.hue-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: white;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  border-radius: 50%;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.hue-slider::-moz-range-thumb:active {
+  transform: scale(1.2);
+}
