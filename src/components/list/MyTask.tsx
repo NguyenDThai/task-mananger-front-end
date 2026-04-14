@@ -328,7 +328,7 @@ const MyTask = () => {
         </div>
 
         <div className="p-0 pb-32">
-          <div className="overflow-x-auto rounded-tl-lg shadow-sm no-scrollbar">
+          <div className="overflow-auto max-h-[calc(100vh-200px)] rounded-tl-lg shadow-sm no-scrollbar">
             <SortableContext
               items={tasks.map((t: ProjectTask) => (t._id || t.id) as string)}
               strategy={verticalListSortingStrategy}
