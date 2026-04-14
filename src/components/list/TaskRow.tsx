@@ -234,7 +234,7 @@ export const TaskRow = ({
       <tr
         ref={setNodeRef}
         style={style}
-        className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-grab active:cursor-grabbing ${isSubtask ? 'bg-white' : 'bg-white'} ${isDragging ? 'opacity-50 bg-blue-50' : ''}`}
+        className={`group border-b border-gray-200 hover:bg-gray-50 transition-colors cursor-grab active:cursor-grabbing ${isSubtask ? 'bg-white' : 'bg-white'} ${isDragging ? 'opacity-0' : 'opacity-100'}`}
         {...listeners}
       >
         {/* Main Checkbox */}

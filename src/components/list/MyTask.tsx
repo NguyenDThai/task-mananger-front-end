@@ -18,14 +18,18 @@ import {
   DndContext,
   closestCenter,
   type DragEndEvent,
+  type DragStartEvent,
   PointerSensor,
   useSensor,
   useSensors,
+  DragOverlay,
+  defaultDropAnimationSideEffects,
 } from '@dnd-kit/core';
 import {
   SortableContext,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
+import { restrictToVerticalAxis } from '@dnd-kit/modifiers';
 import {
   calculateNewPosition,
   roundPosition,
@@ -33,23 +37,21 @@ import {
 
 const MyTask = () => {
   const [page, setPage] = useState(1);
+  const [activeId, setActiveId] = useState<string | null>(null);
 
   const { data, isLoading, error, isFetching } = useGetTasksQuery({
     page,
     limit: 20,
   });
 
-  // Derived State: Tính toán trực tiếp, không dùng useEffect để tránh cascading renders
   const hasMore = data?.pagination?.hasMore ?? true;
 
   const [createTask] = useCreateTaskMutation();
   const [updateTask] = useUpdateTaskMutation();
   const dispatch = useDispatch();
 
-  // Luôn sử dụng dữ liệu từ Redux Slide làm nguồn chính
   const tasks = useSelector((state: RootState) => state.task.tasks);
 
-  // Observer để nạp thêm dữ liệu (Infinite Scroll)
   const observer = useRef<IntersectionObserver | null>(null);
   const lastTaskRef = useCallback(
     (node: HTMLTableRowElement) => {
@@ -67,41 +69,36 @@ const MyTask = () => {
     [isFetching, hasMore],
   );
 
-  // fall back user
   const userFromRedux = useSelector((state: RootState) => state.auth.user);
-
   const { data: meData } = useGetMeQuery();
   const me = meData?.user || userFromRedux;
 
-  // Cấu hình sensor để tránh xung đột với click sự kiện khác
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 8, // Chỉ bắt đầu kéo sau khi di chuyển 8px
+        distance: 8,
       },
     }),
   );
 
-  // Xử lý khi kết thúc kéo thả
+  const handleDragStart = (event: DragStartEvent) => {
+    setActiveId(event.active.id as string);
+  };
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    setActiveId(null);
     if (!over || active.id === over.id) return;
 
     const getId = (t: ProjectTask) => t._id || t.id;
-    // Task đang kéo
     const activeId = active.id as string;
-    // Task đích
     const overId = over.id as string;
 
-    // Tìm task đang kéo
     const activeTask = tasks.find((t) => getId(t) === activeId);
     if (!activeTask) return;
 
-    // Xác định task đích
     const overTask = tasks.find((t) => getId(t) === overId);
 
-    // Trong MyTask, không có status column, nên sắp xếp theo position
-    // Lấy và SẮP XẾP danh sách task (Bắt buộc phải sort theo position)
     const sortedTasks = [...tasks].sort(
       (a, b) => (a.position || 0) - (b.position || 0),
     );
@@ -109,31 +106,24 @@ const MyTask = () => {
     let prevPos: number | null = null;
     let nextPos: number | null = null;
 
-    // Nếu thả vào vùng trống thì xuống dưới
     if (!overTask) {
-      // TH1: Thả vào vùng trống (Xuống cuối cùng)
       const lastTask = sortedTasks[sortedTasks.length - 1];
       prevPos = lastTask?.position ? lastTask.position : null;
       nextPos = null;
     } else {
-      // TH2: Thả lên một task khác
       const oldIndex = sortedTasks.findIndex(
         (t) => (t._id || t.id) === activeId,
       );
       const newIndex = sortedTasks.findIndex((t) => (t._id || t.id) === overId);
 
-      // Sử dụng logic arrayMove để giả lập danh sách mới
       const newOrderedList = [...sortedTasks];
       if (oldIndex !== -1) {
-        // Di chuyển nội bộ
         const [movedTask] = newOrderedList.splice(oldIndex, 1);
         newOrderedList.splice(newIndex, 0, movedTask);
       } else {
-        // Từ vị trí khác chuyển sang
         newOrderedList.splice(newIndex, 0, activeTask);
       }
 
-      // Tìm vị trí của activeTask trong danh sách giả lập để lấy prev/next thực tế
       const finalIndex = newOrderedList.findIndex(
         (t) => (t._id || t.id) === activeId,
       );
@@ -146,7 +136,6 @@ const MyTask = () => {
 
     const newPosition = roundPosition(calculateNewPosition(prevPos, nextPos));
 
-    // Gửi dữ liệu lên API
     updateTask({
       id: activeId,
       data: {
@@ -163,20 +152,17 @@ const MyTask = () => {
     }
   }, [meData, dispatch]);
 
-  // Calculate global summary info
   const allTasksAndSubtasks = tasks.flatMap((t: ProjectTask) => [
     t,
     ...(t.subtasks || []),
   ]);
 
-  // Calculate selection ownership
   const [selectedTaskIds, setSelectedTaskIds] = useState<string[]>([]);
 
   const selectedTasks = allTasksAndSubtasks.filter((t: ProjectTask) =>
     selectedTaskIds.includes(t._id || t.id || ''),
   );
 
-  // Kiểm tra xem người dùng có phải là chủ sở hữu của tất cả các task được chọn không
   const isOwner =
     selectedTasks.length > 0 &&
     selectedTasks.every((t: ProjectTask) => {
@@ -185,7 +171,6 @@ const MyTask = () => {
       return creatorId === (me?._id || me?.id);
     });
 
-  // Tổng số task
   const totalTasksCount = allTasksAndSubtasks.length;
   const completedTasksCount = allTasksAndSubtasks.filter(
     (t: ProjectTask) => t.status === 'Done',
@@ -219,7 +204,6 @@ const MyTask = () => {
     globalDateRangeText = `${fmt(minDate)} - ${fmt(maxDate)}`;
   }
 
-  // Lấy tất cả ID của task và subtask
   const getAllIds = (taskList: ProjectTask[]): string[] => {
     let ids: string[] = [];
     taskList.forEach((task) => {
@@ -234,10 +218,8 @@ const MyTask = () => {
     return ids;
   };
 
-  // Chọn tất cả task
   const handleToggleSelectAll = () => {
     const allIds = getAllIds(tasks);
-    // Nếu đã chon hết thì bỏ chọn
     if (selectedTaskIds.length === allIds.length && allIds.length > 0) {
       setSelectedTaskIds([]);
     } else {
@@ -245,7 +227,6 @@ const MyTask = () => {
     }
   };
 
-  // Chọn task
   const handleToggleTask = (taskId: string, childrenIds: string[] = []) => {
     setSelectedTaskIds((prev) => {
       const isSelected = prev.includes(taskId);
@@ -263,21 +244,16 @@ const MyTask = () => {
     });
   };
 
-  // Sidebar state
   const [selectedTask, setSelectedTask] = useState<ProjectTask | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
-  // Quick Add state
   const [isAdding, setIsAdding] = useState(false);
   const [taskName, setTaskName] = useState('');
 
-  // Mở sidebar
   const handleOpenSidebar = (task: ProjectTask) => {
     setSelectedTask(task);
     setIsSidebarOpen(true);
   };
 
-  // Thêm task cha
   const handleQuickAdd = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!taskName.trim()) {
@@ -294,7 +270,6 @@ const MyTask = () => {
     }
   };
 
-  // Lấy task để hiển thị sidebar
   const currentSelectedTask =
     tasks.find((t: ProjectTask) => t._id === selectedTask?._id) || selectedTask;
 
@@ -320,38 +295,16 @@ const MyTask = () => {
     );
   }
 
-  /* Tạm thời ẩn
-  // Định nghĩa thứ tự trạng thái giống như bên Kanban để đồng nhất việc sắp xếp
-  const statusOrder = ['None', 'Pending', 'Doing', 'Stuck', 'Done'];
-
-  // // Sắp xếp tasks: ưu tiên theo trạng thái, sau đó mới đến position
-  const sortedTasks = [...tasks].sort((a, b) => {
-    const aStatusIndex = statusOrder.indexOf(a.status);
-    const bStatusIndex = statusOrder.indexOf(b.status);
-
-    if (aStatusIndex !== bStatusIndex) {
-      return aStatusIndex - bStatusIndex;
-    }
-    return (a.position || 0) - (b.position || 0);
-  });
-  */
-
   return (
     <DndContext
       sensors={sensors}
+      onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       collisionDetection={closestCenter}
-      autoScroll={{
-        threshold: { x: 0, y: 0.1 },
-        acceleration: 3,
-        canScroll: () => {
-          return true;
-        },
-      }}
+      modifiers={[restrictToVerticalAxis]}
     >
       <div className="bg-white min-h-screen relative overflow-x-hidden">
-        {/* Minimalistic Header */}
-        <div className="flex items-center justify-between px-6 py-5  border-gray-200">
+        <div className="flex items-center justify-between px-6 py-5 border-gray-200">
           <div>
             <h2 className="text-xl font-bold text-gray-900 tracking-tight flex items-center gap-2">
               Tổng quan không gian làm việc
@@ -374,17 +327,16 @@ const MyTask = () => {
           </div>
         </div>
 
-        {/* Grid Table Container */}
         <div className="p-0 pb-32">
-          <div className="overflow-x-auto overflow-y-hidden rounded-tl-lg shadow-sm">
+          <div className="overflow-x-auto rounded-tl-lg shadow-sm no-scrollbar">
             <SortableContext
-              items={tasks.map((t) => (t._id || t.id) as string)}
+              items={tasks.map((t: ProjectTask) => (t._id || t.id) as string)}
               strategy={verticalListSortingStrategy}
             >
               <table className="w-full text-left border-separate border-spacing-0 min-w-[1300px] table-fixed">
                 <thead className="bg-gray-50 shadow-gray-200/50">
                   <tr>
-                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest rounded-tl-lg">
+                    <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 w-[48px] min-w-[48px] max-w-[48px] text-center text-[9px] font-bold text-gray-400 uppercase tracking-widest rounded-tl-lg font-mono">
                       <div className="flex items-center justify-center">
                         <input
                           type="checkbox"
@@ -396,7 +348,6 @@ const MyTask = () => {
                           className="w-3.5 h-3.5 rounded border-gray-300 text-blue-600 cursor-pointer"
                         />
                       </div>
-                      <div className="absolute left-0 top-0 -bottom-px w-[4px] z-10 transition-colors duration-300 bg-gray-200"></div>
                     </th>
                     <th className="sticky top-0 z-10 bg-gray-50 px-3 py-2 border-r border-b border-gray-200 text-[10px] font-bold text-gray-400 uppercase tracking-widest pl-3">
                       Tên
@@ -431,9 +382,7 @@ const MyTask = () => {
                       typeof task.createdBy === 'string'
                         ? task.createdBy
                         : task.createdBy?._id;
-
                     const isOwnerOfThisTask = creatorId === (me?._id || me?.id);
-
                     return (
                       <TaskRow
                         key={task._id || task.id}
@@ -445,12 +394,10 @@ const MyTask = () => {
                       />
                     );
                   })}
-
-                  {/* Thẻ Sentinel kín đáo ở cuối tbody để kích hoạt load thêm */}
-                  <tr ref={lastTaskRef} className="">
+                  <tr ref={lastTaskRef}>
                     <td colSpan={10} className="text-center border-none">
                       {isFetching && (
-                        <div className="flex items-center justify-center gap-2">
+                        <div className="flex items-center justify-center gap-2 p-4">
                           <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full font-bold"></div>
                           <span className="text-[10px] text-gray-400 font-bold uppercase tracking-widest">
                             Đang tải tiếp...
@@ -464,7 +411,6 @@ const MyTask = () => {
             </SortableContext>
           </div>
 
-          {/* Thêm nhanh công việc */}
           <div className="relative p-4 bg-white border-b border-gray-200 rounded-bl-lg overflow-hidden">
             {isAdding ? (
               <form
@@ -520,6 +466,29 @@ const MyTask = () => {
           />
         )}
       </div>
+
+      <DragOverlay
+        dropAnimation={{
+          sideEffects: defaultDropAnimationSideEffects({
+            styles: {
+              active: {
+                opacity: '0.4',
+              },
+            },
+          }),
+        }}
+      >
+        {activeId ? (
+          <table className="w-full text-left border-separate border-spacing-0 min-w-[1300px] table-fixed opacity-80 shadow-2xl bg-white rounded-lg overflow-hidden border border-blue-200">
+            <tbody>
+              <TaskRow
+                task={tasks.find((t) => (t._id || t.id) === activeId)!}
+                canEdit={false}
+              />
+            </tbody>
+          </table>
+        ) : null}
+      </DragOverlay>
     </DndContext>
   );
 };
