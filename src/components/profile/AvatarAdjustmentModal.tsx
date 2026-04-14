@@ -189,8 +189,8 @@ const AvatarAdjustmentModal = ({
         </div>
 
         {/* Canvas Area */}
-        <div className="mb-8">
-          <p className="text-sm text-gray-600 mb-3">
+        <div className="mb-8 flex flex-col justify-center items-center">
+          <p className="text-sm text-gray-600 mb-3 self-start">
             Kéo để di chuyển | Cuộn để phóng to
           </p>
           <canvas
@@ -201,7 +201,7 @@ const AvatarAdjustmentModal = ({
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
-            className="w-140 h-140 bg-gray-100 rounded-2xl cursor-move border-2 border-gray-200"
+            className="w-100 h-100 bg-gray-100 rounded-2xl cursor-move border-2 border-gray-200 "
           />
         </div>
 
