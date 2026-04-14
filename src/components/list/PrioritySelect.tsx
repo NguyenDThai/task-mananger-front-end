@@ -6,15 +6,21 @@ import { useUpdateTaskMutation } from '../../redux/api/taskApi';
 import { updatePriorityColor } from '../../redux/slides/task/taskSlide';
 import type { RootState } from '../../redux/store';
 
-// 1. Định nghĩa các màu mẫu sang trọng (Pastel & Vibrant)
-const PRESET_COLORS = [
-  { bg: '#fee2e2', text: '#991b1b', icon: '#dc2626' }, // Red
-  { bg: '#ffedd5', text: '#9a3412', icon: '#f97316' }, // Orange
-  { bg: '#fef3c7', text: '#92400e', icon: '#f59e0b' }, // Amber
-  { bg: '#dcfce7', text: '#166534', icon: '#16a34a' }, // Green
-  { bg: '#dbeafe', text: '#1e40af', icon: '#2563eb' }, // Blue
-  { bg: '#f3e8ff', text: '#6b21a8', icon: '#9333ea' }, // Purple
-];
+// 1. Helper function để tạo theme màu từ mã Hue (0-360)
+const generateTheme = (hue: number) => ({
+  bg: `hsl(${hue}, 80%, 96%)`,
+  icon: `hsl(${hue}, 80%, 45%)`,
+  text: `hsl(${hue}, 80%, 20%)`,
+});
+
+// 2. Helper để lấy Hue từ string hsl(...)
+const getHueFromColor = (color: string) => {
+  if (color.startsWith('hsl')) {
+    const match = color.match(/hsl\((\d+)/);
+    return match ? parseInt(match[1]) : 0;
+  }
+  return 0; // Mặc định cho HEX
+};
 
 export const PrioritySelect = ({
   initialPriority,
@@ -108,7 +114,7 @@ export const PrioritySelect = ({
             />
 
             <div
-              className="absolute bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[200px] z-10 animate-in fade-in zoom-in-95 duration-100"
+              className="absolute bg-white rounded-2xl shadow-[0_10px_40px_-10px_rgba(0,0,0,0.15)] border border-gray-100 p-2 min-w-[220px] z-10 animate-in fade-in zoom-in-95 duration-100"
               style={{
                 top: coords.top + 8,
                 left: coords.left + coords.width / 2,
@@ -171,19 +177,41 @@ export const PrioritySelect = ({
                         </button>
                       </div>
 
-                      {/* Color Palette Selection */}
+                      {/* Hue slider color picker */}
                       {isPickingColor === key && (
-                        <div className="flex gap-2 px-2 pb-2 animate-in slide-in-from-top-1 duration-200">
-                          {PRESET_COLORS.map((color, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => {
-                                dispatch(updatePriorityColor({ key, color }));
+                        <div className="flex flex-col gap-2 px-2 pb-2 animate-in slide-in-from-top-1 duration-200">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="range"
+                              min="0"
+                              max="360"
+                              defaultValue={getHueFromColor(cfg.icon)}
+                              className="w-full h-2 rounded-lg appearance-none cursor-pointer hue-slider"
+                              style={{
+                                background:
+                                  'linear-gradient(to right, #ff0000 0%, #ffff00 17%, #00ff00 33%, #00ffff 50%, #0000ff 67%, #ff00ff 83%, #ff0000 100%)',
                               }}
-                              style={{ backgroundColor: color.icon }}
-                              className={`w-5 h-5 rounded-full border-2 ${cfg.icon === color.icon ? 'border-slate-800 scale-125' : 'border-transparent'} hover:scale-110 transition-transform shadow-sm`}
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value);
+                                const newTheme = generateTheme(val);
+                                dispatch(
+                                  updatePriorityColor({
+                                    key,
+                                    color: newTheme,
+                                  }),
+                                );
+                              }}
+                              onMouseDown={(e) => e.stopPropagation()}
+                              onPointerDown={(e) => e.stopPropagation()}
                             />
-                          ))}
+                            <div
+                              className="w-4 h-4 rounded-full border border-gray-200 shadow-sm shrink-0"
+                              style={{ backgroundColor: cfg.icon }}
+                            />
+                          </div>
+                          <p className="text-[10px] text-gray-400 text-center font-medium">
+                            Kéo để thay đổi màu sắc
+                          </p>
                         </div>
                       )}
                     </div>
