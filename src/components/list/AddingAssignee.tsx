@@ -116,17 +116,20 @@ const AddingAssignee: React.FC<AddingAssigneeProps> = ({
   triggerRect,
 }) => {
   const [search, setSearch] = useState('');
-  const { data, isLoading: loadingUsers } = useGetUsersQuery();
+  const usersFromRedux = useSelector((state: RootState) => state.user.users);
   const dispatch = useDispatch();
+  const { data, isLoading: loadingUsers } = useGetUsersQuery(undefined, {
+    skip: usersFromRedux.length > 0,
+  });
 
   useEffect(() => {
-    if (data?.users) {
+    if (data?.users && usersFromRedux.length === 0) {
       dispatch(setUsers(data.users));
     }
-  }, [data, dispatch]);
+  }, [data, dispatch, usersFromRedux.length]);
 
-  const usersFromRedux = useSelector((state: RootState) => state.user.users);
-  const usersData = data?.users || usersFromRedux;
+  // Ưu tiên dùng user từ Redux slice
+  const usersData = usersFromRedux.length > 0 ? usersFromRedux : data?.users;
 
   // Sử dụng trực tiếp dữ liệu user đnag đăng nhập từ Redux Slide (Nguồn chuẩn xác nhất hiện tại)
   const me = useSelector((state: RootState) => state.auth.user) || undefined;
