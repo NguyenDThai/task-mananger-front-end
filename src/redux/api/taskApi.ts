@@ -16,6 +16,7 @@ export interface Pagination {
 }
 
 export const taskApi = baseApi.injectEndpoints({
+  overrideExisting: true,
   endpoints: (builder) => ({
     getTasks: builder.query<
       {
@@ -59,6 +60,7 @@ export const taskApi = baseApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
+      invalidatesTags: ['Task'],
       // transformResponse để lấy dữ liệu task từ response của API
       transformResponse: (response: { task: ProjectTask }) => response.task,
       async onQueryStarted(_, { dispatch, queryFulfilled }) {
@@ -86,6 +88,7 @@ export const taskApi = baseApi.injectEndpoints({
         method: 'PATCH',
         body: data,
       }),
+      invalidatesTags: ['Task'],
       async onQueryStarted({ id, data }, { dispatch, queryFulfilled }) {
         // 1. Cập nhật Redux Slide ngay lập tức cho UI
         dispatch(updateTaskLocal({ id, data }));
@@ -103,6 +106,7 @@ export const taskApi = baseApi.injectEndpoints({
         url: `/task/${id}`,
         method: 'DELETE',
       }),
+      invalidatesTags: ['Task'],
       async onQueryStarted(id, { dispatch, queryFulfilled }) {
         // 1. Xóa trong Redux Slide ngay lập tức
         dispatch(deleteTaskLocal(id));
@@ -122,6 +126,7 @@ export const taskApi = baseApi.injectEndpoints({
         method: 'POST',
         body: data,
       }),
+      invalidatesTags: ['Task'],
       async onQueryStarted({ ids }, { dispatch, queryFulfilled }) {
         // 1. Xóa trong Redux Slide
         dispatch(bulkDeleteLocal(ids));
