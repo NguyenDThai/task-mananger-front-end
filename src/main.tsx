@@ -7,16 +7,13 @@ import { store } from './redux/store.ts';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './route/index.tsx';
 import { ToastContainer } from 'react-toastify';
-import { ChatProvider } from './contexts/ChatContext.tsx';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <Provider store={store}>
-      <ChatProvider>
-        <RouterProvider router={router} />
-        <App />
-        <ToastContainer position="top-center" />
-      </ChatProvider>
+      <RouterProvider router={router} />
+      <App />
+      <ToastContainer position="top-center" />
     </Provider>
   </StrictMode>,
 );

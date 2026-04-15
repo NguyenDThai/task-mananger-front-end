@@ -1,8 +1,9 @@
 // import { useEffect } from "react";
-// import { useChat } from "./contexts";
+// import { useInitializeChat } from "./hooks";
 
 // const App = () => {
-//   const {chat} = useChat();
+//   const { instance: chat } = useInitializeChat();
+
 //   useEffect(() => {
 //     const initAppChat = async () => {
 //       if (chat) {
@@ -39,7 +40,6 @@
 
 //     const chats = await chat.getChats(10, 1);
 //     console.log("Danh sách cuộc trò chuyện:", chats);
-
 //   };
 
 //   const testChat = async () => {
@@ -59,15 +59,13 @@
 
 //         const existingChatTest = await chat.findChatByReceiver(receiver.id);
 //         console.log("Kiểm tra lại cuộc trò chuyện sau khi xóa:", existingChatTest);
-
 //       } else {
 //         console.log("Không tìm thấy cuộc trò chuyện hiện có. Đang tạo mới...");
 //         // const chat1 = await chat.addChat(receiver.id, "Xin chào! Đây là tin nhắn đầu tiên.");
 //         // console.log("Cuộc trò chuyện đã được tạo hoặc lấy:", chat1);
 //       }
 //     }
-
-//   }
+//   };
 
 //   return null;
 // };
