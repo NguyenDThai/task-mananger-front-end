@@ -227,7 +227,7 @@ export interface IMessageItem {
   files?: unknown[]; // Danh sách file gửi kèm (nếu có)
   replyId?: number | null;
   createdAt: string;
-  // Thêm các trường khác tùy theo thực tế SDK trả về
+  // ... các trường khác từ SDK trả về
 }
 
 export interface ISChatEventPayloads {
