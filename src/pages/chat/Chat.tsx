@@ -77,6 +77,63 @@ export const Chat = () => {
       unreadCount: 0,
       isGroup: false,
     },
+    {
+      id: 4,
+      name: 'Trần Minh Tâm',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
+      lastMessage:
+        'Bạn gửi file thiết kế cho mình chưa?????????????????????????????????',
+      unreadCount: 1,
+      isGroup: false,
+    },
+    {
+      id: 5,
+      name: 'Gia Đình ❤️',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
+      lastMessage: 'Cuối tuần này có về quê không con?',
+      unreadCount: 12,
+      isGroup: true,
+    },
+    {
+      id: 6,
+      name: 'Phạm Hoàng Nam',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
+      lastMessage: 'Trận bóng tối nay bắt đầu lúc 7h nhé',
+      unreadCount: 0,
+      isGroup: false,
+    },
+    {
+      id: 7,
+      name: 'Lớp Đại Học',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
+      lastMessage: 'Thông báo về lịch thi học kỳ mới nhất',
+      unreadCount: 8,
+      isGroup: true,
+    },
+    {
+      id: 8,
+      name: 'Hoàng Thu Thủy',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=8',
+      lastMessage: 'Ảnh đẹp quá bạn ơi!',
+      unreadCount: 0,
+      isGroup: false,
+    },
+    {
+      id: 9,
+      name: 'Hội Ăn Trưa',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=9',
+      lastMessage: 'Hôm nay ăn bún chả nhé cả nhà?',
+      unreadCount: 3,
+      isGroup: true,
+    },
+    {
+      id: 10,
+      name: 'Đặng Quốc Bảo',
+      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=10',
+      lastMessage: 'Đã nhận được thanh toán, cảm ơn!',
+      unreadCount: 0,
+      isGroup: false,
+    },
   ]);
 
   const [activeChatId, setActiveChatId] = useState<number | undefined>(
@@ -150,7 +207,7 @@ export const Chat = () => {
   return (
     <div className="h-screen flex gap-0 bg-white no-header hidden-y hidden-x">
       {/* Sidebar - Hidden on mobile, visible on larger screens */}
-      <div className="hidden md:block md:w-80 lg:w-96 flex-shrink-0">
+      <div className="hidden md:block md:w-64 lg:w-80 flex-shrink-0">
         <ChatSidebar
           chats={chats}
           activeChatId={activeChatId}

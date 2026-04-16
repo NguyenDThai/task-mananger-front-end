@@ -36,12 +36,9 @@ export const ChatItem = ({
   return (
     <div
       className={`
-        flex items-center gap-3 px-4 py-3 cursor-pointer rounded-lg transition-all duration-200
-        ${
-          isActive
-            ? 'bg-blue-50 border-l-4 border-blue-600'
-            : 'hover:bg-gray-50 border-l-4 border-transparent'
-        }
+        flex items-center gap-4 px-3 py-2.5 cursor-pointer transition-all duration-200
+        border-b border-gray-100 last:border-b-0
+        ${isActive ? 'bg-gray-50' : 'hover:bg-gray-50/50'}
       `}
       onClick={() => onSelect(id)}
       onMouseEnter={() => setShowDeleteBtn(true)}
@@ -53,11 +50,11 @@ export const ChatItem = ({
           <img
             src={avatar}
             alt={name}
-            className="w-12 h-12 rounded-full object-cover"
+            className="w-10 h-10 rounded-full object-cover"
           />
         ) : (
-          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-semibold text-sm">
+          <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+            <span className="text-gray-600 font-medium text-xs">
               {name.charAt(0).toUpperCase()}
             </span>
           </div>
@@ -66,23 +63,23 @@ export const ChatItem = ({
 
       {/* Chat info */}
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold text-gray-900 truncate text-sm">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-medium text-gray-900 truncate text-sm">
             {name}
             {isGroup && (
-              <span className="ml-2 text-xs text-gray-500 font-normal">
-                (Nhóm)
+              <span className="ml-1.5 text-xs text-gray-400 font-normal">
+                Nhóm
               </span>
             )}
           </h3>
           {unreadCount && unreadCount > 0 && (
-            <span className="ml-2 inline-flex items-center justify-center w-5 h-5 bg-blue-600 text-white text-xs font-bold rounded-full flex-shrink-0">
+            <span className="flex-shrink-0 inline-flex items-center justify-center min-w-5 h-5 bg-gray-900 text-white text-xs font-semibold rounded-full">
               {unreadCount > 99 ? '99+' : unreadCount}
             </span>
           )}
         </div>
         {lastMessage && (
-          <p className="text-xs text-gray-500 truncate mt-1">{lastMessage}</p>
+          <p className="text-xs text-gray-400 truncate mt-1">{lastMessage}</p>
         )}
       </div>
 
@@ -90,10 +87,10 @@ export const ChatItem = ({
       {showDeleteBtn && onDelete && (
         <button
           onClick={handleDelete}
-          className="flex-shrink-0 p-1 text-gray-400 hover:text-red-600 transition-colors"
+          className="flex-shrink-0 p-1 text-gray-300 hover:text-gray-600 transition-colors"
           title="Xóa chat"
         >
-          <X size={16} />
+          <X size={18} />
         </button>
       )}
     </div>

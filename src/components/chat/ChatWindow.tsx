@@ -73,11 +73,11 @@ export const ChatWindow = ({
 
   if (!chatId) {
     return (
-      <div className="h-full flex items-center justify-center bg-gray-50">
+      <div className="h-full flex items-center justify-center bg-white">
         <div className="text-center">
-          <div className="w-20 h-20 rounded-full bg-gray-200 flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 rounded-full bg-gray-50 flex items-center justify-center mx-auto mb-3">
             <svg
-              className="w-10 h-10 text-gray-400"
+              className="w-8 h-8 text-gray-300"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -90,8 +90,10 @@ export const ChatWindow = ({
               />
             </svg>
           </div>
-          <p className="text-gray-600 font-medium">Chọn một chat để bắt đầu</p>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-gray-600 text-sm font-medium">
+            Chọn một chat để bắt đầu
+          </p>
+          <p className="text-xs text-gray-400 mt-1">
             Chọn cuộc trò chuyện từ danh sách bên trái
           </p>
         </div>
@@ -102,40 +104,42 @@ export const ChatWindow = ({
   return (
     <div className="h-full flex flex-col bg-white">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-gray-200 bg-white sticky top-0">
+      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white sticky top-0">
         {chatAvatar ? (
           <img
             src={chatAvatar}
             alt={chatName}
-            className="w-10 h-10 rounded-full object-cover"
+            className="w-9 h-9 rounded-full object-cover"
           />
         ) : (
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
-            <span className="text-white font-semibold text-sm">
+          <div className="w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center">
+            <span className="text-gray-600 font-medium text-xs">
               {chatName.charAt(0).toUpperCase()}
             </span>
           </div>
         )}
         <div className="flex-1">
-          <h2 className="font-semibold text-gray-900">{chatName}</h2>
-          <p className="text-xs text-gray-500">Online</p>
+          <h2 className="font-medium text-gray-900 text-sm">{chatName}</h2>
+          <p className="text-xs text-gray-400">Online</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <div className="w-10 h-10 rounded-full border-2 border-blue-200 border-t-blue-600 animate-spin mx-auto mb-2"></div>
-              <p className="text-sm text-gray-500">Đang tải tin nhắn...</p>
+              <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-gray-600 animate-spin mx-auto mb-2"></div>
+              <p className="text-xs text-gray-400">Đang tải tin nhắn...</p>
             </div>
           </div>
         ) : messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
-              <p className="text-gray-600 font-medium">Chưa có tin nhắn nào</p>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="text-gray-600 text-sm font-medium">
+                Chưa có tin nhắn nào
+              </p>
+              <p className="text-xs text-gray-400 mt-1">
                 Hãy gửi tin nhắn đầu tiên
               </p>
             </div>
@@ -145,7 +149,7 @@ export const ChatWindow = ({
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex gap-3 ${
+                className={`flex gap-2 ${
                   message.isCurrentUser ? 'justify-end' : 'justify-start'
                 }`}
               >
@@ -153,26 +157,26 @@ export const ChatWindow = ({
                   <img
                     src={message.senderAvatar || ''}
                     alt={message.senderName}
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                    className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5"
                   />
                 )}
 
                 <div
-                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
+                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded ${
                     message.isCurrentUser
-                      ? 'bg-blue-600 text-white rounded-br-none'
-                      : 'bg-gray-200 text-gray-900 rounded-bl-none'
+                      ? 'bg-gray-900 text-white'
+                      : 'bg-gray-100 text-gray-900'
                   }`}
                 >
                   {!message.isCurrentUser && (
-                    <p className="text-xs font-semibold mb-1 opacity-70">
+                    <p className="text-xs font-medium mb-0.5 opacity-70">
                       {message.senderName}
                     </p>
                   )}
                   <p className="text-sm break-words">{message.content}</p>
                   <p
-                    className={`text-xs mt-1 ${
-                      message.isCurrentUser ? 'text-blue-100' : 'text-gray-500'
+                    className={`text-xs mt-0.5 ${
+                      message.isCurrentUser ? 'text-gray-400' : 'text-gray-500'
                     }`}
                   >
                     {formatTime(message.timestamp)}
@@ -186,26 +190,26 @@ export const ChatWindow = ({
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t border-gray-200 bg-white">
-        <div className="flex gap-3">
+      <div className="px-4 py-3 border-t border-gray-100 bg-white">
+        <div className="flex gap-2">
           <textarea
             value={messageInput}
             onChange={(e) => setMessageInput(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Nhập tin nhắn..."
             rows={1}
-            className="flex-1 px-4 py-2 bg-gray-100 rounded-lg text-sm text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white resize-none transition-all"
+            className="flex-1 px-3 py-2 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 resize-none transition-all"
           />
           <button
             onClick={handleSend}
             disabled={!messageInput.trim() || isLoading}
-            className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium text-sm hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+            className="px-4 py-2 bg-gray-900 text-white rounded font-medium text-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
           >
             Gửi
           </button>
         </div>
-        <p className="text-xs text-gray-500 mt-2">
-          Nhấn Enter để gửi, Shift+Enter để xuống dòng
+        <p className="text-xs text-gray-400 mt-1.5">
+          Enter để gửi, Shift+Enter để xuống dòng
         </p>
       </div>
     </div>
