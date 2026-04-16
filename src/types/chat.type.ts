@@ -30,7 +30,9 @@ export interface ISChatInstance {
     limit?: number,
     page?: number,
     include?: string,
-  ) => Promise<ISChatUser[]>;
+  ) => Promise<{
+    data: ISChatUser[];
+  }>;
   addMember: (chatId: number, memberId: number) => Promise<unknown>;
 
   /**
@@ -73,7 +75,12 @@ export interface ISChatInstance {
    * @param receiverId ID người nhận (Number, bắt buộc)
    * @param content Tin nhắn đầu tiên (String, tùy chọn)
    */
-  addChat: (receiverId: number, content?: string) => Promise<IChatItem>;
+  addChat: (
+    receiverId: number,
+    content?: string,
+  ) => Promise<{
+    data: IChatItem;
+  }>;
 
   /**
    * Tạo nhóm trò chuyện mới.

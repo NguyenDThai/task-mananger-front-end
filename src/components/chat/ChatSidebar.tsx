@@ -1,11 +1,12 @@
 import { useMemo, useState, useRef } from 'react';
 import { Plus, Search, X } from 'lucide-react';
-import type { IChatItem } from '../../types/chat.type';
+import type { IChatItem, ISChatUser } from '../../types/chat.type';
 import { ChatItem } from './ChatItem';
 
 interface ChatSidebarProps {
   chats: IChatItem[];
-  activeChatId?: number;
+  activeChat?: IChatItem | null;
+  currentUser?: ISChatUser | null;
   isLoading?: boolean;
   onSelectChat: (chatId: number) => void;
   onDeleteChat: (chatId: number) => void;
@@ -14,7 +15,8 @@ interface ChatSidebarProps {
 
 export const ChatSidebar = ({
   chats,
-  activeChatId,
+  activeChat,
+  currentUser,
   isLoading = false,
   onSelectChat,
   onDeleteChat,
@@ -149,7 +151,8 @@ export const ChatSidebar = ({
               <ChatItem
                 key={chat.id}
                 {...chat}
-                isActive={activeChatId === chat.id}
+                isActive={activeChat?.id === chat.id}
+                currentUser={currentUser}
                 onSelect={onSelectChat}
                 onDelete={onDeleteChat}
               />

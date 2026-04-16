@@ -1,10 +1,11 @@
 import { MoreVertical } from 'lucide-react';
 import { useState } from 'react';
-import type { IChatItem } from '../../types/chat.type';
+import type { IChatItem, ISChatUser } from '../../types/chat.type';
 
 interface ChatItemProps extends Omit<IChatItem, 'id'> {
   id: number;
   isActive?: boolean;
+  currentUser?: ISChatUser | null;
   onSelect: (chatId: number) => void;
   onDelete?: (chatId: number) => void;
 }
@@ -32,16 +33,42 @@ const formatMessageTime = (time?: string): string => {
 };
 
 // Get chat display name based on type
-const getChatDisplayName = (chat: IChatItem): string => {
+const getChatDisplayName = (
+  chat: IChatItem,
+  currentUser?: ISChatUser | null,
+): string => {
   if (chat.type === 'group') {
     return `Nhóm (${chat.members?.length || 0} thành viên)`;
   }
   // For single chat, get the other member's name
+  if (currentUser) {
+    const otherMember = chat.members?.find(
+      (member) => member.code !== currentUser.code,
+    );
+    if (otherMember) {
+      return otherMember.name;
+    }
+  }
   return chat.members?.[0]?.name || 'Chat';
 };
 
-// Get chat avatar from first member
-const getChatAvatar = (chat: IChatItem): string | undefined => {
+// Get chat avatar from other member (for single chat) or first member (for group)
+const getChatAvatar = (
+  chat: IChatItem,
+  currentUser?: ISChatUser | null,
+): string | undefined => {
+  if (chat.type === 'group') {
+    return chat.members?.[0]?.avatar;
+  }
+  // For single chat, get the other member's avatar
+  if (currentUser) {
+    const otherMember = chat.members?.find(
+      (member) => member.code !== currentUser.code,
+    );
+    if (otherMember) {
+      return otherMember.avatar;
+    }
+  }
   return chat.members?.[0]?.avatar;
 };
 
@@ -53,31 +80,38 @@ export const ChatItem = ({
   unreadCount,
   updated_at,
   isActive,
+  currentUser,
   onSelect,
   onDelete,
 }: ChatItemProps) => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  const chatName = getChatDisplayName({
-    id,
-    members,
-    message,
-    type,
-    unreadCount,
-    updated_at,
-    create_at: '',
-    code: '',
-  });
-  const avatar = getChatAvatar({
-    id,
-    members,
-    message,
-    type,
-    unreadCount,
-    updated_at,
-    create_at: '',
-    code: '',
-  });
+  const chatName = getChatDisplayName(
+    {
+      id,
+      members,
+      message,
+      type,
+      unreadCount,
+      updated_at,
+      create_at: '',
+      code: '',
+    },
+    currentUser,
+  );
+  const avatar = getChatAvatar(
+    {
+      id,
+      members,
+      message,
+      type,
+      unreadCount,
+      updated_at,
+      create_at: '',
+      code: '',
+    },
+    currentUser,
+  );
   const lastMessageContent = message?.content;
   const lastMessageTime = message?.created_at || updated_at;
 

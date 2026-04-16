@@ -7,7 +7,7 @@ import type {
   ISChatEventPayloads,
   ISChatUser,
 } from '../../types/chat.type';
-import { ChatSidebar, ChatWindow } from '../../components/chat';
+import { ChatSidebar, ChatWindow, NewChatWindow } from '../../components/chat';
 import { toast } from 'react-toastify';
 
 export const Chat = () => {
@@ -18,6 +18,8 @@ export const Chat = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<ISChatUser | null>(null);
   const [, setReceiver] = useState<ISChatUser | null>(null);
+  const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
+  const [members, setMembers] = useState<ISChatUser[]>([]);
 
   // Load chats from chat SDK
   useEffect(() => {
@@ -34,7 +36,6 @@ export const Chat = () => {
         const response = await chat.getChats(10, 1);
 
         const chatsList = response?.data || [];
-
         setChats(chatsList);
         // Set first chat as active
         if (chatsList.length > 0) {
@@ -52,6 +53,38 @@ export const Chat = () => {
       loadChats();
     }, 1000);
   }, [chat]);
+
+  // Load members for new chat window
+  useEffect(() => {
+    const loadMembers = async () => {
+      if (!chat) return;
+
+      try {
+        const response = await chat.getMembers(null, 0, 1);
+        const membersList = response?.data || [];
+
+        // Get all members in single chats
+        const membersInSingleChats = chats
+          .filter((c) => c.type === 'single')
+          .flatMap((c) => c.members || [])
+          .map((m) => m.code);
+
+        // Filter out current user and members already in single chats
+        const filteredMembers = membersList.filter(
+          (member) =>
+            member.code !== currentUser?.code &&
+            !membersInSingleChats.includes(member.code),
+        );
+        setMembers(filteredMembers);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách thành viên:', error);
+      }
+    };
+
+    if (isCreatingNewChat && currentUser) {
+      loadMembers();
+    }
+  }, [isCreatingNewChat, chat, currentUser, chats]);
 
   // Load messages when active chat changes
   useEffect(() => {
@@ -147,17 +180,47 @@ export const Chat = () => {
     }
   };
 
-  const handleDeleteChat = (chatId: number) => {
-    setChats((prev) => prev.filter((chat) => chat.id !== chatId));
-    if (currentChat?.id === chatId) {
-      const remainingChat = chats.find((chat) => chat.id !== chatId);
-      setCurrentChat(remainingChat || null);
+  const handleDeleteChat = async (chatId: number) => {
+    if (!chat) return;
+
+    try {
+      await chat.removeChat(chatId);
+      setChats((prev) => prev.filter((chat) => chat.id !== chatId));
+      if (currentChat?.id === chatId) {
+        const remainingChat = chats.find((chat) => chat.id !== chatId);
+        setCurrentChat(remainingChat || null);
+      }
+      toast.success('Đã xóa cuộc trò chuyện');
+    } catch (error) {
+      console.error('Lỗi khi xóa cuộc trò chuyện:', error);
     }
-    toast.success('Đã xóa cuộc trò chuyện');
   };
 
   const handleCreateNewChat = () => {
-    toast.info('Tính năng tạo chat mới sẽ sớm được cập nhật');
+    setIsCreatingNewChat(true);
+  };
+
+  const handleSelectReceiver = async (receiver: ISChatUser) => {
+    if (!chat || !receiver.id) return;
+
+    try {
+      setIsLoading(true);
+      // Create new chat with receiver
+      const newChat = await chat.addChat(receiver.id);
+      setCurrentChat(newChat.data);
+      setChats((prev) => [newChat.data, ...prev]);
+      setIsCreatingNewChat(false);
+      toast.success(`Đã tạo cuộc trò chuyện với ${receiver.name}`);
+    } catch (error) {
+      console.error('Lỗi khi tạo cuộc trò chuyện:', error);
+      toast.error('Không thể tạo cuộc trò chuyện');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleBackFromNewChat = () => {
+    setIsCreatingNewChat(false);
   };
 
   const handleSendMessage = async (content: string) => {
@@ -172,7 +235,8 @@ export const Chat = () => {
       <div className="hidden md:block md:w-64 lg:w-80 flex-shrink-0">
         <ChatSidebar
           chats={chats}
-          activeChatId={currentChat?.id}
+          activeChat={currentChat}
+          currentUser={currentUser}
           isLoading={isLoading}
           onSelectChat={handleSelectChat}
           onDeleteChat={handleDeleteChat}
@@ -182,15 +246,24 @@ export const Chat = () => {
 
       {/* Main Chat Window */}
       <div className="flex-1 flex flex-col">
-        <ChatWindow
-          chatId={currentChat?.id}
-          chatName={getActiveChatName()}
-          chatAvatar={getActiveChatAvatar()}
-          messages={messages}
-          isLoading={isLoading}
-          currentUserId={currentUser?.id}
-          onSendMessage={handleSendMessage}
-        />
+        {isCreatingNewChat ? (
+          <NewChatWindow
+            members={members}
+            isLoading={isLoading}
+            onSelectReceiver={handleSelectReceiver}
+            onBack={handleBackFromNewChat}
+          />
+        ) : (
+          <ChatWindow
+            chatId={currentChat?.id}
+            chatName={getActiveChatName()}
+            chatAvatar={getActiveChatAvatar()}
+            messages={messages}
+            isLoading={isLoading}
+            currentUserId={currentUser?.id}
+            onSendMessage={handleSendMessage}
+          />
+        )}
       </div>
     </div>
   );
