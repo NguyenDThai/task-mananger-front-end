@@ -66,9 +66,15 @@ const ChatBot = () => {
     return currentChat.name || 'Nhóm chat';
   };
 
-  // Lọc member dựa trên giá trị đã được debounce
-  const filteredMembers = systemMembers.filter((m) =>
-    m.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()),
+  // Lọc member: Duy nhất + Không phải là mình + Khớp search query
+  const filteredMembers = systemMembers.filter(
+    (m, index, self) =>
+      // 1. Chỉ lấy những người có tên khớp với tìm kiếm
+      m.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) &&
+      // 2. Không phải là chính mình
+      m.code !== user?._id &&
+      // 3. Loại bỏ trùng lặp (chỉ lấy người đầu tiên có code này trong danh sách)
+      index === self.findIndex((t) => t.code === m.code),
   );
 
   return (
@@ -81,7 +87,9 @@ const ChatBot = () => {
           <div className="flex items-center gap-3">
             {currentChat && (
               <button
-                onClick={() => setCurrentChat(null)}
+                onClick={() => {
+                  setCurrentChat(null);
+                }}
                 className="p-1 hover:bg-white/20 rounded-lg transition-colors"
               >
                 <svg

@@ -1,4 +1,3 @@
-import React from 'react';
 import { selectChatSDK } from '../../../redux/slides/chat/chatSlide';
 import { useSelector } from 'react-redux';
 
@@ -12,7 +11,7 @@ export const ChatbotSearchList = ({
   const handleSelectMember = async () => {
     try {
       await chatSDK.setReceiver({
-        code: m.id,
+        code: m.code,
         name: m.name,
         avatar: m.avatar,
         phone: m.phone,
