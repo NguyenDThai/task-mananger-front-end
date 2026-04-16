@@ -10,8 +10,10 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const { data, isSuccess, isError, isLoading } = useGetMeQuery();
 
   useEffect(() => {
-    if (isSuccess && data?.user) {
-      dispatch(setCredentials({ user: data.user }));
+    const user = data?.user || {};
+
+    if (isSuccess && user && user._id && user.name) {
+      dispatch(setCredentials({ user: user }));
     }
   }, [isSuccess, data, dispatch]);
 

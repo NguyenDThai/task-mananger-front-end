@@ -8,6 +8,10 @@ import taskReducer from './slides/task/taskSlide';
 import userReducer from './slides/user/userSlide';
 import chatReducer from './slides/chat/chatSlide';
 import { baseApi } from './api/baseApi';
+import {
+  chatMiddleware,
+  authListenerMiddleware,
+} from './middleware/chatMiddleware';
 
 const appReducer = combineReducers({
   auth: authReducer,
@@ -36,7 +40,10 @@ export const store = configureStore({
         ignoredActions: ['chatSlide/initializeChatSuccess'],
         ignoredPaths: ['chat.instance'],
       },
-    }).concat(baseApi.middleware);
+    })
+      .concat(baseApi.middleware)
+      .concat(chatMiddleware)
+      .concat(authListenerMiddleware.middleware);
   },
 });
 

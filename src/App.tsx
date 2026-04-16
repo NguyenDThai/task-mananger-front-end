@@ -1,23 +1,30 @@
 // import { useEffect } from "react";
-// import { useInitializeChat } from "./hooks";
+// import { useSelector } from "react-redux";
+// import type { RootState } from "./redux/store";
+// import type { ISChatUser } from "./types";
 
 // const App = () => {
-//   const { instance: chat } = useInitializeChat();
+//   const chat = useSelector((state: RootState) => state.chat.instance);
 
 //   useEffect(() => {
 //     const initAppChat = async () => {
 //       if (chat) {
 //         try {
-//           chat.setConfig({ debugMode: true });
-
-//           const user = await chat.setAuth({ code: '1234', name: 'Huy Tran' });
-//           console.log("Auth thành công cho user:", user);
+//           const receiver1 = await chat.setReceiver({ code: "69d7143337e6fda26cd161fd", name: 'Nguyen Duc Thai' });
+//           console.log("Người nhận đã được thiết lập:", receiver1);
+//           const receiver2 = await chat.setReceiver({ code: 'ct100', name: 'Nguyen Van A' });
+//           console.log("Người nhận đã được thiết lập:", receiver2);
 
 //           await testConnection();
-//           await testChat();
+//           await testChatOneToOne(receiver1);
+//           // if (receiver1.id && receiver2.id) {
+//           //   await testChatGroup(receiver1.id, receiver2.id);
+//           // }
 
-//           // await chat.clearAuth();
-//           // console.log("Đã xóa thông tin xác thực. ");
+//           // await chat.removeChat(53);
+
+//           await chat.clearAuth();
+//           console.log("Đã xóa thông tin xác thực. ");
 //         } catch (error) {
 //           console.error("Lỗi khởi tạo chat:", error);
 //         }
@@ -42,29 +49,41 @@
 //     console.log("Danh sách cuộc trò chuyện:", chats);
 //   };
 
-//   const testChat = async () => {
-//     if (!chat) return;
+//   const testChatOneToOne = async (receiver: ISChatUser) => {
+//     if (!chat || !receiver.id) return;
 
-//     const receiver = await chat.setReceiver({ code: 'user_3', name: 'Nguyen Duc Thai' });
-//     console.log("Người nhận đã được thiết lập:", receiver);
+//     const existingChat = await chat.findChatByReceiver(receiver.id);
+//     if (existingChat) {
+//       console.log("Đã tìm thấy cuộc trò chuyện hiện có với người nhận:", existingChat);
+//       const messages = await chat.getMessages(existingChat.id, 10, 1);
+//       console.log("Danh sách tin nhắn trong cuộc trò chuyện:", messages);
+//       // await chat.removeChat(existingChat.id);
+//       // console.log("Đã xóa cuộc trò chuyện hiện có:");
+//       // if (messages.data.length > 0) {
+//       //   console.log('Các tham số để xóa tin nhắn:', {
+//       //     chatId: existingChat.id,
+//       //     messageId: messages.data[0].id,
+//       //     action: "revoke"
+//       //   });
+//       //   const removeStatus = await chat.actionMessage(existingChat.id, messages.data[0].id, "revoke");
+//       //   console.log("Kết quả xóa tin nhắn:", removeStatus);
+//       // }
 
-//     if (receiver.id) {
-//       const existingChat = await chat.findChatByReceiver(receiver.id);
-//       if (existingChat) {
-//         console.log("Đã tìm thấy cuộc trò chuyện hiện có với người nhận:", existingChat);
-//         const messages = await chat.getMessages(existingChat.id, 10, 1);
-//         console.log("Danh sách tin nhắn trong cuộc trò chuyện:", messages);
-//         const removeChat = await chat.removeChat(existingChat.id);
-//         console.log("Đã xóa cuộc trò chuyện hiện có:", removeChat);
-
-//         const existingChatTest = await chat.findChatByReceiver(receiver.id);
-//         console.log("Kiểm tra lại cuộc trò chuyện sau khi xóa:", existingChatTest);
-//       } else {
-//         console.log("Không tìm thấy cuộc trò chuyện hiện có. Đang tạo mới...");
-//         // const chat1 = await chat.addChat(receiver.id, "Xin chào! Đây là tin nhắn đầu tiên.");
-//         // console.log("Cuộc trò chuyện đã được tạo hoặc lấy:", chat1);
-//       }
+//       // const existingChatTest = await chat.findChatByReceiver(receiver.id);
+//       // console.log("Kiểm tra lại cuộc trò chuyện sau khi xóa:", existingChatTest);
+//     } else {
+//       console.log("Không tìm thấy cuộc trò chuyện hiện có. Đang tạo mới...");
+//       const chat1 = await chat.addChat(receiver.id, "Xin chào! Đây là tin nhắn đầu tiên.");
+//       console.log("Cuộc trò chuyện đã được tạo hoặc lấy:", chat1);
 //     }
+//   };
+
+//   const testChatGroup = async (...receiversIds: number[]) => {
+//     if (!chat || receiversIds.length < 2) return;
+//     console.log("Đang tạo nhóm với các người nhận có ID:", receiversIds);
+
+//     const group = await chat.addGroup(receiversIds, 'Nhóm test');
+//     console.log("Nhóm đã được tạo:", group);
 //   };
 
 //   return null;

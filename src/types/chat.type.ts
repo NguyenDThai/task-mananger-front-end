@@ -121,7 +121,9 @@ export interface ISChatInstance {
     chatId: number,
     limit?: number,
     page?: number,
-  ) => Promise<IMessageItem[]>;
+  ) => Promise<{
+    data: IMessageItem[];
+  }>;
 
   /**
    * Gửi tin nhắn với nội dung, tập tin, hoặc trả lời tin nhắn khác.
