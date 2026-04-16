@@ -1,2 +1,3 @@
 export { default as SideBar } from './SideBar';
-export { default as ChatBot } from './ChatBot';
+export * as ChatbotSearchList from './chatbot/ChatbotSearchList';
+export { default as ChatBot } from './chatbot/ChatBot';

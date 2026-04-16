@@ -1,4 +1,11 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
+import {
+  selectChatSDK,
+  selectIsChatInitialized,
+} from '../../../redux/slides/chat/chatSlide';
+import useDebounce from '../../../hooks/useDebound';
+import { ChatbotSearchList } from './ChatbotSearchList';
 
 const MOCK_CONVERSATIONS = [
   {
@@ -17,20 +24,38 @@ const MOCK_CONVERSATIONS = [
   },
 ];
 
-const ALL_SYSTEM_MEMBERS = [
-  { id: '101', name: 'Lê Văn Luyện', email: 'luyen@gmail.com' },
-  { id: '102', name: 'Phạm Nhật Vượng', email: 'vuong@vin.com' },
-  { id: '103', name: 'Trương Mỹ Lan', email: 'lan@scb.vn' },
-];
-
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentChat, setCurrentChat] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [systemMembers, setSystemMembers] = useState<any[]>([]);
+  const chatSDK = useSelector(selectChatSDK);
+  const isInitialized = useSelector(selectIsChatInitialized);
 
-  // Lọc member dựa trên UI
-  const filteredMembers = ALL_SYSTEM_MEMBERS.filter((m) =>
-    m.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  // Áp dụng debounce cho giá trị search (500ms cho thong thả)
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
+  useEffect(() => {
+    const fetchMembers = async () => {
+      if (!isInitialized) return;
+      if (!debouncedSearchQuery.trim()) {
+        setSystemMembers([]);
+        return;
+      }
+      try {
+        const res = await chatSDK.getMembers();
+        setSystemMembers(res.data || []);
+      } catch (error) {
+        console.error('Error fetching members:', error);
+      }
+    };
+
+    fetchMembers();
+  }, [isInitialized, chatSDK, debouncedSearchQuery]);
+
+  // Lọc member dựa trên giá trị đã được debounce
+  const filteredMembers = systemMembers.filter((m) =>
+    m.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()),
   );
 
   return (
@@ -121,23 +146,12 @@ const ChatBot = () => {
                     Kết quả hệ thống
                   </p>
                   {filteredMembers.map((m) => (
-                    <div
-                      key={m.id}
-                      onClick={() => {
-                        setCurrentChat(m);
-                        setSearchQuery('');
-                      }}
-                      className="flex items-center gap-3 p-3 rounded-xl hover:bg-white cursor-pointer border border-transparent hover:border-slate-100 transition-all"
-                    >
-                      <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
-                        {m.name.charAt(0)}
-                      </div>
-                      <div>
-                        <h4 className="text-sm font-semibold text-slate-800">
-                          {m.name}
-                        </h4>
-                        <p className="text-xs text-slate-500">{m.email}</p>
-                      </div>
+                    <div key={m.id}>
+                      <ChatbotSearchList
+                        m={m}
+                        setCurrentChat={setCurrentChat}
+                        setSearchQuery={setSearchQuery}
+                      />
                     </div>
                   ))}
                 </>
