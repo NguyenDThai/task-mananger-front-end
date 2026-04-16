@@ -214,7 +214,7 @@ export const Chat = () => {
   };
 
   return (
-    <div className="h-screen flex gap-0 bg-white no-header hidden-y hidden-x">
+    <div className="h-screen flex gap-0 no-header hidden-y hidden-x">
       {/* Sidebar - Hidden on mobile, visible on larger screens */}
       <div className="hidden md:block md:w-64 lg:w-80 flex-shrink-0">
         <ChatSidebar

@@ -102,9 +102,9 @@ export const ChatWindow = ({
   }
 
   return (
-    <div className="h-full flex flex-col bg-white">
+    <div className="h-full flex flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white sticky top-0">
+      <div className="h-14 bg-white flex items-center gap-3 px-4 py-3 border-b border-gray-100 sticky top-0">
         {chatAvatar ? (
           <img
             src={chatAvatar}
@@ -125,7 +125,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-transparent [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
+      <div className="bg-white flex-1 overflow-y-auto p-4 space-y-3 bg-transparent [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Plus, Search } from 'lucide-react';
+import { useMemo, useState, useRef } from 'react';
+import { Plus, Search, X } from 'lucide-react';
 import { ChatItem } from './ChatItem';
 
 interface IChatItem {
@@ -29,6 +29,8 @@ export const ChatSidebar = ({
   onCreateNewChat,
 }: ChatSidebarProps) => {
   const [searchQuery, setSearchQuery] = useState('');
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const filteredChats = useMemo(() => {
     if (!searchQuery.trim()) {
@@ -42,35 +44,67 @@ export const ChatSidebar = ({
     );
   }, [searchQuery, chats]);
 
-  return (
-    <div className="h-full flex flex-col bg-white border-r border-gray-100">
-      {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-100">
-        <div className="flex items-center justify-between mb-3">
-          <h2 className="text-base font-semibold text-gray-900">Tin nhắn</h2>
-          <button
-            onClick={onCreateNewChat}
-            className="p-1.5 hover:bg-gray-100 rounded transition-colors text-gray-600 hover:text-gray-900"
-            title="Tạo chat mới"
-          >
-            <Plus size={18} />
-          </button>
-        </div>
+  const handleSearchClick = () => {
+    setIsSearchOpen(true);
+    setTimeout(() => searchInputRef.current?.focus(), 0);
+  };
 
-        {/* Search */}
-        <div className="relative">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300"
-          />
-          <input
-            type="text"
-            placeholder="Tìm chat..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-1.5 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 transition-all"
-          />
-        </div>
+  const handleCloseSearch = () => {
+    setIsSearchOpen(false);
+    setSearchQuery('');
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      {/* Header */}
+      <div className="h-14 px-4 py-3 border-b border-gray-100 bg-white">
+        {isSearchOpen ? (
+          /* Search Bar */
+          <div className="flex items-center gap-2">
+            <div className="flex-1 relative">
+              <Search
+                size={16}
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-300"
+              />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Tìm chat..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-1.5 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 transition-all"
+              />
+            </div>
+            <button
+              onClick={handleCloseSearch}
+              className="p-1.5 hover:bg-gray-100 rounded transition-colors text-gray-600 hover:text-gray-900"
+              title="Đóng tìm kiếm"
+            >
+              <X size={18} />
+            </button>
+          </div>
+        ) : (
+          /* Title with buttons */
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-gray-900">Tin nhắn</h2>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={handleSearchClick}
+                className="p-1.5 hover:bg-gray-100 rounded transition-colors text-gray-600 hover:text-gray-900"
+                title="Tìm chat"
+              >
+                <Search size={18} />
+              </button>
+              <button
+                onClick={onCreateNewChat}
+                className="p-1.5 hover:bg-gray-100 rounded transition-colors text-gray-600 hover:text-gray-900"
+                title="Tạo chat mới"
+              >
+                <Plus size={18} />
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Chat List */}

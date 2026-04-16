@@ -63,8 +63,8 @@ export const ChatItem = ({
       <div
         className={`
           flex items-center gap-4 px-3 py-2.5 cursor-pointer transition-all duration-200
-          border-b border-gray-100 last:border-b-0 h-16 relative z-10
-          ${isActive ? 'bg-gray-50' : 'hover:bg-gray-50/50'}
+          border-b border-gray-50/50 last:border-b-0 h-16 relative z-10
+          ${isActive ? 'bg-white' : 'hover:bg-gray-50/50'}
         `}
         onClick={() => onSelect(id)}
       >
