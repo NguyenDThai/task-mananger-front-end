@@ -67,7 +67,7 @@ const SideBar = () => {
       ${isCollapsed ? 'w-20' : 'w-60'}`}
     >
       <div
-        className={`px-2 py-10 flex justify-start ${isCollapsed ? 'justify-center' : ''}`}
+        className={`h-14 px-2 py-3 flex justify-start ${isCollapsed ? 'justify-center' : ''}`}
       >
         <div className="flex items-center space-x-3 group cursor-pointer">
           <div className="w-10 h-10 bg-linear-to-tr from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/40 group-hover:rotate-12 transition-transform flex-shrink-0">
@@ -88,7 +88,7 @@ const SideBar = () => {
 
       <nav className="flex-1 space-y-8 ">
         <div>
-          <div className="flex items-center justify-between mb-6 px-4">
+          <div className="flex items-center justify-between px-4 py-4 mt-2">
             {!isCollapsed && (
               <p className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em]">
                 Menu

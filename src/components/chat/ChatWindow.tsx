@@ -1,19 +1,13 @@
-interface Message {
-  id: number;
-  senderId: number;
-  senderName: string;
-  senderAvatar?: string;
-  content: string;
-  timestamp: string;
-  isCurrentUser?: boolean;
-}
+import React from 'react';
+import type { IMessageItem } from '../../types/chat.type';
 
 interface ChatWindowProps {
   chatId?: number;
   chatName?: string;
   chatAvatar?: string;
-  messages: Message[];
+  messages: IMessageItem[];
   isLoading?: boolean;
+  currentUserId?: number;
   onSendMessage: (content: string) => void;
 }
 
@@ -23,6 +17,7 @@ export const ChatWindow = ({
   chatAvatar,
   messages = [],
   isLoading = false,
+  currentUserId,
   onSendMessage,
 }: ChatWindowProps) => {
   const [messageInput, setMessageInput] = React.useState('');
@@ -50,8 +45,8 @@ export const ChatWindow = ({
     }
   };
 
-  const formatTime = (timestamp: string) => {
-    const date = new Date(timestamp);
+  const formatTime = (isoString: string) => {
+    const date = new Date(isoString);
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
@@ -69,6 +64,15 @@ export const ChatWindow = ({
         day: 'numeric',
       });
     }
+  };
+
+  // Helper function to get member avatar and name
+  const getSenderInfo = (message: IMessageItem) => {
+    const member = message.member;
+    return {
+      name: member?.name || 'Người dùng',
+      avatar: member?.avatar,
+    };
   };
 
   if (!chatId) {
@@ -146,48 +150,65 @@ export const ChatWindow = ({
           </div>
         ) : (
           <>
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex gap-2 ${
-                  message.isCurrentUser ? 'justify-end' : 'justify-start'
-                }`}
-              >
-                {!message.isCurrentUser && (
-                  <img
-                    src={message.senderAvatar || ''}
-                    alt={message.senderName}
-                    className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5"
-                  />
-                )}
+            {messages.map((message) => {
+              const senderInfo = getSenderInfo(message);
+              // Determine if this is a message from current user
+              const isCurrentUser =
+                currentUserId && message.member?.id === currentUserId;
 
-                <div className="flex flex-col gap-1">
-                  <div
-                    className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded ${
-                      message.isCurrentUser
-                        ? 'bg-blue-900 text-white'
-                        : 'bg-blue-100 text-gray-900'
-                    }`}
-                  >
-                    {!message.isCurrentUser && (
-                      <p className="text-xs font-medium mb-0.5 opacity-70">
-                        {message.senderName}
-                      </p>
-                    )}
-                    <p className="text-sm break-words">{message.content}</p>
+              return (
+                <div
+                  key={message.id}
+                  className={`flex gap-2 ${
+                    isCurrentUser ? 'justify-end' : 'justify-start'
+                  }`}
+                >
+                  {!isCurrentUser && senderInfo.avatar && (
+                    <img
+                      src={senderInfo.avatar}
+                      alt={senderInfo.name}
+                      className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5"
+                    />
+                  )}
+
+                  <div className="flex flex-col gap-1">
+                    <div
+                      className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded ${
+                        isCurrentUser
+                          ? 'bg-blue-900 text-white'
+                          : 'bg-blue-100 text-gray-900'
+                      }`}
+                    >
+                      {!isCurrentUser && (
+                        <p className="text-xs font-medium mb-0.5 opacity-70">
+                          {senderInfo.name}
+                        </p>
+                      )}
+                      <p className="text-sm break-words">{message.content}</p>
+                      {message.revoke && (
+                        <p className="text-xs italic opacity-50 mt-1">
+                          Tin nhắn đã được thu hồi
+                        </p>
+                      )}
+                      {message.remove && (
+                        <p className="text-xs italic opacity-50 mt-1">
+                          Tin nhắn đã bị xóa
+                        </p>
+                      )}
+                    </div>
+                    <p
+                      className={`text-xs ${
+                        isCurrentUser
+                          ? 'text-right text-gray-400'
+                          : 'text-left text-gray-500'
+                      }`}
+                    >
+                      {formatTime(message.created_at)}
+                    </p>
                   </div>
-                  <p
-                    className={`text-xs ${
-                      message.isCurrentUser
-                        ? 'text-right text-gray-400'
-                        : 'text-left text-gray-500'
-                    }`}
-                  >
-                    {formatTime(message.timestamp)}
-                  </p>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div ref={messagesEndRef} />
           </>
         )}
@@ -219,5 +240,3 @@ export const ChatWindow = ({
     </div>
   );
 };
-
-import React from 'react';

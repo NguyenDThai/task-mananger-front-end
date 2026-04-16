@@ -1,15 +1,7 @@
 import { useMemo, useState, useRef } from 'react';
 import { Plus, Search, X } from 'lucide-react';
+import type { IChatItem } from '../../types/chat.type';
 import { ChatItem } from './ChatItem';
-
-interface IChatItem {
-  id: number;
-  name: string;
-  avatar?: string;
-  lastMessage?: string;
-  unreadCount?: number;
-  isGroup?: boolean;
-}
 
 interface ChatSidebarProps {
   chats: IChatItem[];
@@ -37,11 +29,20 @@ export const ChatSidebar = ({
       return chats;
     }
     const query = searchQuery.toLowerCase();
-    return chats.filter(
-      (chat) =>
-        chat.name.toLowerCase().includes(query) ||
-        chat.lastMessage?.toLowerCase().includes(query),
-    );
+    return chats.filter((chat) => {
+      // Search in member names
+      const memberNames =
+        chat.members?.some((member) =>
+          member.name?.toLowerCase().includes(query),
+        ) ?? false;
+
+      // Search in message content
+      const messageContent =
+        typeof chat.message?.content === 'string' &&
+        chat.message.content.toLowerCase().includes(query);
+
+      return memberNames || messageContent;
+    });
   }, [searchQuery, chats]);
 
   const handleSearchClick = () => {
@@ -155,11 +156,6 @@ export const ChatSidebar = ({
             ))}
           </div>
         )}
-      </div>
-
-      {/* Footer */}
-      <div className="px-4 py-2.5 border-t border-gray-100 text-xs text-gray-400">
-        <p>Tổng: {chats.length} cuộc trò chuyện</p>
       </div>
     </div>
   );

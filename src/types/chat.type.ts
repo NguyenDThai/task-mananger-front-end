@@ -47,7 +47,19 @@ export interface ISChatInstance {
    * @param limit Số lượng bản ghi (tùy chọn, mặc định 0 = tất cả)
    * @param page Số trang (tùy chọn, mặc định 1)
    */
-  getChats: (limit?: number, page?: number) => Promise<IChatItem[]>;
+  getChats: (
+    limit?: number,
+    page?: number,
+  ) => Promise<{
+    data: IChatItem[];
+    pagination: {
+      count: number;
+      currentPage: number;
+      per_page: number;
+      total: number;
+      total_pages: number;
+    };
+  }>;
 
   /**
    * Tìm cuộc trò chuyện 1-1 với một người nhất định.
@@ -123,6 +135,13 @@ export interface ISChatInstance {
     page?: number,
   ) => Promise<{
     data: IMessageItem[];
+    pagination: {
+      count: number;
+      currentPage: number;
+      per_page: number;
+      total: number;
+      total_pages: number;
+    };
   }>;
 
   /**
@@ -216,21 +235,27 @@ export interface ISChatUser {
 
 export interface IChatItem {
   id: number;
-  name?: string;
-  lastMessage?: unknown;
-  updatedAt: string;
-  // ... các trường khác từ SDK trả về
+  code: string;
+  message: IMessageItem | null;
+  members: ISChatUser[];
+  unreadCount?: number;
+  type: 'single' | 'group';
+  updated_at: string;
+  create_at: string;
 }
 
 export interface IMessageItem {
   id: number;
-  chatId: number;
-  senderId: number;
+  type: 'text' | unknown;
+  action: string[];
+  member: ISChatUser;
   content: string | null; // Nội dung tin nhắn (có thể null nếu chỉ có file đính kèm)
   files?: unknown[]; // Danh sách file gửi kèm (nếu có)
-  replyId?: number | null;
-  createdAt: string;
-  // ... các trường khác từ SDK trả về
+  revoke: boolean; // Trạng thái thu hồi tin nhắn
+  remove: boolean; // Trạng thái xóa tin nhắn
+  date: string;
+  updated_at: string;
+  created_at: string;
 }
 
 export interface ISChatEventPayloads {

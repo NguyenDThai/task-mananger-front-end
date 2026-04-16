@@ -63,7 +63,12 @@ authListenerMiddleware.startListening({
 
     // 3. Nếu có chatInstance, tiến hành setAuth
     if (chatInstance && user) {
-      await chatInstance.setAuth({ code: user._id, name: user.name });
+      await chatInstance.setAuth({
+        code: user._id,
+        name: user.name,
+        avatar: user.avatar,
+        email: user.email,
+      });
     }
   },
 });

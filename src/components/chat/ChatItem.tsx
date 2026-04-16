@@ -1,21 +1,16 @@
 import { MoreVertical } from 'lucide-react';
 import { useState } from 'react';
+import type { IChatItem } from '../../types/chat.type';
 
-interface ChatItemProps {
+interface ChatItemProps extends Omit<IChatItem, 'id'> {
   id: number;
-  name: string;
-  avatar?: string;
-  lastMessage?: string;
-  lastMessageTime?: string | number | Date;
-  unreadCount?: number;
   isActive?: boolean;
-  isGroup?: boolean;
   onSelect: (chatId: number) => void;
   onDelete?: (chatId: number) => void;
 }
 
 // Utility function to format time
-const formatMessageTime = (time?: string | number | Date): string => {
+const formatMessageTime = (time?: string): string => {
   if (!time) return '';
 
   const messageDate = new Date(time);
@@ -36,19 +31,55 @@ const formatMessageTime = (time?: string | number | Date): string => {
   });
 };
 
+// Get chat display name based on type
+const getChatDisplayName = (chat: IChatItem): string => {
+  if (chat.type === 'group') {
+    return `Nhóm (${chat.members?.length || 0} thành viên)`;
+  }
+  // For single chat, get the other member's name
+  return chat.members?.[0]?.name || 'Chat';
+};
+
+// Get chat avatar from first member
+const getChatAvatar = (chat: IChatItem): string | undefined => {
+  return chat.members?.[0]?.avatar;
+};
+
 export const ChatItem = ({
   id,
-  name,
-  avatar,
-  lastMessage,
-  lastMessageTime,
+  members,
+  message,
+  type,
   unreadCount,
+  updated_at,
   isActive,
-  isGroup = false,
   onSelect,
   onDelete,
 }: ChatItemProps) => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+
+  const chatName = getChatDisplayName({
+    id,
+    members,
+    message,
+    type,
+    unreadCount,
+    updated_at,
+    create_at: '',
+    code: '',
+  });
+  const avatar = getChatAvatar({
+    id,
+    members,
+    message,
+    type,
+    unreadCount,
+    updated_at,
+    create_at: '',
+    code: '',
+  });
+  const lastMessageContent = message?.content;
+  const lastMessageTime = message?.created_at || updated_at;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -73,13 +104,13 @@ export const ChatItem = ({
           {avatar ? (
             <img
               src={avatar}
-              alt={name}
+              alt={chatName}
               className="w-10 h-10 rounded-full object-cover"
             />
           ) : (
             <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
               <span className="text-gray-600 font-medium text-xs">
-                {name.charAt(0).toUpperCase()}
+                {chatName ? chatName.charAt(0).toUpperCase() : '?'}
               </span>
             </div>
           )}
@@ -89,22 +120,17 @@ export const ChatItem = ({
         <div className="flex-1 min-w-0 flex items-center justify-between">
           <div className="flex flex-col items-start justify-start w-40">
             <h3 className="font-medium text-gray-900 truncate text-sm w-full">
-              {name}
-              {isGroup && (
-                <span className="ml-1.5 text-xs text-gray-400 font-normal">
-                  Nhóm
-                </span>
-              )}
+              {chatName}
             </h3>
-            {lastMessage && (
+            {lastMessageContent && (
               <p className="text-xs text-gray-400 truncate mt-1 w-full">
-                {lastMessage}
+                {lastMessageContent}
               </p>
             )}
           </div>
 
           <div className="flex flex-col items-start justify-start">
-            {!!unreadCount && unreadCount > 0 && (
+            {unreadCount && unreadCount > 0 && (
               <span className="flex-shrink-0 inline-flex items-center justify-center min-w-7 h-5 bg-gray-900 text-white text-xs font-semibold rounded-full">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
@@ -134,13 +160,13 @@ export const ChatItem = ({
           pointer-events-none group-hover:pointer-events-auto"
       >
         {/* More menu button */}
-        <div className="relative">
+        <div className="relative mr-3">
           <button
             onClick={(e) => {
               e.stopPropagation();
               setShowMoreMenu(!showMoreMenu);
             }}
-            className="p-1.5 text-white hover:bg-white/20 rounded transition-colors"
+            className="p-1.5 text-white bg-white/20 hover:text-black hover:bg-white/60 rounded transition-colors"
             title="Thêm tùy chọn"
           >
             <MoreVertical size={18} />

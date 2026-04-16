@@ -1,173 +1,157 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
+import type { RootState } from '../../redux/store';
+import type {
+  IChatItem,
+  IMessageItem,
+  ISChatEventPayloads,
+  ISChatUser,
+} from '../../types/chat.type';
 import { ChatSidebar, ChatWindow } from '../../components/chat';
 import { toast } from 'react-toastify';
 
-interface IChatItem {
-  id: number;
-  name: string;
-  avatar?: string;
-  lastMessage?: string;
-  lastMessageTime?: string | number | Date;
-  unreadCount?: number;
-  isGroup?: boolean;
-}
-
-interface Message {
-  id: number;
-  senderId: number;
-  senderName: string;
-  senderAvatar?: string;
-  content: string;
-  timestamp: string;
-  isCurrentUser?: boolean;
-}
-
-const getInitialMessages = (): Message[] => {
-  const now = Date.now();
-  return [
-    {
-      id: 1,
-      senderId: 2,
-      senderName: 'Nguyễn Văn A',
-      senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-      content: 'Xin chào bạn!',
-      timestamp: new Date(now - 3600000).toISOString(),
-      isCurrentUser: false,
-    },
-    {
-      id: 2,
-      senderId: 1,
-      senderName: 'Bạn',
-      senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=current',
-      content: 'Xin chào! Bạn khỏe không?',
-      timestamp: new Date(now - 3000000).toISOString(),
-      isCurrentUser: true,
-    },
-    {
-      id: 3,
-      senderId: 2,
-      senderName: 'Nguyễn Văn A',
-      senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-      content: 'Tôi khỏe, cảm ơn bạn nhé!',
-      timestamp: new Date(now - 2400000).toISOString(),
-      isCurrentUser: false,
-    },
-  ];
-};
-
-const getInitialChats = (): IChatItem[] => {
-  const now = Date.now();
-  return [
-    {
-      id: 1,
-      name: 'Nguyễn Văn A',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-      lastMessage: 'Cảm ơn bạn nhé!',
-      lastMessageTime: new Date(now - 2400000).toISOString(),
-      unreadCount: 2,
-      isGroup: false,
-    },
-    {
-      id: 2,
-      name: 'Project Team',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
-      lastMessage: 'Cuộc họp diễn ra lúc 3 giờ chiều',
-      unreadCount: 5,
-      isGroup: true,
-    },
-    {
-      id: 3,
-      name: 'Lê Thị B',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3',
-      lastMessage: 'OK, tôi sẽ làm ngay',
-      unreadCount: 0,
-      isGroup: false,
-    },
-    {
-      id: 4,
-      name: 'Trần Minh Tâmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
-      lastMessage:
-        'Bạn gửi file thiết kế cho mình chưa?????????????????????????????????',
-      unreadCount: 1,
-      isGroup: false,
-    },
-    {
-      id: 5,
-      name: 'Gia Đình ❤️',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
-      lastMessage: 'Cuối tuần này có về quê không con?',
-      unreadCount: 101,
-      isGroup: true,
-    },
-    {
-      id: 6,
-      name: 'Phạm Hoàng Nam',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=6',
-      lastMessage: 'Trận bóng tối nay bắt đầu lúc 7h nhé',
-      unreadCount: 0,
-      isGroup: false,
-    },
-    {
-      id: 7,
-      name: 'Lớp Đại Học',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=7',
-      lastMessage: 'Thông báo về lịch thi học kỳ mới nhất',
-      unreadCount: 8,
-      isGroup: true,
-    },
-    {
-      id: 8,
-      name: 'Hoàng Thu Thủy',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=8',
-      lastMessage: 'Ảnh đẹp quá bạn ơi!',
-      unreadCount: 0,
-      isGroup: false,
-    },
-    {
-      id: 9,
-      name: 'Hội Ăn Trưa',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=9',
-      lastMessage: 'Hôm nay ăn bún chả nhé cả nhà?',
-      unreadCount: 3,
-      isGroup: true,
-    },
-    {
-      id: 10,
-      name: 'Đặng Quốc Bảo',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=10',
-      lastMessage: 'Đã nhận được thanh toán, cảm ơn!',
-      unreadCount: 0,
-      isGroup: false,
-    },
-  ];
-};
-
 export const Chat = () => {
-  const [chats, setChats] = useState<IChatItem[]>(getInitialChats());
-  const [activeChatId, setActiveChatId] = useState<number | undefined>(
-    chats[0]?.id,
-  );
-  const [messages, setMessages] = useState<Message[]>(getInitialMessages());
-
+  const chat = useSelector((state: RootState) => state.chat.instance);
+  const [chats, setChats] = useState<IChatItem[]>([]);
+  const [currentChat, setCurrentChat] = useState<IChatItem | null>(null);
+  const [messages, setMessages] = useState<IMessageItem[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<ISChatUser | null>(null);
+  const [, setReceiver] = useState<ISChatUser | null>(null);
 
-  const activeChat = chats.find((chat) => chat.id === activeChatId);
+  // Load chats from chat SDK
+  useEffect(() => {
+    const loadChats = async () => {
+      if (!chat) return;
+
+      try {
+        setIsLoading(true);
+
+        // Get current user
+        const user = chat.getAuth();
+        setCurrentUser(user);
+
+        const response = await chat.getChats(10, 1);
+
+        const chatsList = response?.data || [];
+
+        setChats(chatsList);
+        // Set first chat as active
+        if (chatsList.length > 0) {
+          setCurrentChat(chatsList[0]);
+        }
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách chat:', error);
+        toast.error('Không thể tải danh sách chat');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    setTimeout(() => {
+      loadChats();
+    }, 1000);
+  }, [chat]);
+
+  // Load messages when active chat changes
+  useEffect(() => {
+    if (!currentChat || !chat) return;
+
+    const loadMessages = async () => {
+      try {
+        setIsLoading(true);
+
+        chat.clearReceiver();
+
+        // Set new receiver for single chat
+        if (currentChat.type === 'single') {
+          const otherMember = currentChat.members?.find(
+            (member) => member.code !== currentUser?.code,
+          );
+          if (otherMember) {
+            await chat.setReceiver(otherMember);
+            setReceiver(otherMember);
+          }
+        } else {
+          setReceiver(null);
+        }
+
+        // console.log('Thông tin cuộc trò chuyện:', currentChat);
+
+        // const receiverInfo = await chat.getReceiver();
+        // console.log('Thông tin người nhận:', receiverInfo);
+
+        const response = await chat.getMessages(currentChat.id, 20, 1);
+
+        const messagesList = response?.data || [];
+        // console.log('Tin nhắn đã được tải:', messagesList);
+
+        setMessages(messagesList.toReversed());
+      } catch (error) {
+        console.error('Lỗi khi lấy tin nhắn:', error);
+        setMessages([]);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    loadMessages();
+  }, [currentChat, chat, currentUser?.code]);
+
+  useEffect(() => {
+    if (!chat) return;
+
+    const handleNewMessage = (
+      payload: ISChatEventPayloads['chats.message'],
+    ) => {
+      const { chat: chatInfo, message } = payload;
+
+      setMessages((prev) => {
+        const isExisted = prev.find((m) => m.id === message.id);
+        if (isExisted) return prev;
+        return Number(chatInfo.id) === Number(currentChat?.id)
+          ? [...prev, message]
+          : prev;
+      });
+    };
+
+    chat.addEventListener('chats.message', handleNewMessage);
+    return () => chat.removeEventListener('chats.message', handleNewMessage);
+  }, [chat, currentChat?.id]);
+
+  // Get chat name from members or use default
+  const getActiveChatName = () => {
+    if (!currentChat) return 'Chat';
+    if (currentChat.type === 'group') {
+      return `Nhóm (${currentChat.members?.length || 0} thành viên)`;
+    }
+    // For single chat, get the other member's name
+    const otherMember = currentChat.members?.find(
+      (member) => member.code !== currentUser?.code,
+    );
+    return otherMember?.name || 'Chat';
+  };
+
+  // Get chat avatar from first member
+  const getActiveChatAvatar = () => {
+    const otherMember = currentChat?.members?.find(
+      (member) => member.code !== currentUser?.code,
+    );
+    return otherMember?.avatar;
+  };
 
   const handleSelectChat = (chatId: number) => {
-    setActiveChatId(chatId);
-    // Simulate loading messages
-    setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
-    }, 500);
+    const selectedChat = chats.find((chat) => chat.id === chatId);
+    if (selectedChat) {
+      setCurrentChat(selectedChat);
+    }
   };
 
   const handleDeleteChat = (chatId: number) => {
     setChats((prev) => prev.filter((chat) => chat.id !== chatId));
-    if (activeChatId === chatId) {
+    if (currentChat?.id === chatId) {
       const remainingChat = chats.find((chat) => chat.id !== chatId);
-      setActiveChatId(remainingChat?.id);
+      setCurrentChat(remainingChat || null);
     }
     toast.success('Đã xóa cuộc trò chuyện');
   };
@@ -176,41 +160,10 @@ export const Chat = () => {
     toast.info('Tính năng tạo chat mới sẽ sớm được cập nhật');
   };
 
-  const handleSendMessage = (content: string) => {
-    const newMessage: Message = {
-      id: messages.length + 1,
-      senderId: 1,
-      senderName: 'Bạn',
-      senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=current',
-      content,
-      timestamp: new Date().toISOString(),
-      isCurrentUser: true,
-    };
-
-    setMessages((prev) => [...prev, newMessage]);
-
-    // Update last message in chat list
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === activeChatId
-          ? { ...chat, lastMessage: content, unreadCount: 0 }
-          : chat,
-      ),
-    );
-
-    // Simulate reply
-    setTimeout(() => {
-      const reply: Message = {
-        id: messages.length + 2,
-        senderId: activeChatId || 2,
-        senderName: activeChat?.name || 'Người dùng',
-        senderAvatar: activeChat?.avatar,
-        content: 'Cảm ơn bạn đã gửi tin nhắn!',
-        timestamp: new Date().toISOString(),
-        isCurrentUser: false,
-      };
-      setMessages((prev) => [...prev, reply]);
-    }, 1000);
+  const handleSendMessage = async (content: string) => {
+    if (!currentUser || !chat || !currentChat) return;
+    const newMessageResponse = await chat?.addMessage(currentChat.id, content);
+    console.warn('Tin nhắn mới đã được gửi:', newMessageResponse);
   };
 
   return (
@@ -219,7 +172,7 @@ export const Chat = () => {
       <div className="hidden md:block md:w-64 lg:w-80 flex-shrink-0">
         <ChatSidebar
           chats={chats}
-          activeChatId={activeChatId}
+          activeChatId={currentChat?.id}
           isLoading={isLoading}
           onSelectChat={handleSelectChat}
           onDeleteChat={handleDeleteChat}
@@ -230,11 +183,12 @@ export const Chat = () => {
       {/* Main Chat Window */}
       <div className="flex-1 flex flex-col">
         <ChatWindow
-          chatId={activeChatId}
-          chatName={activeChat?.name}
-          chatAvatar={activeChat?.avatar}
+          chatId={currentChat?.id}
+          chatName={getActiveChatName()}
+          chatAvatar={getActiveChatAvatar()}
           messages={messages}
           isLoading={isLoading}
+          currentUserId={currentUser?.id}
           onSendMessage={handleSendMessage}
         />
       </div>

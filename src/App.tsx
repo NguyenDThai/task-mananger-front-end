@@ -22,8 +22,8 @@
 //         // await chat.removeChat(53);
 
 //         // await chat.clearReceiver();
-//         await chat.clearAuth();
-//         console.log("Đã xóa thông tin xác thực và người nhận. ");
+//         // await chat.clearAuth();
+//         // console.log("Đã xóa thông tin xác thực và người nhận. ");
 //       } catch (error) {
 //         console.error("Lỗi khởi tạo chat:", error);
 //       }
@@ -64,6 +64,8 @@
 //       //   const removeStatus = await chat.actionMessage(existingChat.id, messages.data[0].id, "remove");
 //       //   console.log("Kết quả xóa tin nhắn:", removeStatus);
 //       // }
+//       // const newMessage = await chat.addMessage(existingChat.id, "Đây là tin nhắn mới sau khi tìm thấy cuộc trò chuyện cũ.");
+//       // console.log("Tin nhắn mới đã được gửi trong cuộc trò chuyện hiện có:", newMessage);
 
 //     } else {
 //       console.log("Không tìm thấy cuộc trò chuyện hiện có. Đang tạo mới...");
@@ -81,7 +83,11 @@
 //   };
 
 //   return {
-//     initAppChat,
+//     initAppChat: async () => {
+//       setTimeout(() => {
+//         initAppChat();
+//       }, 500);
+//     },
 //   };
 // };
 
@@ -92,7 +98,7 @@ const useApp = () => {
         console.warn(
           'Đây là hàm initAppChat được gọi sau khi người dùng đã đăng nhập thành công. Bạn có thể thực hiện các thao tác khởi tạo chat ở đây.',
         );
-      }, 2000);
+      }, 500);
     },
   };
 };
