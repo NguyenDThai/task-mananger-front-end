@@ -6,6 +6,7 @@ interface ChatItemProps {
   name: string;
   avatar?: string;
   lastMessage?: string;
+  lastMessageTime?: string | number | Date;
   unreadCount?: number;
   isActive?: boolean;
   isGroup?: boolean;
@@ -13,11 +14,34 @@ interface ChatItemProps {
   onDelete?: (chatId: number) => void;
 }
 
+// Utility function to format time
+const formatMessageTime = (time?: string | number | Date): string => {
+  if (!time) return '';
+
+  const messageDate = new Date(time);
+  const now = new Date();
+  const diffMs = now.getTime() - messageDate.getTime();
+  const diffMins = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMins < 1) return 'Vừa xong';
+  if (diffMins < 60) return `${diffMins}m`;
+  if (diffHours < 24) return `${diffHours}h`;
+  if (diffDays < 7) return `${diffDays}d`;
+
+  return messageDate.toLocaleDateString('vi-VN', {
+    month: 'short',
+    day: 'numeric',
+  });
+};
+
 export const ChatItem = ({
   id,
   name,
   avatar,
   lastMessage,
+  lastMessageTime,
   unreadCount,
   isActive,
   isGroup = false,
@@ -34,7 +58,7 @@ export const ChatItem = ({
   };
 
   return (
-    <div className="relative group">
+    <div className="relative group" onMouseLeave={() => setShowMoreMenu(false)}>
       {/* Main item */}
       <div
         className={`
@@ -62,9 +86,9 @@ export const ChatItem = ({
         </div>
 
         {/* Chat info */}
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center justify-between gap-2">
-            <h3 className="font-medium text-gray-900 truncate text-sm">
+        <div className="flex-1 min-w-0 flex items-center justify-between">
+          <div className="flex flex-col items-start justify-start w-40">
+            <h3 className="font-medium text-gray-900 truncate text-sm w-full">
               {name}
               {isGroup && (
                 <span className="ml-1.5 text-xs text-gray-400 font-normal">
@@ -72,22 +96,32 @@ export const ChatItem = ({
                 </span>
               )}
             </h3>
-            {unreadCount && unreadCount > 0 && (
-              <span className="flex-shrink-0 inline-flex items-center justify-center min-w-5 h-5 bg-gray-900 text-white text-xs font-semibold rounded-full">
+            {lastMessage && (
+              <p className="text-xs text-gray-400 truncate mt-1 w-full">
+                {lastMessage}
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-col items-start justify-start">
+            {!!unreadCount && unreadCount > 0 && (
+              <span className="flex-shrink-0 inline-flex items-center justify-center min-w-7 h-5 bg-gray-900 text-white text-xs font-semibold rounded-full">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>
             )}
+            {lastMessageTime && (
+              <span className="text-xs text-gray-400 mt-1">
+                {formatMessageTime(lastMessageTime)}
+              </span>
+            )}
           </div>
-          {lastMessage && (
-            <p className="text-xs text-gray-400 truncate mt-1">{lastMessage}</p>
-          )}
         </div>
       </div>
 
       {/* Gradient Scrim + Blur Overlay (Combined) */}
       <div
         className="absolute right-0 top-0 bottom-0 w-24 
-          flex items-center justify-end px-3
+          flex items-center justify-end
           /* Hiệu ứng nền: Mờ + Gradient đen nhạt mượt */
           backdrop-blur-sm 
           bg-gradient-to-l from-black/20 via-black/10 to-transparent

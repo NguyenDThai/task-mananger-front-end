@@ -74,7 +74,7 @@ export const ChatSidebar = ({
       </div>
 
       {/* Chat List */}
-      <div className="flex-1 overflow-y-auto [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
+      <div className="flex-1 overflow-x-hidden overflow-y-auto [&::-webkit-scrollbar]:!w-0 [&::-webkit-scrollbar]:!h-0">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">

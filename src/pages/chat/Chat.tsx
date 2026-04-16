@@ -7,6 +7,7 @@ interface IChatItem {
   name: string;
   avatar?: string;
   lastMessage?: string;
+  lastMessageTime?: string | number | Date;
   unreadCount?: number;
   isGroup?: boolean;
 }
@@ -21,43 +22,48 @@ interface Message {
   isCurrentUser?: boolean;
 }
 
-const getInitialMessages = (): Message[] => [
-  {
-    id: 1,
-    senderId: 2,
-    senderName: 'Nguyễn Văn A',
-    senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-    content: 'Xin chào bạn!',
-    timestamp: new Date(Date.now() - 3600000).toISOString(),
-    isCurrentUser: false,
-  },
-  {
-    id: 2,
-    senderId: 1,
-    senderName: 'Bạn',
-    senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=current',
-    content: 'Xin chào! Bạn khỏe không?',
-    timestamp: new Date(Date.now() - 3000000).toISOString(),
-    isCurrentUser: true,
-  },
-  {
-    id: 3,
-    senderId: 2,
-    senderName: 'Nguyễn Văn A',
-    senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-    content: 'Tôi khỏe, cảm ơn bạn nhé!',
-    timestamp: new Date(Date.now() - 2400000).toISOString(),
-    isCurrentUser: false,
-  },
-];
+const getInitialMessages = (): Message[] => {
+  const now = Date.now();
+  return [
+    {
+      id: 1,
+      senderId: 2,
+      senderName: 'Nguyễn Văn A',
+      senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
+      content: 'Xin chào bạn!',
+      timestamp: new Date(now - 3600000).toISOString(),
+      isCurrentUser: false,
+    },
+    {
+      id: 2,
+      senderId: 1,
+      senderName: 'Bạn',
+      senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=current',
+      content: 'Xin chào! Bạn khỏe không?',
+      timestamp: new Date(now - 3000000).toISOString(),
+      isCurrentUser: true,
+    },
+    {
+      id: 3,
+      senderId: 2,
+      senderName: 'Nguyễn Văn A',
+      senderAvatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
+      content: 'Tôi khỏe, cảm ơn bạn nhé!',
+      timestamp: new Date(now - 2400000).toISOString(),
+      isCurrentUser: false,
+    },
+  ];
+};
 
-export const Chat = () => {
-  const [chats, setChats] = useState<IChatItem[]>([
+const getInitialChats = (): IChatItem[] => {
+  const now = Date.now();
+  return [
     {
       id: 1,
       name: 'Nguyễn Văn A',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
       lastMessage: 'Cảm ơn bạn nhé!',
+      lastMessageTime: new Date(now - 2400000).toISOString(),
       unreadCount: 2,
       isGroup: false,
     },
@@ -79,7 +85,7 @@ export const Chat = () => {
     },
     {
       id: 4,
-      name: 'Trần Minh Tâm',
+      name: 'Trần Minh Tâmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
       lastMessage:
         'Bạn gửi file thiết kế cho mình chưa?????????????????????????????????',
@@ -91,7 +97,7 @@ export const Chat = () => {
       name: 'Gia Đình ❤️',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=5',
       lastMessage: 'Cuối tuần này có về quê không con?',
-      unreadCount: 12,
+      unreadCount: 101,
       isGroup: true,
     },
     {
@@ -134,8 +140,11 @@ export const Chat = () => {
       unreadCount: 0,
       isGroup: false,
     },
-  ]);
+  ];
+};
 
+export const Chat = () => {
+  const [chats, setChats] = useState<IChatItem[]>(getInitialChats());
   const [activeChatId, setActiveChatId] = useState<number | undefined>(
     chats[0]?.id,
   );

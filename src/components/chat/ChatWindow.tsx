@@ -125,7 +125,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-white [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
+      <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-transparent [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -161,22 +161,26 @@ export const ChatWindow = ({
                   />
                 )}
 
-                <div
-                  className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded ${
-                    message.isCurrentUser
-                      ? 'bg-gray-900 text-white'
-                      : 'bg-gray-100 text-gray-900'
-                  }`}
-                >
-                  {!message.isCurrentUser && (
-                    <p className="text-xs font-medium mb-0.5 opacity-70">
-                      {message.senderName}
-                    </p>
-                  )}
-                  <p className="text-sm break-words">{message.content}</p>
+                <div className="flex flex-col gap-1">
+                  <div
+                    className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded ${
+                      message.isCurrentUser
+                        ? 'bg-blue-900 text-white'
+                        : 'bg-blue-100 text-gray-900'
+                    }`}
+                  >
+                    {!message.isCurrentUser && (
+                      <p className="text-xs font-medium mb-0.5 opacity-70">
+                        {message.senderName}
+                      </p>
+                    )}
+                    <p className="text-sm break-words">{message.content}</p>
+                  </div>
                   <p
-                    className={`text-xs mt-0.5 ${
-                      message.isCurrentUser ? 'text-gray-400' : 'text-gray-500'
+                    className={`text-xs ${
+                      message.isCurrentUser
+                        ? 'text-right text-gray-400'
+                        : 'text-left text-gray-500'
                     }`}
                   >
                     {formatTime(message.timestamp)}
