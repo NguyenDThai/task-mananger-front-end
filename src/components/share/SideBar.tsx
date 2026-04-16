@@ -6,6 +6,7 @@ import {
   Zap,
   ChevronLeft,
   ChevronRight,
+  MessageCircle,
 } from 'lucide-react';
 import { useState } from 'react';
 import { useDispatch } from 'react-redux';
@@ -29,6 +30,8 @@ const SideBar = () => {
         return 'dashboard';
       case '/profile':
         return 'profile';
+      case '/chat':
+        return 'chat';
       default:
         return 'my-tasks';
     }
@@ -42,6 +45,7 @@ const SideBar = () => {
       kanban: '/kanban',
       dashboard: '/dashboard',
       profile: '/profile',
+      chat: '/chat',
     };
     navigate(paths[viewId] || '/');
   };
@@ -115,6 +119,11 @@ const SideBar = () => {
                 icon: <LayoutDashboard size={16} />,
               },
               { id: 'dashboard', label: 'Thống kê', icon: <Zap size={16} /> },
+              {
+                id: 'chat',
+                label: 'Tin nhắn',
+                icon: <MessageCircle size={16} />,
+              },
             ].map((item) => (
               <button
                 key={item.id}

@@ -13,7 +13,7 @@ const Home = () => {
       <SideBar />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col overflow-hidden has-[.no-header]:[&_header]:hidden">
         <header className="h-24 px-10 flex items-center justify-between z-10">
           <div className="relative w-1/3 group">
             <input
@@ -53,7 +53,7 @@ const Home = () => {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto px-10 pb-10 has-[.hidden-y]:overflow-y-hidden has-[.hidden-y]:pb-0">
+        <div className="flex-1 overflow-y-auto px-10 pb-10 has-[.hidden-y]:overflow-y-hidden has-[.hidden-y]:pb-0 has-[.hidden-x]:px-0">
           <Outlet />
         </div>
       </main>

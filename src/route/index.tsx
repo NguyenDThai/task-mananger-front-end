@@ -7,6 +7,7 @@ import KanbanPage from '../pages/kanban/Kanban';
 import DashboardPage from '../pages/dashboard/Dashboard';
 import ProfilePage from '../pages/profile/Profile';
 import MyTasksPage from '../pages/tasks/MyTasks';
+import { Chat } from '../pages/chat/Chat';
 
 export const router = createBrowserRouter([
   {
@@ -32,6 +33,10 @@ export const router = createBrowserRouter([
       {
         path: 'profile',
         element: <ProfilePage />,
+      },
+      {
+        path: 'chat',
+        element: <Chat />,
       },
     ],
   },
