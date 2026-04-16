@@ -78,7 +78,13 @@ interface SChatInstance {
   unreadChat(chatId: number): Promise<any>;
 
   // Quản lý tin nhắn
-  getMessages(chatId: number, limit?: number, page?: number): Promise<any>;
+  getMessages(
+    chatId: number,
+    limit?: number,
+    page?: number,
+  ): Promise<{
+    data: any[];
+  }>;
 
   // Gửi tin nhắn
   addMessage(
