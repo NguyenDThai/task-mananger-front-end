@@ -31,6 +31,7 @@ const ChatBot = () => {
   const [systemMembers, setSystemMembers] = useState<any[]>([]);
   const chatSDK = useSelector(selectChatSDK);
   const isInitialized = useSelector(selectIsChatInitialized);
+  const { user } = useSelector((state: any) => state.auth);
 
   // Áp dụng debounce cho giá trị search (500ms cho thong thả)
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -52,6 +53,18 @@ const ChatBot = () => {
 
     fetchMembers();
   }, [isInitialized, chatSDK, debouncedSearchQuery]);
+
+  // Hàm hiển thị tên chat không phải tên của mình
+  const getChatName = () => {
+    if (!currentChat) return 'Tin nhắn';
+    if (currentChat.type === 'single') {
+      const partner = currentChat.members?.find(
+        (m: any) => m.code !== user?._id,
+      );
+      return partner ? partner.name : 'Người dùng';
+    }
+    return currentChat.name || 'Nhóm chat';
+  };
 
   // Lọc member dựa trên giá trị đã được debounce
   const filteredMembers = systemMembers.filter((m) =>
@@ -87,9 +100,7 @@ const ChatBot = () => {
                 </svg>
               </button>
             )}
-            <h3 className="text-lg font-bold">
-              {currentChat ? currentChat.name : 'Tin nhắn'}
-            </h3>
+            <h3 className="text-lg font-bold">{getChatName()}</h3>
           </div>
           <button
             onClick={() => setIsOpen(false)}
@@ -190,7 +201,7 @@ const ChatBot = () => {
           >
             <div className="flex-1 p-4 overflow-y-auto">
               <div className="bg-indigo-600 text-white p-3 rounded-2xl rounded-br-sm self-end ml-auto max-w-[80%] text-sm shadow-sm">
-                Chào bạn, tôi tìm thấy bạn trong hệ thống!
+                Chào bạn, các bạn có thể trò chuyên với nhau
               </div>
             </div>
             <div className="p-4 bg-white flex gap-2">

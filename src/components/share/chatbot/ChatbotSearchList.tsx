@@ -1,16 +1,37 @@
 import React from 'react';
+import { selectChatSDK } from '../../../redux/slides/chat/chatSlide';
+import { useSelector } from 'react-redux';
 
 export const ChatbotSearchList = ({
   m,
   setCurrentChat,
   setSearchQuery,
 }: any) => {
+  const chatSDK = useSelector(selectChatSDK);
+
+  const handleSelectMember = async () => {
+    try {
+      await chatSDK.setReceiver({
+        code: m.id,
+        name: m.name,
+        avatar: m.avatar,
+        phone: m.phone,
+        email: m.email,
+      });
+
+      // Tạo hoặc lấy cuộc trò chuyện
+      const chatResponse = await chatSDK.addChat(m.id);
+
+      setCurrentChat(chatResponse.data);
+      setSearchQuery('');
+    } catch (error) {
+      console.error('Không thể khởi tạo chat', error);
+    }
+  };
+
   return (
     <div
-      onClick={() => {
-        setCurrentChat(m);
-        setSearchQuery('');
-      }}
+      onClick={handleSelectMember}
       className="flex items-center gap-3 p-3 rounded-xl hover:bg-white cursor-pointer border border-transparent hover:border-slate-100 transition-all"
     >
       {m.avatar ? (
