@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import ScreenChat from './ScreenChat';
 import RecentChat from './RecentChat';
+import CreateGroupModal from './CreateGroupModal';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -23,6 +24,7 @@ const ChatBot = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [systemMembers, setSystemMembers] = useState<any[]>([]);
   const [isGroupMode, setIsGroupMode] = useState(false);
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
   const [groupName, setGroupName] = useState('');
   const [recentChats, setRecentChats] = useState<any[]>([]);
@@ -224,6 +226,7 @@ const ChatBot = () => {
       // Gọi lấy danh sách chats để tìm cái group vừa tạo
       const res = await chatSDK.getChats();
       const chats = res.data || [];
+      setRecentChats(chats);
 
       // Tìm group vừa tạo theo tên và type
       const targetGroup = chats.find(
@@ -308,7 +311,7 @@ const ChatBot = () => {
                 </div>
                 {!isGroupMode && (
                   <button
-                    onClick={() => setIsGroupMode(true)}
+                    onClick={() => setIsGroupModalOpen(true)}
                     className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors tooltip group relative"
                     title="Tạo nhóm mới"
                   >
@@ -320,49 +323,7 @@ const ChatBot = () => {
                 )}
               </div>
 
-              {/* Ô nhập tên nhóm khi ở Group Mode */}
-              {isGroupMode && (
-                <div className="animate-in slide-in-from-top-2 duration-300">
-                  <input
-                    type="text"
-                    value={groupName}
-                    onChange={(e) => setGroupName(e.target.value)}
-                    placeholder="Nhập tên nhóm chat..."
-                    className="w-full bg-indigo-50 border-2 border-indigo-100 rounded-xl py-2.5 px-4 text-sm outline-none focus:border-indigo-600 focus:bg-white transition-all font-semibold text-indigo-900 placeholder:text-indigo-300"
-                    autoFocus
-                  />
-                </div>
-              )}
-
-              {/* Danh sách member đã chọn (Chips) */}
-              {isGroupMode && selectedMembers.length > 0 && (
-                <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                  {selectedMembers.map((m) => (
-                    <div
-                      key={m.id}
-                      className="flex-shrink-0 relative group animate-in zoom-in duration-200"
-                    >
-                      {m.avatar ? (
-                        <img
-                          src={m.avatar}
-                          className="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                          alt=""
-                        />
-                      ) : (
-                        <div className="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center text-xs font-bold border-2 border-white shadow-sm">
-                          {m.name.charAt(0)}
-                        </div>
-                      )}
-                      <button
-                        onClick={() => toggleMemberSelection(m)}
-                        className="absolute top-1 -right-1 bg-slate-800 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {/* Logic cũ inline đã được chuyển sang Modal */}
             </div>
 
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -385,22 +346,7 @@ const ChatBot = () => {
                       />
                     </div>
                   ))}
-                  {/* Nút Tạo Nhóm nổi bật ở chân trang */}
-                  {isGroupMode && selectedMembers.length >= 2 && (
-                    <div className="p-4 bg-white border-t border-slate-100 animate-in slide-in-from-bottom duration-300">
-                      <button
-                        onClick={handleCreateGroup}
-                        disabled={!groupName.trim()}
-                        className={`w-full py-3 rounded-xl font-bold shadow-lg transition-all active:scale-[0.98] flex items-center justify-center gap-2 ${
-                          groupName.trim()
-                            ? 'bg-indigo-600 text-white shadow-indigo-200 hover:bg-indigo-700'
-                            : 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none'
-                        }`}
-                      >
-                        Tạo nhóm ngay ({selectedMembers.length})
-                      </button>
-                    </div>
-                  )}
+                  {/* Nút Tạo Nhóm inline được loại bỏ vì đã có Modal */}
                 </>
               ) : (
                 <>
@@ -429,6 +375,27 @@ const ChatBot = () => {
           />
         </div>
       </div>
+
+      <CreateGroupModal
+        isOpen={isGroupModalOpen}
+        onClose={() => {
+          setIsGroupModalOpen(false);
+          setGroupName('');
+          setSelectedMembers([]);
+          setSearchQuery('');
+        }}
+        systemMembers={filteredMembers}
+        onToggleMember={toggleMemberSelection}
+        selectedMembers={selectedMembers}
+        groupName={groupName}
+        setGroupName={setGroupName}
+        onCreateGroup={async () => {
+          await handleCreateGroup();
+          setIsGroupModalOpen(false);
+        }}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+      />
 
       <button
         onClick={() => setIsOpen(true)}
