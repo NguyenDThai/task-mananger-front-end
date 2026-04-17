@@ -1,4 +1,4 @@
-import { ISChatConstructor } from './config/chat.config';
+import { ISChatConstructor } from './types';
 
 declare global {
   interface Window {

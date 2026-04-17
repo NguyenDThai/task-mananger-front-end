@@ -1,50 +1,82 @@
-import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-import type { ISChatInstance } from '../../../types';
+import { createSlice } from '@reduxjs/toolkit';
+import type { ISChatUser, IChatItem, IMessageItem } from '../../../types';
 
 type ChatState = {
-  instance: ISChatInstance | null;
-  isInitialized: boolean;
-  isLoading: boolean;
+  currentUser: ISChatUser | null;
+  chats: IChatItem[];
+  currentChat?: IChatItem | null;
+  currentChatMessages: IMessageItem[];
+  currentReceiver?: ISChatUser | null;
+  members: ISChatUser[];
 };
 
 const initialState: ChatState = {
-  instance: null,
-  isInitialized: false,
-  isLoading: false,
+  currentUser: null,
+  chats: [],
+  currentChat: null,
+  currentChatMessages: [],
+  currentReceiver: null,
+  members: [],
 };
 
 const chatSlice = createSlice({
   name: 'chatSlide',
   initialState,
   reducers: {
-    // Action để bắt đầu khởi tạo chat
-    initializeChatStart: (state) => {
-      state.isLoading = true;
+    setCurrentUser: (state, action) => {
+      state.currentUser = action.payload;
     },
-    // Action để set chat instance sau khi khởi tạo thành công
-    initializeChatSuccess: (state, action: PayloadAction<ISChatInstance>) => {
-      state.instance = action.payload;
-      state.isInitialized = true;
-      state.isLoading = false;
+    setChats: (state, action) => {
+      state.chats = action.payload;
     },
-    // Action để xử lý lỗi khi khởi tạo chat
-    initializeChatFailure: (state) => {
-      state.isLoading = false;
-      state.isInitialized = false;
+    setCurrentChat: (state, action) => {
+      state.currentChat = action.payload;
     },
-    // Action để reset chat
-    resetChat: (state) => {
-      state.instance = null;
-      state.isInitialized = false;
-      state.isLoading = false;
+    setCurrentChatMessages: (state, action) => {
+      state.currentChatMessages = action.payload;
+    },
+    setMembers: (state, action) => {
+      state.members = action.payload;
+    },
+    setCurrentReceiver: (state, action) => {
+      state.currentReceiver = action.payload;
+    },
+    addNewMessage: (state, action) => {
+      const isExisted = state.currentChatMessages.find(
+        (m) => m.id === action.payload.id,
+      );
+      if (isExisted || !action.payload.id) return;
+      const newMessage = action.payload as IMessageItem;
+      state.currentChatMessages.push(newMessage);
+      if (!state.currentChat) return;
+
+      const chatIndex = state.chats.findIndex(
+        (chat) => chat.id === state.currentChat?.id,
+      );
+      if (chatIndex !== -1) {
+        state.chats[chatIndex].message = newMessage;
+        const updatedChat = state.chats.splice(chatIndex, 1)[0];
+        state.chats.unshift(updatedChat);
+      }
+    },
+    removeChat: (state, action) => {
+      state.chats = state.chats.filter((chat) => chat.id !== action.payload);
+    },
+    addChat: (state, action) => {
+      state.chats.unshift(action.payload);
     },
   },
 });
 
 export const {
-  initializeChatStart,
-  initializeChatSuccess,
-  initializeChatFailure,
-  resetChat,
+  setCurrentUser,
+  setChats,
+  setCurrentChat,
+  setCurrentChatMessages,
+  setMembers,
+  setCurrentReceiver,
+  addNewMessage,
+  removeChat,
+  addChat,
 } = chatSlice.actions;
 export default chatSlice.reducer;
