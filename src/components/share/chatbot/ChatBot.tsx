@@ -19,6 +19,7 @@ import ScreenChat from './ScreenChat';
 import RecentChat from './RecentChat';
 import CreateGroupModal from './CreateGroupModal';
 import { toast } from 'react-toastify';
+import EditGroupModal from './EditGroupModal';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,6 +28,8 @@ const ChatBot = () => {
   const [systemMembers, setSystemMembers] = useState<any[]>([]);
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingChat, setEditingChat] = useState<any>(null);
   const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
   const [groupName, setGroupName] = useState('');
   const [recentChats, setRecentChats] = useState<any[]>([]);
@@ -270,6 +273,58 @@ const ChatBot = () => {
     }
   };
 
+  // Hàm cập nhật tên nhóm
+  const handleUpdateGroupName = async (chat: any) => {
+    setEditingChat(chat);
+    setIsEditModalOpen(true);
+    setGroupName(chat.name || '');
+
+    let allMembers = systemMembers;
+
+    if (allMembers.length === 0) {
+      try {
+        const res = await chatSDK.getMembers();
+
+        allMembers = res.data || [];
+
+        setSystemMembers(allMembers);
+      } catch (error) {
+        console.error('Lỗi khi load thành viên:', error);
+      }
+    }
+
+    const membersIds = chat.new ? Object.keys(chat.new).map(Number) : [];
+
+    const groupMembers = allMembers.filter((m) =>
+      membersIds.includes(Number(m.id)),
+    );
+    setSelectedMembers(groupMembers);
+  };
+
+  const handleSaveGroupNam = async () => {
+    if (!groupName.trim() || !editingChat) return;
+
+    try {
+      await chatSDK.updateGroup(editingChat.id, groupName.trim());
+
+      // Cập nhật UI
+      setRecentChats((prev) =>
+        prev.map((c) =>
+          c.id === editingChat.id ? { ...c, name: groupName.trim() } : c,
+        ),
+      );
+
+      if (currentChat?.id === editingChat.id) {
+        setCurrentChat({ ...currentChat, name: groupName.trim() });
+      }
+
+      toast.success('Cập nhật tên nhóm thành công');
+      setIsEditModalOpen(false);
+    } catch {
+      toast.error('Có lỗi xảy ra khi cập nhật nhóm');
+    }
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-[9999] font-sans">
       <div
@@ -347,7 +402,12 @@ const ChatBot = () => {
                 </div>
                 {!isGroupMode && (
                   <button
-                    onClick={() => setIsGroupModalOpen(true)}
+                    onClick={() => {
+                      setIsGroupModalOpen(true);
+                      setGroupName('');
+                      setSelectedMembers([]);
+                      setSearchQuery('');
+                    }}
                     className="p-2.5 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-100 transition-colors tooltip group relative"
                     title="Tạo nhóm mới"
                   >
@@ -394,6 +454,7 @@ const ChatBot = () => {
                     setCurrentChat={setCurrentChat}
                     user={user}
                     onRemoveChat={handleRemoveChat}
+                    onUpdateGroupName={handleUpdateGroupName}
                   />
                 </>
               )}
@@ -432,6 +493,20 @@ const ChatBot = () => {
         }}
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
+      />
+
+      <EditGroupModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setGroupName('');
+          setSelectedMembers([]);
+          setSearchQuery('');
+        }}
+        groupName={groupName}
+        setGroupName={setGroupName}
+        onSave={handleSaveGroupNam}
+        members={selectedMembers}
       />
 
       <button

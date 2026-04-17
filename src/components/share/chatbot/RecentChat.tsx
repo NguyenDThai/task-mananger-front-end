@@ -6,6 +6,7 @@ const RecentChat = ({
   setCurrentChat,
   user,
   onRemoveChat,
+  onUpdateGroupName,
 }: any) => {
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
 
@@ -91,7 +92,14 @@ const RecentChat = ({
                     >
                       {chat.type === 'group' && (
                         <>
-                          <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              onUpdateGroupName(chat);
+                              setMenuOpenId(null);
+                            }}
+                            className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
+                          >
                             <Edit3 size={16} />
                             <span>Đổi tên nhóm</span>
                           </button>
