@@ -1,3 +1,5 @@
+import { MessageSquareMore, Plus, Send } from 'lucide-react';
+
 const ScreenChat = ({
   scrollRef,
   messages,
@@ -71,16 +73,7 @@ const ScreenChat = ({
           })
         ) : (
           <div className="flex flex-col items-center justify-center h-full text-slate-400 gap-2 opacity-60">
-            <svg
-              width="40"
-              height="40"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1"
-              viewBox="0 0 24 24"
-            >
-              <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-            </svg>
+            <MessageSquareMore size={40} />
             <p className="text-xs">
               Chưa có tin nhắn nào. Hãy bắt đầu chào nhau!
             </p>
@@ -103,17 +96,14 @@ const ScreenChat = ({
           disabled={!newMessage.trim()}
           className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 disabled:bg-slate-200 disabled:shadow-none"
         >
-          <svg
-            width="18"
-            height="18"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2.5"
-            viewBox="0 0 24 24"
-          >
-            <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" />
-          </svg>
+          <Send size={20} />
         </button>
+
+        {currentChat?.type === 'group' && (
+          <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 disabled:bg-slate-200 disabled:shadow-none">
+            <Plus size={20} />
+          </div>
+        )}
       </div>
     </div>
   );

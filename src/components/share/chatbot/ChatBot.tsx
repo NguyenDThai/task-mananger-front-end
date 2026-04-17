@@ -6,8 +6,16 @@ import {
 } from '../../../redux/slides/chat/chatSlide';
 import useDebounce from '../../../hooks/useDebound';
 import { ChatbotSearchList } from './ChatbotSearchList';
-import { CircleX, MoveLeft, Search, Users, X } from 'lucide-react';
+import {
+  CircleX,
+  MessageSquare,
+  MoveLeft,
+  Search,
+  Users,
+  X,
+} from 'lucide-react';
 import ScreenChat from './ScreenChat';
+import RecentChat from './RecentChat';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -39,6 +47,7 @@ const ChatBot = () => {
     }
   }, [messages]);
 
+  // Hàm gửi tin nhắn
   const handleSendMessage = async () => {
     if (!newMessage.trim() || !currentChat || !isInitialized) return;
 
@@ -142,6 +151,7 @@ const ChatBot = () => {
     fetchRecentChats();
   }, [isInitialized, isOpen, chatSDK]);
 
+  // Lấy danh sách thành viên và tìm kiếm
   useEffect(() => {
     const fetchMembers = async () => {
       if (!isInitialized) return;
@@ -191,6 +201,7 @@ const ChatBot = () => {
     );
   };
 
+  // Tạo nhóm chat
   const handleCreateGroup = async () => {
     if (!groupName.trim()) return;
 
@@ -396,90 +407,11 @@ const ChatBot = () => {
                   <p className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase">
                     Trò chuyện gần đây
                   </p>
-                  {recentChats.length > 0 ? (
-                    recentChats.map((chat) => {
-                      // Xử lý tên hiển thị cho từng item
-                      let displayName = chat.name || 'Nhóm chat';
-                      let displayAvatar = chat.avatar;
-
-                      if (chat.type === 'single') {
-                        const partner = chat.members?.find(
-                          (m: any) => m.code !== user?._id,
-                        );
-                        displayName = partner ? partner.name : 'Người dùng';
-                        displayAvatar = partner ? partner.avatar : null;
-                      }
-
-                      return (
-                        <div
-                          key={chat.id}
-                          onClick={() => setCurrentChat(chat)}
-                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-white cursor-pointer border border-transparent hover:border-slate-100 transition-all group"
-                        >
-                          <div className="shrink-0 relative">
-                            {displayAvatar ? (
-                              <img
-                                src={displayAvatar}
-                                className="w-10 h-10 rounded-full object-cover shadow-sm"
-                                alt=""
-                              />
-                            ) : (
-                              <div
-                                className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold shadow-sm ${chat.type === 'group' ? 'bg-amber-500' : 'bg-indigo-500'}`}
-                              >
-                                {displayName.charAt(0)}
-                              </div>
-                            )}
-                            {/* Trạng thái Online (Mockup cho sinh động) */}
-                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="text-sm font-semibold text-slate-800 truncate">
-                              {displayName}
-                            </h4>
-                            <p className="text-xs text-slate-500 truncate">
-                              {chat.message?.content ||
-                                (chat.type === 'group'
-                                  ? 'Bấm để xem nội dung nhóm'
-                                  : 'Bấm để bắt đầu trò chuyện')}
-                            </p>
-                          </div>
-                          <div className="text-[10px] text-slate-400 self-start mt-1">
-                            {chat.updated_at
-                              ? new Date(chat.updated_at).toLocaleTimeString(
-                                  [],
-                                  {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  },
-                                )
-                              : ''}
-                          </div>
-                        </div>
-                      );
-                    })
-                  ) : (
-                    <div className="flex flex-col items-center justify-center py-10 px-6 text-center">
-                      <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-3">
-                        <svg
-                          width="24"
-                          height="24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          viewBox="0 0 24 24"
-                        >
-                          <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                        </svg>
-                      </div>
-                      <p className="text-sm text-slate-500 font-medium">
-                        Chưa có cuộc hội thoại nào
-                      </p>
-                      <p className="text-xs text-slate-400 mt-1">
-                        Hãy tìm kiếm bạn bè để bắt đầu nhé!
-                      </p>
-                    </div>
-                  )}
+                  <RecentChat
+                    recentChats={recentChats}
+                    setCurrentChat={setCurrentChat}
+                    user={user}
+                  />
                 </>
               )}
             </div>
@@ -502,16 +434,7 @@ const ChatBot = () => {
         onClick={() => setIsOpen(true)}
         className={`w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg transition-all ${isOpen ? 'scale-0' : 'scale-100'}`}
       >
-        <svg
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          viewBox="0 0 24 24"
-          width="28"
-          height="28"
-        >
-          <path d="M21 15C21 16.1046 20.1046 17 19 17H7L3 21V5C3 3.89543 3.89543 3 5 3H19C20.1046 3 21 3.89543 21 5V15Z"></path>
-        </svg>
+        <MessageSquare size={20} />
       </button>
     </div>
   );
