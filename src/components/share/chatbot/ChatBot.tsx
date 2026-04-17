@@ -45,7 +45,11 @@ const ChatBot = () => {
     try {
       const res = await chatSDK.addMessage(currentChat.id, newMessage);
       if (res.message) {
-        setMessages((prev) => [...prev, res.message]);
+        setMessages((prev) => {
+          // Tránh trùng lặp nếu sự kiện Real-time đã nạp tin nhắn này rồi
+          if (prev.some((m) => m.id === res.message.id)) return prev;
+          return [...prev, res.message];
+        });
         setNewMessage('');
       }
     } catch (error) {
@@ -57,36 +61,49 @@ const ChatBot = () => {
   useEffect(() => {
     if (!isInitialized || !chatSDK) return;
 
-    const handleReceivedMessage = (data: any) => {
-      // Cập nhật khung chat nếu đang mở đúng cuộc hội thoại đó
-      if (currentChat && data.chat_id === currentChat.id) {
+    // Lắng nghe tin nhắn mới(Cung cấp cả message và chat)
+    const handleChatsMessage = (data: any) => {
+      const { message, chat } = data;
+
+      // 1. Cập nhật khung chat nếu đang mở đúng cuộc hội thoại đó
+      // SỬA: Dùng chat.id thay vì message.chat_id
+      if (currentChat && chat.id === currentChat.id) {
         setMessages((prev) => {
-          if (prev.some((m) => m.id === data.id)) return prev;
-          return [...prev, data];
+          if (prev.some((m) => m.id === message.id)) return prev;
+          return [...prev, message];
         });
       }
 
-      // Cập nhật danh sách chat bên ngoài (đưa lên đầu)
+      // 2. Cập nhật danh sách chat (Luôn đưa chat có tin nhắn mới lên đầu)
       setRecentChats((prev) => {
-        const targetChat = prev.find((c) => c.id === data.chat_id);
-        const others = prev.filter((c) => c.id !== data.chat_id);
-        if (targetChat) {
-          return [
-            { ...targetChat, message: data, updated_at: data.created_at },
-            ...others,
-          ];
-        } else {
-          return prev;
-        }
+        const others = prev.filter((c) => c.id !== chat.id);
+        return [
+          { ...chat, message: message, updated_at: message.created_at },
+          ...others,
+        ];
       });
     };
 
-    chatSDK.addEventListener(chatSDK.EVENTS.new_message, handleReceivedMessage);
+    // Lắng nghe cuộc trò chuyện mới
+    const handleChatCreated = (data: any) => {
+      const { chat } = data;
+      setRecentChats((prev) => {
+        if (prev.some((c) => c.id === chat.id)) return prev;
+        return [chat, ...prev];
+      });
+    };
+
+    chatSDK.addEventListener(chatSDK.EVENTS.chats_message, handleChatsMessage);
+    chatSDK.addEventListener(chatSDK.EVENTS.chats_created, handleChatCreated);
 
     return () => {
       chatSDK.removeEventListener(
-        chatSDK.EVENTS.new_message,
-        handleReceivedMessage,
+        chatSDK.EVENTS.chats_message,
+        handleChatsMessage,
+      );
+      chatSDK.removeEventListener(
+        chatSDK.EVENTS.chats_created,
+        handleChatCreated,
       );
     };
   }, [isInitialized, chatSDK, currentChat]);
