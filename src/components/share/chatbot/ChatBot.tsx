@@ -18,6 +18,7 @@ import {
 import ScreenChat from './ScreenChat';
 import RecentChat from './RecentChat';
 import CreateGroupModal from './CreateGroupModal';
+import { toast } from 'react-toastify';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -249,6 +250,26 @@ const ChatBot = () => {
     }
   };
 
+  // Hàm xóa cuộc trò chuyện và group
+  const handleRemoveChat = async (chatId: number) => {
+    if (!window.confirm('Bạn có chắc xóa cuộc trò chuyện này?')) return;
+
+    try {
+      await chatSDK.removeChat(chatId);
+      setRecentChats((prev) => prev.filter((chat) => chat.id !== chatId));
+
+      // Nếu đang xem tin nhắn của cuộc trò chuyện bị xóa thì chuyển về null
+      if (currentChat?.id === chatId) {
+        setCurrentChat(null);
+      }
+
+      toast.success('Xóa cuộc trò chuyện thành công');
+    } catch (error) {
+      console.error('Lỗi khi xóa chat:', error);
+      toast.error('Không thể xóa cuộc trò chuyện, vui lòng thử lại sau');
+    }
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-[9999] font-sans">
       <div
@@ -277,18 +298,18 @@ const ChatBot = () => {
               <h3 className="text-lg font-bold">
                 {isGroupMode ? 'Tạo nhóm mới' : getChatName()}
               </h3>
-              <div className="flex items-center gap-2">
-                <User size={14} />
-                <p className="text-[11px] text-indigo-100/80 font-medium">
-                  {isGroupMode
-                    ? 'Kết nối với đồng nghiệp của bạn'
-                    : currentChat
-                      ? currentChat.type === 'group'
+              {(isGroupMode || currentChat) && (
+                <div className="flex items-center gap-2">
+                  <User size={14} />
+                  <p className="text-[11px] text-indigo-100/80 font-medium">
+                    {isGroupMode
+                      ? 'Kết nối với đồng nghiệp của bạn'
+                      : currentChat?.type === 'group'
                         ? `${currentChat.member || 0} thành viên`
-                        : 'Đang hoạt động'
-                      : ''}
-                </p>
-              </div>
+                        : 'Đang hoạt động'}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
           <button
@@ -372,6 +393,7 @@ const ChatBot = () => {
                     recentChats={recentChats}
                     setCurrentChat={setCurrentChat}
                     user={user}
+                    onRemoveChat={handleRemoveChat}
                   />
                 </>
               )}
