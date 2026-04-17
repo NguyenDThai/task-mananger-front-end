@@ -5,15 +5,12 @@ import { Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
 interface DeadlinePickerProps {
   onClose: () => void;
   onUpdate: (date: Date | null) => void;
-  initialDate?: string | Date;
   triggerRect: DOMRect;
 }
 
 export const DeadlinePicker: React.FC<DeadlinePickerProps> = ({
   onClose,
   onUpdate,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  initialDate,
   triggerRect,
 }) => {
   const [selectedDate, setSelectedDate] = useState<number>(30);

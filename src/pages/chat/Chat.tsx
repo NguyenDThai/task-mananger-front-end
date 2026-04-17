@@ -28,9 +28,8 @@ export const Chat = () => {
 
       try {
         setIsLoading(true);
-
         // Get current user
-        const user = chat.getAuth();
+        const user = await chat.getAuth();
         setCurrentUser(user);
 
         const response = await chat.getChats(10, 1);
@@ -49,9 +48,10 @@ export const Chat = () => {
       }
     };
 
-    setTimeout(() => {
+    const timer = setTimeout(() => {
       loadChats();
     }, 1000);
+    return () => clearTimeout(timer);
   }, [chat]);
 
   // Load members for new chat window
@@ -63,72 +63,78 @@ export const Chat = () => {
         const response = await chat.getMembers(null, 0, 1);
         const membersList = response?.data || [];
 
-        // Get all members in single chats
-        const membersInSingleChats = chats
-          .filter((c) => c.type === 'single')
-          .flatMap((c) => c.members || [])
-          .map((m) => m.code);
-
-        // Filter out current user and members already in single chats
-        const filteredMembers = membersList.filter(
-          (member) =>
-            member.code !== currentUser?.code &&
-            !membersInSingleChats.includes(member.code),
-        );
-        setMembers(filteredMembers);
+        setMembers(membersList);
       } catch (error) {
         console.error('Lỗi khi lấy danh sách thành viên:', error);
       }
     };
 
-    if (isCreatingNewChat && currentUser) {
+    if (isCreatingNewChat && currentUser?.code) {
       loadMembers();
     }
-  }, [isCreatingNewChat, chat, currentUser, chats]);
+  }, [isCreatingNewChat, chat, currentUser?.code, chats]);
 
   // Load messages when active chat changes
   useEffect(() => {
-    if (!currentChat || !chat) return;
+    if (!chat || !currentChat?.id) {
+      setMessages([]);
+      return;
+    }
+
+    let isMounted = true;
 
     const loadMessages = async () => {
       try {
         setIsLoading(true);
-
-        chat.clearReceiver();
-
-        // Set new receiver for single chat
-        if (currentChat.type === 'single') {
-          const otherMember = currentChat.members?.find(
-            (member) => member.code !== currentUser?.code,
-          );
-          if (otherMember) {
-            await chat.setReceiver(otherMember);
-            setReceiver(otherMember);
-          }
-        } else {
-          setReceiver(null);
-        }
-
-        // console.log('Thông tin cuộc trò chuyện:', currentChat);
-
-        // const receiverInfo = await chat.getReceiver();
-        // console.log('Thông tin người nhận:', receiverInfo);
-
         const response = await chat.getMessages(currentChat.id, 20, 1);
 
-        const messagesList = response?.data || [];
-        // console.log('Tin nhắn đã được tải:', messagesList);
-
-        setMessages(messagesList.toReversed());
+        if (isMounted) {
+          const messagesList = response?.data || [];
+          setMessages(messagesList.toReversed());
+        }
       } catch (error) {
         console.error('Lỗi khi lấy tin nhắn:', error);
         setMessages([]);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     loadMessages();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentChat?.id, chat]);
+
+  useEffect(() => {
+    if (!chat || !currentChat) return;
+
+    const setupReceiver = async () => {
+      try {
+        chat.clearReceiver();
+
+        if (currentChat.type !== 'single') {
+          setReceiver(null);
+          return;
+        }
+
+        const otherMember = currentChat.members?.find(
+          (member) => member.code !== currentUser?.code,
+        );
+
+        if (otherMember) {
+          await chat.setReceiver(otherMember);
+          setReceiver(otherMember);
+        }
+      } catch (error) {
+        console.error('Lỗi khi thiết lập receiver:', error);
+      }
+    };
+
+    setupReceiver();
   }, [currentChat, chat, currentUser?.code]);
 
   useEffect(() => {
