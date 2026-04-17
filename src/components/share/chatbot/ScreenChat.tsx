@@ -1,4 +1,12 @@
-import { MessageSquareMore, Plus, Send } from 'lucide-react';
+import {
+  Heart,
+  MessageSquareMore,
+  Plus,
+  RotateCcw,
+  Send,
+  ThumbsUp,
+  Trash2,
+} from 'lucide-react';
 
 const ScreenChat = ({
   scrollRef,
@@ -8,6 +16,7 @@ const ScreenChat = ({
   newMessage,
   setNewMessage,
   handleSendMessage,
+  onMessageAction,
 }: any) => {
   return (
     <div
@@ -26,47 +35,107 @@ const ScreenChat = ({
             return (
               <div
                 key={item.id}
-                className={`flex items-end gap-2 ${isMine ? 'flex-row-reverse' : 'flex-row'} animate-in slide-in-from-bottom-2 duration-300`}
+                className={`group relative flex items-end gap-3 ${
+                  isMine ? 'flex-row-reverse' : 'flex-row'
+                } animate-in fade-in slide-in-from-bottom-2 duration-500 cursor-default`}
               >
-                {/* Avatar người gửi (nếu không phải mình) */}
-                {!isMine && (
-                  <div className="w-8 h-8 rounded-full overflow-hidden bg-indigo-100 flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-indigo-600 shadow-sm border border-white">
-                    {sender.avatar ? (
-                      <img
-                        src={sender.avatar}
-                        className="w-full h-full object-cover"
-                        alt=""
-                      />
-                    ) : (
-                      sender.name?.charAt(0) || 'U'
+                {/* Floating Action Menu */}
+                <div
+                  className={`absolute -top-4 ${isMine ? 'right-0' : 'left-0'} opacity-0 group-hover:opacity-100 group-hover:-top-9 transition-all duration-300 z-10 pointer-events-none group-hover:pointer-events-auto`}
+                >
+                  <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md px-1.5 py-1 rounded-full border border-slate-200/60 shadow-xl shadow-indigo-500/10">
+                    <button
+                      onClick={() => onMessageAction(item.id, 'like')}
+                      className="p-1.5 hover:bg-yellow-50 rounded-full text-slate-400 hover:text-yellow-500 transition-colors"
+                      title="Thích"
+                    >
+                      <ThumbsUp size={14} />
+                    </button>
+                    <button
+                      onClick={() => onMessageAction(item.id, 'love')}
+                      className="p-1.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500 transition-colors"
+                      title="Yêu thích"
+                    >
+                      <Heart size={14} />
+                    </button>
+                    {isMine && (
+                      <div className="flex items-center gap-1 ml-1 pl-1 border-l border-slate-100">
+                        <button
+                          onClick={() => onMessageAction(item.id, 'revoke')}
+                          className="p-1.5 hover:bg-indigo-50 rounded-full text-slate-400 hover:text-indigo-600 transition-colors"
+                          title="Thu hồi"
+                        >
+                          <RotateCcw size={14} />
+                        </button>
+                        <button
+                          onClick={() => onMessageAction(item.id, 'remove')}
+                          className="p-1.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-600 transition-colors"
+                          title="Xóa"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Sender Avatar */}
+                {!isMine && (
+                  <div className="relative flex-shrink-0 group/avatar">
+                    <div className="w-9 h-9 rounded-2xl overflow-hidden bg-linear-to-tr from-indigo-50 to-white flex items-center justify-center text-[10px] font-bold text-indigo-600 shadow-sm border border-slate-100 group-hover/avatar:border-indigo-200 transition-colors">
+                      {sender.avatar ? (
+                        <img
+                          src={sender.avatar}
+                          className="w-full h-full object-cover transition-transform duration-300 group-hover/avatar:scale-110"
+                          alt=""
+                        />
+                      ) : (
+                        <span className="text-xs uppercase">
+                          {sender.name?.charAt(0) || 'U'}
+                        </span>
+                      )}
+                    </div>
+                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm"></div>
                   </div>
                 )}
 
-                <div className="flex flex-col gap-1 max-w-[75%]">
-                  {/* Hiện tên người gửi nếu là chat nhóm và không phải mình */}
+                <div
+                  className={`flex flex-col gap-1.5 max-w-[78%] ${isMine ? 'items-end' : 'items-start'}`}
+                >
+                  {/* Sender Name (for group chats) */}
                   {currentChat?.type === 'group' && !isMine && (
-                    <span className="text-[10px] text-slate-400 px-1">
+                    <span className="text-[11px] font-semibold text-slate-500 px-2 tracking-tight">
                       {sender.name}
                     </span>
                   )}
+
+                  {/* Message Bubble */}
                   <div
-                    className={`p-3 text-sm shadow-sm ${
+                    className={`relative px-4 py-2.5 text-[13.5px] leading-relaxed transition-all duration-300 ${
                       isMine
-                        ? 'bg-indigo-600 text-white rounded-2xl rounded-br-sm'
-                        : 'bg-white text-slate-700 rounded-2xl rounded-bl-sm border border-slate-100'
+                        ? 'bg-linear-to-br from-indigo-500 via-indigo-600 to-indigo-700 text-white rounded-[22px] rounded-br-[4px] shadow-md shadow-indigo-500/10'
+                        : 'bg-white text-slate-700 rounded-[22px] rounded-bl-[4px] border border-slate-100/80 shadow-sm shadow-slate-200/50 hover:border-slate-200'
                     }`}
                   >
-                    {item.content}
+                    <div className="relative z-10">{item.content}</div>
+
+                    {/* Glass sheen for user messages */}
+                    {isMine && (
+                      <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-white/10 rounded-[22px] rounded-br-[4px] pointer-events-none"></div>
+                    )}
                   </div>
-                  <span
-                    className={`text-[9px] px-1 text-slate-400 ${isMine ? 'text-right' : 'text-left'}`}
+
+                  {/* Timestamp */}
+                  <div
+                    className={`flex items-center gap-1.5 px-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}
                   >
-                    {new Date(item.created_at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+                    <span className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">
+                      {new Date(item.created_at).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </span>
+                  </div>
                 </div>
               </div>
             );

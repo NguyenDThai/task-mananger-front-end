@@ -85,7 +85,14 @@ const ChatBot = () => {
       // SỬA: Dùng chat.id thay vì message.chat_id
       if (currentChat && chat.id === currentChat.id) {
         setMessages((prev) => {
-          if (prev.some((m) => m.id === message.id)) return prev;
+          // TRƯỜNG HỢP 1: Tin nhắn bị thu hồi (revoked: true hoặc action có revoke)
+          if (message.revoked || message.removed) {
+            return prev.filter((m) => m.id !== message.id);
+          }
+
+          if (prev.some((m) => m.id === message.id)) {
+            return prev.map((m) => (m.id === message.id ? message : m));
+          }
           return [...prev, message];
         });
       }
@@ -158,7 +165,7 @@ const ChatBot = () => {
     fetchRecentChats();
   }, [isInitialized, isOpen, chatSDK]);
 
-  // Lấy danh sách thành viên và tìm kiếm
+  // Lấy danh sách thành viên và tìm kiếm thành viên
   useEffect(() => {
     const fetchMembers = async () => {
       if (!isInitialized) return;
@@ -325,6 +332,33 @@ const ChatBot = () => {
     }
   };
 
+  // Hàm xử lý tương tác tin nhắn
+  const handleMessageAction = async (
+    messageId: number,
+    action: 'like' | 'love' | 'revoke' | 'remove',
+  ) => {
+    if (!currentChat) return;
+
+    try {
+      await chatSDK.actionMessage(currentChat.id, messageId, action);
+
+      // Cập nhật UI mượt mà
+      if (action === 'remove' || action === 'revoke') {
+        setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        toast.success(
+          action === 'revoke'
+            ? 'Thu hồi tin nhắn thành công'
+            : 'Xóa tin nhắn thành công',
+        );
+      } else {
+        toast.success(action === 'like' ? 'Đã thích tin nhắn' : 'Đã thả tim');
+      }
+    } catch (error) {
+      console.error(`Lỗi khi thực hiện action ${action}:`, error);
+      toast.error('Không thể thực hiện thao tác này');
+    }
+  };
+
   return (
     <div className="fixed bottom-6 right-6 z-[9999] font-sans">
       <div
@@ -470,6 +504,7 @@ const ChatBot = () => {
             newMessage={newMessage}
             setNewMessage={setNewMessage}
             handleSendMessage={handleSendMessage}
+            onMessageAction={handleMessageAction}
           />
         </div>
       </div>
