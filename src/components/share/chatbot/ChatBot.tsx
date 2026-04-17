@@ -11,6 +11,7 @@ import {
   MessageSquare,
   MoveLeft,
   Search,
+  User,
   Users,
   X,
 } from 'lucide-react';
@@ -272,9 +273,23 @@ const ChatBot = () => {
                 <MoveLeft />
               </button>
             )}
-            <h3 className="text-lg font-bold">
-              {isGroupMode ? 'Tạo nhóm mới' : getChatName()}
-            </h3>
+            <div>
+              <h3 className="text-lg font-bold">
+                {isGroupMode ? 'Tạo nhóm mới' : getChatName()}
+              </h3>
+              <div className="flex items-center gap-2">
+                <User size={14} />
+                <p className="text-[11px] text-indigo-100/80 font-medium">
+                  {isGroupMode
+                    ? 'Kết nối với đồng nghiệp của bạn'
+                    : currentChat
+                      ? currentChat.type === 'group'
+                        ? `${currentChat.member || 0} thành viên`
+                        : 'Đang hoạt động'
+                      : ''}
+                </p>
+              </div>
+            </div>
           </div>
           <button
             onClick={() => setIsOpen(false)}
