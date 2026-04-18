@@ -1,13 +1,15 @@
 import { Ellipsis, Trash2, Edit3, Settings, UserRoundPlus } from 'lucide-react';
 import React, { useState } from 'react';
+import { useSelector } from 'react-redux';
+import { selectRecentChats } from '../../../redux/slides/chat/chatSlide';
 
 const RecentChat = ({
-  recentChats,
   setCurrentChat,
   user,
   onRemoveChat,
   onUpdateGroupName,
 }: any) => {
+  const recentChats = useSelector(selectRecentChats);
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
 
   const toggleMenu = (e: React.MouseEvent, chatId: number) => {

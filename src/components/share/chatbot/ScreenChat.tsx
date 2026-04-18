@@ -7,10 +7,11 @@ import {
   ThumbsUp,
   Trash2,
 } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { currentMessages } from '../../../redux/slides/chat/chatSlide';
 
 const ScreenChat = ({
   scrollRef,
-  messages,
   user,
   currentChat,
   newMessage,
@@ -18,6 +19,8 @@ const ScreenChat = ({
   handleSendMessage,
   onMessageAction,
 }: any) => {
+  const messages = useSelector(currentMessages);
+
   return (
     <div
       className={`absolute inset-0 flex flex-col transition-all duration-300 ${currentChat ? 'translate-x-0' : 'translate-x-full opacity-0'}`}

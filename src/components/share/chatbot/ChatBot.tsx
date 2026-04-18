@@ -1,6 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { selectIsChatInitialized } from '../../../redux/slides/chat/chatSlide';
+import {
+  currentMessages,
+  selectIsChatInitialized,
+  selectRecentChats,
+  selectSystemUsers,
+  setCurrentChatId,
+  setRecentChats,
+  upsertMessage,
+} from '../../../redux/slides/chat/chatSlide';
 import { chatSDK } from '../../../services/chat.service';
 import useDebounce from '../../../hooks/useDebound';
 import { ChatbotSearchList } from './ChatbotSearchList';
@@ -18,6 +26,7 @@ import RecentChat from './RecentChat';
 import CreateGroupModal from './CreateGroupModal';
 import { toast } from 'react-toastify';
 import EditGroupModal from './EditGroupModal';
+import { useDispatch } from 'react-redux';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,13 +39,16 @@ const ChatBot = () => {
   const [editingChat, setEditingChat] = useState<any>(null);
   const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
   const [groupName, setGroupName] = useState('');
-  const [recentChats, setRecentChats] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const isInitialized = useSelector(selectIsChatInitialized);
   const { user } = useSelector((state: any) => state.auth);
+
+  const dispatch = useDispatch();
+  const recentChats = useSelector(selectRecentChats);
+  const messages = useSelector(currentMessages);
+  const allSystemUsers = useSelector(selectSystemUsers);
 
   // Áp dụng debounce cho giá trị search (500ms cho thong thả)
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -58,11 +70,7 @@ const ChatBot = () => {
     try {
       const res = await chatSDK.addMessage(currentChat.id, newMessage);
       if (res.message) {
-        setMessages((prev) => {
-          // Tránh trùng lặp nếu sự kiện Real-time đã nạp tin nhắn này rồi
-          if (prev.some((m) => m.id === res.message.id)) return prev;
-          return [...prev, res.message];
-        });
+        dispatch(upsertMessage({ chat: currentChat, message: res.message }));
         setNewMessage('');
       }
     } catch (error) {
@@ -70,82 +78,25 @@ const ChatBot = () => {
     }
   };
 
-  // Lắng nghe tin nhắn mới Real-time
-  useEffect(() => {
-    if (!isInitialized || !chatSDK) return;
-
-    // Lắng nghe tin nhắn mới(Cung cấp cả message và chat)
-    const handleChatsMessage = (data: any) => {
-      const { message, chat } = data;
-
-      // 1. Cập nhật khung chat nếu đang mở đúng cuộc hội thoại đó
-      // SỬA: Dùng chat.id thay vì message.chat_id
-      if (currentChat && chat.id === currentChat.id) {
-        setMessages((prev) => {
-          // TRƯỜNG HỢP 1: Tin nhắn bị thu hồi (revoked: true hoặc action có revoke)
-          if (message.revoked || message.removed) {
-            return prev.filter((m) => m.id !== message.id);
-          }
-
-          if (prev.some((m) => m.id === message.id)) {
-            return prev.map((m) => (m.id === message.id ? message : m));
-          }
-          return [...prev, message];
-        });
-      }
-
-      // 2. Cập nhật danh sách chat (Luôn đưa chat có tin nhắn mới lên đầu)
-      setRecentChats((prev) => {
-        const others = prev.filter((c) => c.id !== chat.id);
-        return [
-          { ...chat, message: message, updated_at: message.created_at },
-          ...others,
-        ];
-      });
-    };
-
-    // Lắng nghe cuộc trò chuyện mới
-    const handleChatCreated = (data: any) => {
-      const { chat } = data;
-      setRecentChats((prev) => {
-        if (prev.some((c) => c.id === chat.id)) return prev;
-        return [chat, ...prev];
-      });
-    };
-
-    chatSDK.addEventListener(chatSDK.EVENTS.chats_message, handleChatsMessage);
-    chatSDK.addEventListener(chatSDK.EVENTS.chats_created, handleChatCreated);
-
-    return () => {
-      chatSDK.removeEventListener(
-        chatSDK.EVENTS.chats_message,
-        handleChatsMessage,
-      );
-      chatSDK.removeEventListener(
-        chatSDK.EVENTS.chats_created,
-        handleChatCreated,
-      );
-    };
-  }, [isInitialized, chatSDK, currentChat]);
-
   // Lấy tin nhắn của cuộc trò chuyện hiện tại
   useEffect(() => {
     const fetchMessages = async () => {
-      if (!currentChat || !isInitialized) {
-        setMessages([]);
-        return;
-      }
+      if (!currentChat || !isInitialized) return;
       try {
         const res = await chatSDK.getMessages(currentChat.id);
         const data = res.data || [];
-        setMessages([...data].reverse());
+        dispatch(setCurrentChatId(currentChat.id));
+        // Đẩy toàn bộ tin nhắn vào Redux qua loop (Sau này nên dùng setMessagesHistory để nhanh hơn)
+        [...data].reverse().forEach((m: any) => {
+          dispatch(upsertMessage({ chat: currentChat, message: m }));
+        });
       } catch (error) {
         console.error('Lỗi khi lấy tin nhắn:', error);
       }
     };
 
     fetchMessages();
-  }, [currentChat, isInitialized, chatSDK]);
+  }, [currentChat, isInitialized, chatSDK, dispatch]);
 
   // Lấy danh sách chat gần đây
   useEffect(() => {
@@ -153,7 +104,7 @@ const ChatBot = () => {
       if (!isInitialized || !isOpen) return;
       try {
         const res = await chatSDK.getChats();
-        setRecentChats(res.data || []);
+        dispatch(setRecentChats(res.data || []));
       } catch (error) {
         console.error('Lỗi khi lấy danh sách chat:', error);
       }
@@ -161,25 +112,6 @@ const ChatBot = () => {
 
     fetchRecentChats();
   }, [isInitialized, isOpen, chatSDK]);
-
-  // Lấy danh sách thành viên và tìm kiếm thành viên
-  useEffect(() => {
-    const fetchMembers = async () => {
-      if (!isInitialized) return;
-      if (!debouncedSearchQuery.trim()) {
-        setSystemMembers([]);
-        return;
-      }
-      try {
-        const res = await chatSDK.getMembers();
-        setSystemMembers(res.data || []);
-      } catch (error) {
-        console.error('Error fetching members:', error);
-      }
-    };
-
-    fetchMembers();
-  }, [isInitialized, chatSDK, debouncedSearchQuery]);
 
   // Hàm hiển thị tên chat không phải tên của mình
   const getChatName = () => {
@@ -194,7 +126,7 @@ const ChatBot = () => {
   };
 
   // Lọc member: Duy nhất + Không phải là mình + Khớp search query
-  const filteredMembers = systemMembers.filter(
+  const filteredMembers = allSystemUsers.filter(
     (m, index, self) =>
       // 1. Chỉ lấy những người có tên khớp với tìm kiếm
       m.name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) &&
@@ -235,7 +167,7 @@ const ChatBot = () => {
       // Gọi lấy danh sách chats để tìm cái group vừa tạo
       const res = await chatSDK.getChats();
       const chats = res.data || [];
-      setRecentChats(chats);
+      dispatch(setRecentChats(chats));
 
       // Tìm group vừa tạo theo tên và type
       const targetGroup = chats.find(
@@ -263,7 +195,8 @@ const ChatBot = () => {
 
     try {
       await chatSDK.removeChat(chatId);
-      setRecentChats((prev) => prev.filter((chat) => chat.id !== chatId));
+      const updatedChats = recentChats.filter((chat) => chat.id !== chatId);
+      dispatch(setRecentChats(updatedChats));
 
       // Nếu đang xem tin nhắn của cuộc trò chuyện bị xóa thì chuyển về null
       if (currentChat?.id === chatId) {
@@ -312,11 +245,10 @@ const ChatBot = () => {
       await chatSDK.updateGroup(editingChat.id, groupName.trim());
 
       // Cập nhật UI
-      setRecentChats((prev) =>
-        prev.map((c) =>
-          c.id === editingChat.id ? { ...c, name: groupName.trim() } : c,
-        ),
+      const updatedChats = recentChats.map((c) =>
+        c.id === editingChat.id ? { ...c, name: groupName.trim() } : c,
       );
+      dispatch(setRecentChats(updatedChats));
 
       if (currentChat?.id === editingChat.id) {
         setCurrentChat({ ...currentChat, name: groupName.trim() });
@@ -339,9 +271,18 @@ const ChatBot = () => {
     try {
       await chatSDK.actionMessage(currentChat.id, messageId, action);
 
-      // Cập nhật UI mượt mà
+      // Cập nhật UI mượt mà qua Redux
       if (action === 'remove' || action === 'revoke') {
-        setMessages((prev) => prev.filter((m) => m.id !== messageId));
+        const messageToUpdate = messages.find((m) => m.id === messageId);
+        if (messageToUpdate) {
+          // Gửi một "giả lập" tin nhắn đã bị thu hồi vào Redux để nó tự xóa
+          dispatch(
+            upsertMessage({
+              chat: currentChat,
+              message: { ...messageToUpdate, [action]: true },
+            }),
+          );
+        }
         toast.success(
           action === 'revoke'
             ? 'Thu hồi tin nhắn thành công'
