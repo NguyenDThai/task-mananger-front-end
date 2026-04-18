@@ -1,25 +1,13 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 interface ChatState {
-  chatSDK: SChatInstance;
   isInitialized: boolean;
+  unreadCount: number;
 }
 
-/**
- * Initialize the Chat SDK singleton instance.
- * Using the global `initSChat` defined in `global.d.ts`.
- */
-const chatSDKInstance = new initSChat();
-
-// Default configuration
-chatSDKInstance.setConfig({
-  debugMode: true,
-  maxRetries: 3,
-});
-
 const initialState: ChatState = {
-  chatSDK: chatSDKInstance,
   isInitialized: false,
+  unreadCount: 0,
 };
 
 const chatSlide = createSlice({
@@ -38,6 +26,5 @@ export default chatSlide.reducer;
 /**
  * Selectors for easy access via useSelector
  */
-export const selectChatSDK = (state: { chat: ChatState }) => state.chat.chatSDK;
-export const selectIsChatInitialized = (state: { chat: ChatState }) =>
+export const selectIsChatInitialized = (state: { chat: any }) =>
   state.chat.isInitialized;

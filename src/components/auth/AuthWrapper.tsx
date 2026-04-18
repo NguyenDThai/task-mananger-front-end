@@ -1,15 +1,14 @@
 import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import { setInitialized } from '../../redux/slides/chat/chatSlide';
 import { useGetMeQuery } from '../../redux/api/authApi';
 import { setCredentials } from '../../redux/slides/auth/authSlide';
 import { useNavigate } from 'react-router-dom';
-import { selectChatSDK } from '../../redux/slides/chat/chatSlide';
+import { chatSDK } from '../../services/chat.service';
 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const chatSDK = useSelector(selectChatSDK);
   const { data, isSuccess, isError, isLoading } = useGetMeQuery();
 
   useEffect(() => {

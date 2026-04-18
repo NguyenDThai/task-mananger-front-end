@@ -1,5 +1,4 @@
-import { selectChatSDK } from '../../../redux/slides/chat/chatSlide';
-import { useSelector } from 'react-redux';
+import { chatSDK } from '../../../services/chat.service';
 
 export const ChatbotSearchList = ({
   m,
@@ -9,8 +8,6 @@ export const ChatbotSearchList = ({
   isSelected,
   toggleMemberSelection,
 }: any) => {
-  const chatSDK = useSelector(selectChatSDK);
-
   const handleSelectMember = async () => {
     if (isGroupMode) {
       toggleMemberSelection(m);

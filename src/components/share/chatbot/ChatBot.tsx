@@ -1,9 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import {
-  selectChatSDK,
-  selectIsChatInitialized,
-} from '../../../redux/slides/chat/chatSlide';
+import { selectIsChatInitialized } from '../../../redux/slides/chat/chatSlide';
+import { chatSDK } from '../../../services/chat.service';
 import useDebounce from '../../../hooks/useDebound';
 import { ChatbotSearchList } from './ChatbotSearchList';
 import {
@@ -37,7 +35,6 @@ const ChatBot = () => {
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const chatSDK = useSelector(selectChatSDK);
   const isInitialized = useSelector(selectIsChatInitialized);
   const { user } = useSelector((state: any) => state.auth);
 

@@ -1,0 +1,137 @@
+class ChatService {
+  private static instance: ChatService;
+  private chatSDK: SChatInstance;
+  public EVENTS: SatekChatEvent;
+
+  constructor() {
+    this.chatSDK = new initSChat();
+    this.chatSDK.setConfig({
+      debugMode: true,
+      maxRetries: 3,
+    });
+    this.EVENTS = this.chatSDK.EVENTS;
+  }
+
+  public static getInstance(): ChatService {
+    if (!ChatService.instance) {
+      ChatService.instance = new ChatService();
+    }
+    return ChatService.instance;
+  }
+
+  async setAuth(data: SatekChatauthData) {
+    return this.chatSDK.setAuth(data);
+  }
+
+  async getAuth() {
+    return this.chatSDK.getAuth();
+  }
+
+  async clearAuth() {
+    return this.chatSDK.clearAuth();
+  }
+
+  async setReceiver(data: SatekChatauthData) {
+    return this.chatSDK.setReceiver(data);
+  }
+
+  async getReceiver() {
+    return this.chatSDK.getReceiver();
+  }
+
+  async clearReceiver() {
+    return this.chatSDK.clearReceiver();
+  }
+
+  async getMembers(
+    chatId?: number,
+    limit?: number,
+    page?: number,
+    include?: string,
+  ) {
+    return this.chatSDK.getMembers(chatId, limit, page, include);
+  }
+
+  async addMember(chatId: number, memberId: number) {
+    return this.chatSDK.addMember(chatId, memberId);
+  }
+
+  async removeMember(chatId: number, memberId: number) {
+    return this.chatSDK.removeMember(chatId, memberId);
+  }
+
+  async getChats(limit?: number, page?: number) {
+    return this.chatSDK.getChats(limit, page);
+  }
+
+  async findChatByReceiver(receiverId: number) {
+    return this.chatSDK.findChatByReceiver(receiverId);
+  }
+
+  async addChat(receiverId: number, content?: string) {
+    return this.chatSDK.addChat(receiverId, content);
+  }
+
+  async addGroup(memberIds: number[], name: string, avatar?: string) {
+    return this.chatSDK.addGroup(memberIds, name, avatar);
+  }
+
+  async updateGroup(chatId: number, name: string, avatar?: string) {
+    return this.chatSDK.updateGroup(chatId, name, avatar);
+  }
+
+  async removeChat(chatId: number) {
+    return this.chatSDK.removeChat(chatId);
+  }
+
+  async readChat(chatId: number) {
+    return this.chatSDK.readChat(chatId);
+  }
+
+  async unreadChat(chatId: number) {
+    return this.chatSDK.unreadChat(chatId);
+  }
+
+  async getMessages(chatId: number, limit?: number, page?: number) {
+    return this.chatSDK.getMessages(chatId, limit, page);
+  }
+
+  async addMessage(
+    chatId: number,
+    content?: string | null,
+    files?: FileList | File[] | null,
+    replyId?: number,
+  ) {
+    return this.chatSDK.addMessage(chatId, content, files, replyId);
+  }
+
+  async actionMessage(
+    chatId: number,
+    messageId: number,
+    action: 'like' | 'love' | 'revoke' | 'remove',
+  ) {
+    return this.chatSDK.actionMessage(chatId, messageId, action);
+  }
+
+  addEventListener(event: string, listener: (data: any) => void) {
+    this.chatSDK.addEventListener(event, listener);
+  }
+
+  removeEventListener(event: string, listener?: (data: any) => void | null) {
+    this.chatSDK.removeEventListener(event, listener);
+  }
+
+  runEvent(name: string, data?: any) {
+    this.chatSDK.runEvent(name, data);
+  }
+
+  setConfig(config: {
+    debugMode?: boolean;
+    maxRetries?: number;
+    [key: string]: any;
+  }) {
+    this.chatSDK.setConfig(config);
+  }
+}
+
+export const chatSDK = ChatService.getInstance();
