@@ -18,6 +18,7 @@ const ScreenChat = ({
   setNewMessage,
   handleSendMessage,
   onMessageAction,
+  onAddMemberClick,
 }: any) => {
   const messages = useSelector(currentMessages);
 
@@ -172,9 +173,12 @@ const ScreenChat = ({
         </button>
 
         {currentChat?.type === 'group' && (
-          <div className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 disabled:bg-slate-200 disabled:shadow-none">
+          <button
+            onClick={onAddMemberClick}
+            className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 disabled:bg-slate-200 disabled:shadow-none"
+          >
             <Plus size={20} />
-          </div>
+          </button>
         )}
       </div>
     </div>

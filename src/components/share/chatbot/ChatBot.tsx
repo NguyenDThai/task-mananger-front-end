@@ -23,10 +23,11 @@ import {
 } from 'lucide-react';
 import ScreenChat from './ScreenChat';
 import RecentChat from './RecentChat';
-import CreateGroupModal from './CreateGroupModal';
+import CreateGroupInline from './CreateGroupModal';
 import { toast } from 'react-toastify';
 import EditGroupModal from './EditGroupModal';
 import { useDispatch } from 'react-redux';
+import AddMemberModal from './AddMemberModal';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,14 +35,13 @@ const ChatBot = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [systemMembers, setSystemMembers] = useState<any[]>([]);
   const [isGroupMode, setIsGroupMode] = useState(false);
-  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingChat, setEditingChat] = useState<any>(null);
   const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
-
   const isInitialized = useSelector(selectIsChatInitialized);
   const { user } = useSelector((state: any) => state.auth);
 
@@ -297,13 +297,58 @@ const ChatBot = () => {
     }
   };
 
+  // Hàm thêm thành viên vào nhóm
+  const handleAddMember = async (member: any) => {
+    if (!currentChat || !member.id) return;
+
+    try {
+      await chatSDK.addMember(currentChat.id, member.id);
+
+      toast.success(`Đã thêm ${member.name} vào nhóm`);
+    } catch (error) {
+      console.error('Lỗi khi thêm thành viên:', error);
+      toast.error('Không thể thêm thành viên này vào nhóm');
+    }
+  };
+
+  // Hàm xóa thành viên khỏi nhóm
+  // const handleRemoveMember = async (memberId: number) => {
+  //   if (!editingChat) return;
+
+  //   const isOwner = memberId === user.id;
+  //   if (
+  //     isOwner &&
+  //     !window.confirm(
+  //       'Rời nhóm đồng nghĩa với việc nhóm sẽ bị xóa. Bạn chắc chứ?',
+  //     )
+  //   )
+  //     return;
+  //   try {
+  //     await chatSDK.removeMember(editingChat.id, memberId);
+  //     toast.success('Đã xóa thành viên khỏi nhóm');
+
+  //     setSelectedMembers((prev) => prev.filter((m) => m.id !== memberId));
+
+  //     if (isOwner) {
+  //       setIsEditModalOpen(false);
+  //       setCurrentChat((prev: any) =>
+  //         prev.filter((c: any) => c.id !== editingChat.id),
+  //       );
+  //       setCurrentChat(null);
+  //     }
+  //   } catch (error) {
+  //     console.error('Lỗi khi xóa thành viên:', error);
+  //     toast.error('Không thể xóa thành viên này');
+  //   }
+  // };
+
   return (
     <div className="fixed bottom-6 right-6 z-[9999] font-sans">
       <div
         className={`absolute bottom-0 right-0 w-[400px] h-[640px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ${isOpen ? 'scale-100 opacity-100' : 'scale-90 opacity-0 pointer-events-none'}`}
       >
         {/* Header */}
-        <div className="bg-gradient-to-r from-indigo-600 to-violet-600 p-5 text-white flex justify-between items-center shrink-0">
+        <div className="bg-linear-to-r from-indigo-600 to-violet-600 p-5 text-white flex justify-between items-center shrink-0">
           <div className="flex items-center gap-3">
             {(currentChat || isGroupMode) && (
               <button
@@ -350,7 +395,7 @@ const ChatBot = () => {
         <div className="flex-1 relative flex flex-col bg-slate-50/50">
           {/* Màn hình danh sách & Tìm kiếm */}
           <div
-            className={`absolute inset-0 flex flex-col transition-all duration-300 ${currentChat ? '-translate-x-full opacity-0' : 'translate-x-0'}`}
+            className={`absolute inset-0 flex flex-col transition-all duration-300 ${currentChat || isGroupMode ? '-translate-x-full opacity-0' : 'translate-x-0'}`}
           >
             {/* Ô tìm kiếm */}
             <div className="p-4 bg-white border-b border-slate-100 space-y-3">
@@ -375,7 +420,7 @@ const ChatBot = () => {
                 {!isGroupMode && (
                   <button
                     onClick={() => {
-                      setIsGroupModalOpen(true);
+                      setIsGroupMode(true);
                       setGroupName('');
                       setSelectedMembers([]);
                       setSearchQuery('');
@@ -390,8 +435,6 @@ const ChatBot = () => {
                   </button>
                 )}
               </div>
-
-              {/* Logic cũ inline đã được chuyển sang Modal */}
             </div>
 
             <div className="flex-1 overflow-y-auto p-2 space-y-1">
@@ -414,7 +457,6 @@ const ChatBot = () => {
                       />
                     </div>
                   ))}
-                  {/* Nút Tạo Nhóm inline được loại bỏ vì đã có Modal */}
                 </>
               ) : (
                 <>
@@ -433,6 +475,19 @@ const ChatBot = () => {
             </div>
           </div>
 
+          {/* Màn hình Tạo nhóm (Inline) */}
+          <CreateGroupInline
+            isActive={isGroupMode}
+            groupName={groupName}
+            setGroupName={setGroupName}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            selectedMembers={selectedMembers}
+            onToggleMember={toggleMemberSelection}
+            filteredMembers={filteredMembers}
+            onCreateGroup={handleCreateGroup}
+          />
+
           {/* Màn hình Chat */}
           <ScreenChat
             scrollRef={scrollRef}
@@ -443,30 +498,10 @@ const ChatBot = () => {
             setNewMessage={setNewMessage}
             handleSendMessage={handleSendMessage}
             onMessageAction={handleMessageAction}
+            onAddMemberClick={() => setIsAddMemberModalOpen(true)}
           />
         </div>
       </div>
-
-      <CreateGroupModal
-        isOpen={isGroupModalOpen}
-        onClose={() => {
-          setIsGroupModalOpen(false);
-          setGroupName('');
-          setSelectedMembers([]);
-          setSearchQuery('');
-        }}
-        systemMembers={filteredMembers}
-        onToggleMember={toggleMemberSelection}
-        selectedMembers={selectedMembers}
-        groupName={groupName}
-        setGroupName={setGroupName}
-        onCreateGroup={async () => {
-          await handleCreateGroup();
-          setIsGroupModalOpen(false);
-        }}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-      />
 
       <EditGroupModal
         isOpen={isEditModalOpen}
@@ -480,6 +515,14 @@ const ChatBot = () => {
         setGroupName={setGroupName}
         onSave={handleSaveGroupNam}
         members={selectedMembers}
+      />
+
+      <AddMemberModal
+        isOpen={isAddMemberModalOpen}
+        onClose={() => setIsAddMemberModalOpen(false)}
+        systemMembers={allSystemUsers}
+        onAdd={handleAddMember}
+        currentMembers={selectedMembers}
       />
 
       <button
