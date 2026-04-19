@@ -223,13 +223,18 @@ const ChatBot = () => {
     }
   };
 
-  const handleOpenAddMemberModal = async () => {
-    if (!currentChat?.id) return;
+  const handleOpenAddMemberModal = async (chat?: any) => {
+    const targetChat = chat.id ? chat : currentChat;
+    if (!targetChat?.id) return;
+
+    if (chat) {
+      setCurrentChat(chat);
+    }
 
     try {
-      const res = await chatSDK.getMembers(currentChat.id);
+      const res = await chatSDK.getMembers(targetChat.id);
       if (res && res.data) {
-        dispatch(setChatMembers({ chatId: currentChat.id, members: res.data }));
+        dispatch(setChatMembers({ chatId: targetChat.id, members: res.data }));
       }
     } catch (error) {
       console.error('Lỗi khi lấy danh sách thành viên nhóm:', error);
@@ -508,6 +513,7 @@ const ChatBot = () => {
                     user={user}
                     onRemoveChat={handleRemoveChat}
                     onUpdateGroupName={handleUpdateGroupName}
+                    onAddMember={handleOpenAddMemberModal}
                   />
                 </>
               )}
