@@ -10,7 +10,7 @@ import {
   removeChat,
   addChat,
 } from '../../redux/slides/chat/chatSlide';
-import type { ISChatUser } from '../../types';
+import type { ISChatUser, TMessageAction } from '../../types';
 
 export const Chat = () => {
   const dispatch = useDispatch();
@@ -54,6 +54,8 @@ export const Chat = () => {
         targetChat = responseTargetChat.data;
         toast.success(`Đã tạo cuộc trò chuyện với ${receiver.name}`);
       }
+
+      await chat.readChat(targetChat.id);
 
       targetChat = {
         ...targetChat,
@@ -130,6 +132,8 @@ export const Chat = () => {
   const handleSelectChat = async (chatId: number) => {
     const selectedChat = chats.find((chat) => chat.id === chatId);
     if (!selectedChat) return;
+
+    await chat.readChat(selectedChat.id);
     dispatch(setCurrentChat(selectedChat));
   };
 
@@ -144,6 +148,25 @@ export const Chat = () => {
   const handleSendMessage = async (content: string) => {
     if (!currentUser || !chat || !currentChat) return;
     await chat?.addMessage(currentChat.id, content);
+  };
+
+  const handleMessageAction = async (
+    messageId: number,
+    action: TMessageAction,
+  ) => {
+    if (!chat || !currentChat?.id) return;
+
+    try {
+      await chat.actionMessage(currentChat.id, messageId, action);
+      toast.success(
+        `Tin nhắn ${action === 'like' ? 'đã được thích' : action === 'love' ? 'đã được yêu thích' : action === 'revoke' ? 'đã được thu hồi' : 'đã bị xóa'}`,
+      );
+    } catch (error) {
+      console.error(`Lỗi khi ${action}:`, error);
+      toast.error(
+        `Không thể ${action === 'like' ? 'thích' : action === 'love' ? 'yêu thích' : action === 'revoke' ? 'thu hồi' : 'xóa'} tin nhắn`,
+      );
+    }
   };
 
   return (
@@ -173,12 +196,14 @@ export const Chat = () => {
         ) : (
           <ChatWindow
             chatId={currentChat?.id}
+            chatUnread={currentChat?.new}
             chatName={getActiveChatName()}
             chatAvatar={getActiveChatAvatar()}
             messages={currentChatMessages}
             isLoading={isLoading.chatWindow}
             currentUserId={currentUser?.id}
             onSendMessage={handleSendMessage}
+            onMessageAction={handleMessageAction}
           />
         )}
       </div>

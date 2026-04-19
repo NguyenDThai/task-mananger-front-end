@@ -20,7 +20,6 @@ export const useChat = () => {
   const setChatAuth = async (user: User) => {
     if (!user._id || !user.name) return;
     try {
-      // Set auth
       const currentUserData = await chat.setAuth({
         code: user._id,
         name: user.name,
@@ -116,13 +115,36 @@ export const useChat = () => {
   }, [currentUser?.id, dispatch]);
 
   useEffect(() => {
-    const handleMemberChat = (payload: ISChatEventPayloads['chats.action']) => {
+    const handleActionChat = (payload: ISChatEventPayloads['chats.action']) => {
       // const { chat_id, user_id, message_id, action } = payload;
       console.warn('Chat action event:', payload);
     };
 
-    chat.addEventListener('chats.action', handleMemberChat);
-    return () => chat.removeEventListener('chats.action', handleMemberChat);
+    chat.addEventListener('chats.action', handleActionChat);
+    return () => chat.removeEventListener('chats.action', handleActionChat);
+  }, [currentUser?.id, dispatch]);
+
+  useEffect(() => {
+    const handleNewMessage = (payload: ISChatEventPayloads['new_message']) => {
+      // const { chat_id, user_id, message_id, action } = payload;
+      console.warn('New message event:', payload);
+    };
+
+    chat.addEventListener('new_message', handleNewMessage);
+    return () => chat.removeEventListener('new_message', handleNewMessage);
+  }, [currentUser?.id, dispatch]);
+
+  useEffect(() => {
+    const handleProjectsMember = (
+      payload: ISChatEventPayloads['projects.member'],
+    ) => {
+      // const { chat_id, user_id, message_id, action } = payload;
+      console.warn('Projects member event:', payload);
+    };
+
+    chat.addEventListener('projects.member', handleProjectsMember);
+    return () =>
+      chat.removeEventListener('projects.member', handleProjectsMember);
   }, [currentUser?.id, dispatch]);
 
   return {

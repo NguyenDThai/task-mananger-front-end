@@ -246,8 +246,10 @@ export interface IChatItem {
   name?: string; // Tên cuộc trò chuyện (chỉ có cho nhóm, chat 1-1 sẽ lấy tên từ thành viên)
   message: IMessageItem | null;
   members: ISChatUser[];
-  unreadCount?: number;
   type: 'single' | 'group';
+  new: {
+    [user_id: number]: number; // Số tin nhắn chưa đọc của từng thành viên (key là user_id, value là số lượng)
+  };
   updated_at: string;
   create_at: string;
 }
@@ -272,15 +274,18 @@ export interface ISChatEventPayloads {
   'chats.deleted': { chat_id: number };
   'chats.member': {
     type: 'join' | 'leave';
-    chat_id: number;
+    chat_id?: number;
     member?: ISChatUser;
     member_id?: number;
   };
   'chats.action': {
-    chat_id: number;
-    message_id: number;
-    action: TMessageAction;
-    user_id: number;
+    chat_id?: number;
+    message_id?: number;
+    action?: TMessageAction;
+    user_id?: number;
+    chat?: IChatItem;
+    member_id?: number;
+    type: 'read' | 'unread';
   };
   'chats.message': { chat: IChatItem; message: IMessageItem };
   'projects.member': unknown; // Định nghĩa thêm

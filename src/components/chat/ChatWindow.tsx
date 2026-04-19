@@ -1,26 +1,39 @@
 import React from 'react';
-import type { IMessageItem } from '../../types/chat.type';
+import type { IMessageItem, TMessageAction } from '../../types/chat.type';
+import { ThumbsUp, Heart, RotateCcw, Trash2, Smile } from 'lucide-react';
 
 interface ChatWindowProps {
   chatId?: number;
+  chatUnread?: {
+    [user_id: number]: number;
+  };
   chatName?: string;
   chatAvatar?: string;
   messages: IMessageItem[];
   isLoading?: boolean;
   currentUserId?: number;
   onSendMessage: (content: string) => void;
+  onMessageAction?: (messageId: number, action: TMessageAction) => void;
 }
 
 export const ChatWindow = ({
   chatId,
+  chatUnread,
   chatName = 'Chat',
   chatAvatar,
   messages = [],
   isLoading = false,
   currentUserId,
   onSendMessage,
+  onMessageAction,
 }: ChatWindowProps) => {
   const [messageInput, setMessageInput] = React.useState('');
+  const [hoveredMessageId, setHoveredMessageId] = React.useState<number | null>(
+    null,
+  );
+  const [openReactionMenuId, setOpenReactionMenuId] = React.useState<
+    number | null
+  >(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -30,6 +43,22 @@ export const ChatWindow = ({
   React.useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      // Chỉ đóng menu nếu click vào element không phải là phần của reaction menu
+      if (!target.closest('[data-reaction-menu]')) {
+        setOpenReactionMenuId(null);
+        setHoveredMessageId(null);
+      }
+    };
+
+    if (openReactionMenuId !== null) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [openReactionMenuId]);
 
   const handleSend = () => {
     if (messageInput.trim()) {
@@ -42,6 +71,13 @@ export const ChatWindow = ({
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
+    }
+  };
+
+  const handleMessageAction = (messageId: number, action: TMessageAction) => {
+    if (onMessageAction) {
+      onMessageAction(messageId, action);
+      setOpenReactionMenuId(null);
     }
   };
 
@@ -70,6 +106,7 @@ export const ChatWindow = ({
   const getSenderInfo = (message: IMessageItem) => {
     const member = message.member;
     return {
+      code: member.code,
       name: member?.name || 'Người dùng',
       avatar: member?.avatar,
     };
@@ -129,7 +166,7 @@ export const ChatWindow = ({
       </div>
 
       {/* Messages */}
-      <div className="bg-white flex-1 overflow-y-auto p-4 space-y-3 bg-transparent [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
+      <div className="bg-white flex-1 overflow-y-auto px-4 pb-4 pt-11 space-y-3 bg-transparent [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
         {isLoading ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
@@ -150,30 +187,43 @@ export const ChatWindow = ({
           </div>
         ) : (
           <>
-            {messages.map((message) => {
+            {messages.map((message, index) => {
               const senderInfo = getSenderInfo(message);
               // Determine if this is a message from current user
               const isCurrentUser =
                 currentUserId && message.member?.id === currentUserId;
 
+              console.warn('Unread: ', chatUnread);
+
               return (
                 <div
                   key={message.id}
-                  className={`flex gap-2 ${
-                    isCurrentUser ? 'justify-end' : 'justify-start'
-                  }`}
+                  className={`flex gap-2 justify-start items-center relative ${
+                    isCurrentUser ? 'flex-row-reverse' : ''
+                  } `}
+                  onMouseEnter={() => setHoveredMessageId(message.id)}
+                  onMouseLeave={() => {
+                    // Nếu menu đang mở, giữ hoveredMessageId để menu vẫn hiển thị
+                    if (openReactionMenuId !== message.id) {
+                      setHoveredMessageId(null);
+                    }
+                  }}
                 >
-                  {!isCurrentUser && senderInfo.avatar && (
+                  {!isCurrentUser &&
+                  senderInfo.avatar &&
+                  messages.at(index + 1)?.member?.code !== senderInfo.code ? (
                     <img
                       src={senderInfo.avatar}
                       alt={senderInfo.name}
-                      className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5"
+                      className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5 self-end"
                     />
+                  ) : (
+                    !isCurrentUser && <div className="w-7 h-7"></div>
                   )}
 
                   <div className="flex flex-col gap-1">
                     <div
-                      className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded ${
+                      className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded relative group ${
                         isCurrentUser
                           ? 'bg-blue-900 text-white'
                           : 'bg-blue-100 text-gray-900'
@@ -195,17 +245,96 @@ export const ChatWindow = ({
                           Tin nhắn đã bị xóa
                         </p>
                       )}
+                      <p
+                        className={`text-xs mt-1 ${
+                          isCurrentUser ? 'text-gray-300' : 'text-gray-600'
+                        }`}
+                      >
+                        {formatTime(message.created_at)}
+                      </p>
                     </div>
-                    <p
-                      className={`text-xs ${
-                        isCurrentUser
-                          ? 'text-right text-gray-400'
-                          : 'text-left text-gray-500'
-                      }`}
-                    >
-                      {formatTime(message.created_at)}
-                    </p>
                   </div>
+
+                  {/* Reaction Button and Menu */}
+                  {hoveredMessageId === message.id &&
+                    !message.revoke &&
+                    !message.remove && (
+                      <div
+                        className="flex items-center gap-2 relative"
+                        data-reaction-menu
+                      >
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenReactionMenuId(
+                              openReactionMenuId === message.id
+                                ? null
+                                : message.id,
+                            );
+                          }}
+                          className="p-1 text-white bg-gray-400 hover:bg-gray-500 rounded-full transition-all duration-200"
+                          title="Phản ứng"
+                        >
+                          <Smile size={16} />
+                        </button>
+
+                        {/* Reaction Actions Menu */}
+                        {openReactionMenuId === message.id && (
+                          <div
+                            className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2
+                          ${isCurrentUser ? '-left-37' : 'left-0'}
+                        `}
+                            data-reaction-menu
+                          >
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMessageAction(message.id, 'like');
+                              }}
+                              title="Thích"
+                              className="p-2 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-200 hover:scale-110"
+                            >
+                              <ThumbsUp size={18} />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleMessageAction(message.id, 'love');
+                              }}
+                              title="Yêu thích"
+                              className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-500 rounded-lg transition-all duration-200 hover:scale-110"
+                            >
+                              <Heart size={18} />
+                            </button>
+                            <div className="w-px bg-gray-200"></div>
+                            {isCurrentUser && (
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMessageAction(message.id, 'revoke');
+                                  }}
+                                  title="Thu hồi"
+                                  className="p-2 hover:bg-amber-50 text-gray-600 hover:text-amber-600 rounded-lg transition-all duration-200 hover:scale-110"
+                                >
+                                  <RotateCcw size={18} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMessageAction(message.id, 'remove');
+                                  }}
+                                  title="Xóa"
+                                  className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-lg transition-all duration-200 hover:scale-110"
+                                >
+                                  <Trash2 size={18} />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                 </div>
               );
             })}
