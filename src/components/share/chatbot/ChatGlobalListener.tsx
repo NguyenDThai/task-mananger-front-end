@@ -6,6 +6,7 @@ import {
   upsertMessage,
   setRecentChats,
   setSystemUsers,
+  setChatMembers,
 } from '../../../redux/slides/chat/chatSlide';
 
 const ChatGlobalListener = () => {
@@ -52,9 +53,31 @@ const ChatGlobalListener = () => {
       })();
     };
 
+    // Xử lý khi thành viên thay đổi (Thêm/Xóa/Rời nhóm)
+    const handleMemberChange = (data: any) => {
+      const chatId = data.chat_id || data.id || data.chat?.id;
+      if (chatId) {
+        (async () => {
+          try {
+            // Lấy lại danh sách thành viên mới nhất
+            const res = await chatSDK.getMembers(chatId);
+            if (res && res.data) {
+              dispatch(setChatMembers({ chatId, members: res.data }));
+            }
+            // Lấy lại danh sách chat để số lượng thành viên ở Sidebar nhảy số
+            const chatListRes = await chatSDK.getChats();
+            dispatch(setRecentChats(chatListRes.data || []));
+          } catch (error) {
+            console.error('Lỗi cập nhật thành viên real-time:', error);
+          }
+        })();
+      }
+    };
+
     // ĐĂNG KÝ SỰ KIỆN VỚI SDK
     chatSDK.addEventListener(chatSDK.EVENTS.chats_message, handleMessage);
     chatSDK.addEventListener(chatSDK.EVENTS.chats_created, handleChatCreated);
+    chatSDK.addEventListener(chatSDK.EVENTS.chats_member, handleMemberChange);
 
     return () => {
       // HỦY ĐĂNG KÝ KHI UNMOUNT
@@ -62,6 +85,10 @@ const ChatGlobalListener = () => {
       chatSDK.removeEventListener(
         chatSDK.EVENTS.chats_created,
         handleChatCreated,
+      );
+      chatSDK.removeEventListener(
+        chatSDK.EVENTS.chats_member,
+        handleMemberChange,
       );
     };
   }, [isInitialized, dispatch]);
