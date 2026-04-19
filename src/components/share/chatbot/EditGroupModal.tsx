@@ -1,4 +1,5 @@
-import { X, Save, Users, ShieldCheck } from 'lucide-react';
+import { X, Save, Users, ShieldCheck, Trash2 } from 'lucide-react';
+import { useSelector } from 'react-redux';
 
 const EditGroupModal = ({
   isOpen,
@@ -6,8 +7,11 @@ const EditGroupModal = ({
   groupName,
   setGroupName,
   onSave,
-  members,
+  chatId,
+  onRemoveMember,
 }: any) => {
+  const allChatMembers = useSelector((state: any) => state.chat.chatMembers);
+  const members = chatId ? allChatMembers[chatId] || [] : [];
   if (!isOpen) return null;
 
   return (
@@ -61,7 +65,7 @@ const EditGroupModal = ({
               {members?.map((m: any) => (
                 <div
                   key={m.id}
-                  className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:bg-slate-50"
+                  className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:bg-slate-50 group"
                 >
                   <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border-2 border-white shadow-sm shrink-0">
                     {m.name?.charAt(0)}
@@ -74,6 +78,14 @@ const EditGroupModal = ({
                       @{m.email}
                     </p>
                   </div>
+
+                  <button
+                    onClick={() => onRemoveMember(m.id)}
+                    className="p-2 text-rose-500 hover:bg-rose-100 rounded-xl opacity-0 group-hover:opacity-100 transition-all transform hover:scale-110"
+                    title="Xóa khỏi nhóm"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                   <ShieldCheck size={16} className="text-indigo-400 shrink-0" />
                 </div>
               ))}

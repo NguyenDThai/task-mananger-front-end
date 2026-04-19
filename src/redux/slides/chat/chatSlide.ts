@@ -81,6 +81,7 @@ const chatSlide = createSlice({
     setSystemUsers: (state, action: PayloadAction<any[]>) => {
       state.systemUsers = action.payload;
     },
+    // Lưu danh sách thành viên trong group
     setChatMembers: (
       state,
       action: PayloadAction<{ chatId: number; members: any[] }>,

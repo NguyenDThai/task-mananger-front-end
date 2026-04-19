@@ -51,6 +51,7 @@ const ChatBot = () => {
   const messages = useSelector(currentMessages);
   const allSystemUsers = useSelector(selectSystemUsers);
   const currentChatMembers = useSelector(selectChatMembers);
+  const allChatMembers = useSelector((state: any) => state.chat.chatMembers);
 
   // Áp dụng debounce cho giá trị search (500ms cho thong thả)
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -341,35 +342,44 @@ const ChatBot = () => {
   };
 
   // Hàm xóa thành viên khỏi nhóm
-  // const handleRemoveMember = async (memberId: number) => {
-  //   if (!editingChat) return;
+  const handleRemoveMember = async (memberId: number) => {
+    if (!editingChat) return;
 
-  //   const isOwner = memberId === user.id;
-  //   if (
-  //     isOwner &&
-  //     !window.confirm(
-  //       'Rời nhóm đồng nghĩa với việc nhóm sẽ bị xóa. Bạn chắc chứ?',
-  //     )
-  //   )
-  //     return;
-  //   try {
-  //     await chatSDK.removeMember(editingChat.id, memberId);
-  //     toast.success('Đã xóa thành viên khỏi nhóm');
+    const isOwner = memberId === user.id;
+    if (
+      isOwner &&
+      !window.confirm(
+        'Rời nhóm đồng nghĩa với việc nhóm sẽ bị xóa. Bạn chắc chứ?',
+      )
+    )
+      return;
+    try {
+      await chatSDK.removeMember(editingChat.id, memberId);
+      toast.success('Đã xóa thành viên khỏi nhóm');
 
-  //     setSelectedMembers((prev) => prev.filter((m) => m.id !== memberId));
+      setSelectedMembers((prev) => prev.filter((m) => m.id !== memberId));
 
-  //     if (isOwner) {
-  //       setIsEditModalOpen(false);
-  //       setCurrentChat((prev: any) =>
-  //         prev.filter((c: any) => c.id !== editingChat.id),
-  //       );
-  //       setCurrentChat(null);
-  //     }
-  //   } catch (error) {
-  //     console.error('Lỗi khi xóa thành viên:', error);
-  //     toast.error('Không thể xóa thành viên này');
-  //   }
-  // };
+      // Cập nhật danh sách thành viên trong chat trên redux
+      const currentChatMembers = allChatMembers[editingChat.id] || [];
+      const updateMembers = currentChatMembers.filter(
+        (m: any) => m.id !== memberId,
+      );
+      dispatch(
+        setChatMembers({ chatId: editingChat.id, members: updateMembers }),
+      );
+
+      if (isOwner) {
+        setIsEditModalOpen(false);
+        setCurrentChat((prev: any) =>
+          prev.filter((c: any) => c.id !== editingChat.id),
+        );
+        setCurrentChat(null);
+      }
+    } catch (error) {
+      console.error('Lỗi khi xóa thành viên:', error);
+      toast.error('Không thể xóa thành viên này');
+    }
+  };
 
   return (
     <div className="fixed bottom-6 right-6 z-[9999] font-sans">
@@ -539,11 +549,13 @@ const ChatBot = () => {
           setGroupName('');
           setSelectedMembers([]);
           setSearchQuery('');
+          setEditingChat(null);
         }}
         groupName={groupName}
         setGroupName={setGroupName}
         onSave={handleSaveGroupNam}
-        members={selectedMembers}
+        chatId={editingChat?.id}
+        onRemoveMember={handleRemoveMember}
       />
 
       <AddMemberModal

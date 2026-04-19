@@ -1,4 +1,4 @@
-import { Ellipsis, Trash2, Edit3, Settings, UserRoundPlus } from 'lucide-react';
+import { Ellipsis, Trash2, Edit3, UserRoundPlus } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectRecentChats } from '../../../redux/slides/chat/chatSlide';
@@ -103,7 +103,7 @@ const RecentChat = ({
                             className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors"
                           >
                             <Edit3 size={16} />
-                            <span>Đổi tên nhóm</span>
+                            <span>Chỉnh sửa nhóm</span>
                           </button>
                           <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
                             <UserRoundPlus size={16} />
@@ -111,10 +111,6 @@ const RecentChat = ({
                           </button>
                         </>
                       )}
-                      <button className="w-full flex items-center gap-3 px-4 py-2 text-sm text-slate-700 hover:bg-indigo-50 hover:text-indigo-600 transition-colors">
-                        <Settings size={16} />
-                        <span>Cài đặt</span>
-                      </button>
                       <div className="my-1 border-t border-slate-50"></div>
                       <button
                         onClick={(e) => {
