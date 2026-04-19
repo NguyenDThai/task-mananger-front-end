@@ -224,7 +224,7 @@ const ChatBot = () => {
   };
 
   const handleOpenAddMemberModal = async (chat?: any) => {
-    const targetChat = chat.id ? chat : currentChat;
+    const targetChat = chat?.id ? chat : currentChat;
     if (!targetChat?.id) return;
 
     if (chat) {
