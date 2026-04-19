@@ -1,6 +1,14 @@
 import React from 'react';
 import type { IMessageItem, TMessageAction } from '../../types/chat.type';
-import { ThumbsUp, Heart, RotateCcw, Trash2, Smile } from 'lucide-react';
+import {
+  ThumbsUp,
+  Heart,
+  RotateCcw,
+  Trash2,
+  Smile,
+  Reply,
+  X,
+} from 'lucide-react';
 
 interface ChatWindowProps {
   chatId?: number;
@@ -12,7 +20,11 @@ interface ChatWindowProps {
   messages: IMessageItem[];
   isLoading?: boolean;
   currentUserId?: number;
-  onSendMessage: (content: string, files: File[]) => void;
+  onSendMessage: (
+    content: string,
+    files: File[],
+    replyId?: number | null,
+  ) => void;
   onMessageAction?: (messageId: number, action: TMessageAction) => void;
 }
 
@@ -36,6 +48,7 @@ export const ChatWindow = ({
   >(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
   const [selectedImages, setSelectedImages] = React.useState<File[]>([]);
+  const [replyingTo, setReplyingTo] = React.useState<IMessageItem | null>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const emojiPickerRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -94,9 +107,10 @@ export const ChatWindow = ({
   const handleSend = () => {
     if (messageInput.trim() || selectedImages.length > 0) {
       // Đảm bảo content không rỗng và files là mảng
-      onSendMessage(messageInput.trim() || ' ', selectedImages);
+      onSendMessage(messageInput.trim() || ' ', selectedImages, replyingTo?.id);
       setMessageInput('');
       setSelectedImages([]);
+      setReplyingTo(null);
     }
   };
 
@@ -290,6 +304,23 @@ export const ChatWindow = ({
                           {senderInfo.name}
                         </p>
                       )}
+                      {/* Reply Preview */}
+                      {message.reply && (
+                        <div
+                          className={`mb-2 p-2 rounded text-xs border-l-2 ${
+                            isCurrentUser
+                              ? 'bg-blue-800 border-blue-400'
+                              : 'bg-white/30 border-blue-300'
+                          }`}
+                        >
+                          <p className="font-medium opacity-80">
+                            {message.reply.member?.name || 'Người dùng'}
+                          </p>
+                          <p className="opacity-70 truncate">
+                            {message.reply.content}
+                          </p>
+                        </div>
+                      )}
                       <p className="text-sm break-words">{message.content}</p>
                       {message.revoke && (
                         <p className="text-xs italic opacity-50 mt-1">
@@ -363,6 +394,19 @@ export const ChatWindow = ({
                               <Heart size={18} />
                             </button>
 
+                            <div className="w-px bg-gray-200"></div>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setReplyingTo(message);
+                                setOpenReactionMenuId(null);
+                              }}
+                              title="Trả lời"
+                              className="p-2 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-200 hover:scale-110"
+                            >
+                              <Reply size={18} />
+                            </button>
+
                             {isCurrentUser && (
                               <>
                                 <div className="w-px bg-gray-200"></div>
@@ -402,6 +446,26 @@ export const ChatWindow = ({
 
       {/* Input */}
       <div className="px-4 py-3 border-t border-gray-100 bg-white">
+        {/* Reply Preview */}
+        {replyingTo && (
+          <div className="mb-2 flex items-center gap-2 bg-blue-50 p-2 rounded border-l-4 border-blue-500">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-medium text-blue-900">
+                Trả lời: {replyingTo.member?.name || 'Người dùng'}
+              </p>
+              <p className="text-xs text-blue-800 truncate">
+                {replyingTo.content}
+              </p>
+            </div>
+            <button
+              onClick={() => setReplyingTo(null)}
+              className="p-1 text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded transition-colors flex-shrink-0"
+              title="Hủy trả lời"
+            >
+              <X size={16} />
+            </button>
+          </div>
+        )}
         {/* Selected Images Preview */}
         {selectedImages.length > 0 && (
           <div className="mb-2 flex flex-wrap gap-2">

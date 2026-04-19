@@ -269,6 +269,7 @@ export interface IMessageItem {
   revoke: boolean; // Trạng thái thu hồi tin nhắn
   remove: boolean; // Trạng thái xóa tin nhắn
   date: string;
+  reply?: IMessageItem | null; // Tin nhắn được trả lời (nếu có)
   updated_at: string;
   created_at: string;
 }

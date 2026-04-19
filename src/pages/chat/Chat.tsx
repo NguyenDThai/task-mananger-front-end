@@ -187,14 +187,19 @@ export const Chat = () => {
     setIsCreatingNewChat(false);
   };
 
-  const handleSendMessage = async (content: string, files: File[]) => {
+  const handleSendMessage = async (
+    content: string,
+    files: File[],
+    replyId?: number | null,
+  ) => {
     if (!currentUser || !chat || !currentChat) return;
     try {
-      // Gửi message với content (bắt buộc) và files (có thể rỗng)
+      // Gửi message với content (bắt buộc), files (có thể rỗng) và replyId (tùy chọn)
       await chat?.addMessage(
         currentChat.id,
         content,
         files.length > 0 ? files : null,
+        replyId,
       );
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
