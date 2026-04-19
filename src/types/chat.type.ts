@@ -93,7 +93,9 @@ export interface ISChatInstance {
     memberIds: number[],
     name: string,
     avatar?: string,
-  ) => Promise<IChatItem>;
+  ) => Promise<{
+    data: IChatItem;
+  }>;
 
   /**
    * Cập nhật thông tin nhóm (Tên và Ảnh đại diện).
@@ -106,7 +108,9 @@ export interface ISChatInstance {
     chatId: number,
     name: string,
     avatar?: string,
-  ) => Promise<IChatItem>;
+  ) => Promise<{
+    data: IChatItem;
+  }>;
 
   /**
    * Xóa một cuộc trò chuyện (chat 1-1 hoặc nhóm).
@@ -287,7 +291,13 @@ export interface ISChatEventPayloads {
     member_id?: number;
     type: 'read' | 'unread';
   };
-  'chats.message': { chat: IChatItem; message: IMessageItem };
+  'chats.message': {
+    chat: IChatItem;
+    message: IMessageItem;
+    type: 'add' | 'remove';
+    chat_id: number;
+    message_id: number;
+  };
   'projects.member': unknown; // Định nghĩa thêm
   new_message: { new: number }; // Số tin nhắn chưa đọc
 }

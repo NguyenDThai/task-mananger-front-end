@@ -9,6 +9,7 @@ import {
   setCurrentChatMessages,
   removeChat,
   addChat,
+  removeMessage,
 } from '../../redux/slides/chat/chatSlide';
 import type { ISChatUser, TMessageAction } from '../../types';
 
@@ -35,44 +36,85 @@ export const Chat = () => {
     }
   };
 
-  const handleSelectReceiver = async (receiver: ISChatUser) => {
+  const handleSelectReceiver = async (
+    receivers: ISChatUser[],
+    chatName?: string,
+  ) => {
     setIsLoading((prev) => ({ ...prev, chatWindow: true }));
 
-    if (!chat || !receiver.id) {
+    if (!chat) {
       setIsLoading((prev) => ({ ...prev, chatWindow: false }));
       return;
     }
 
     try {
-      let targetChat = chats.find(
-        (c) =>
-          c.type === 'single' && c.members?.find((m) => m.id === receiver.id),
-      );
+      if (receivers.length === 0 || receivers.some((r) => !r.id)) {
+        setIsLoading((prev) => ({ ...prev, chatWindow: false }));
+        return;
+      }
 
-      if (!targetChat) {
-        const responseTargetChat = await chat.addChat(receiver.id);
-        targetChat = responseTargetChat.data;
-        toast.success(`Đã tạo cuộc trò chuyện với ${receiver.name}`);
+      const isGroup = receivers.length > 1;
+      let targetChat;
+      let isNewChat = false;
+      let toastMessage = '';
+
+      if (isGroup) {
+        const memberIds = receivers
+          .filter((r) => r.id !== undefined)
+          .map((r) => r.id as number);
+
+        // Use provided chatName or generate from member names
+        const finalGroupName =
+          chatName || receivers.map((r) => r.name).join(', ');
+
+        const response = await chat.addGroup(memberIds, finalGroupName);
+        targetChat = response.data;
+        isNewChat = true;
+        toastMessage = `Đã tạo nhóm với ${receivers.length} thành viên`;
+      } else {
+        const [singleReceiver] = receivers;
+        const foundChat = chats.find(
+          (c) =>
+            c.type === 'single' &&
+            c.members?.some((m) => m.id === singleReceiver.id),
+        );
+
+        if (foundChat) {
+          // Chat đã tồn tại
+          targetChat = foundChat;
+        } else {
+          // Tạo single chat mới
+          const { data } = await chat.addChat(singleReceiver.id as number);
+          targetChat = data;
+          isNewChat = true;
+          toastMessage = `Đã tạo cuộc trò chuyện với ${singleReceiver.name}`;
+        }
       }
 
       await chat.readChat(targetChat.id);
 
-      targetChat = {
-        ...targetChat,
-        message: {
-          id: 0,
-          content: '',
-          type: 'text',
-          action: [],
-          member: currentUser as ISChatUser,
-          revoke: false,
-          remove: false,
-          date: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-        },
-      };
-      dispatch(addChat(targetChat));
+      if (isNewChat) {
+        const now = new Date().toISOString();
+        targetChat = {
+          ...targetChat,
+          message: {
+            id: 0,
+            content: '',
+            type: 'text',
+            action: [],
+            member: currentUser as ISChatUser,
+            revoke: false,
+            remove: false,
+            date: now,
+            updated_at: now,
+            created_at: now,
+          },
+        };
+
+        dispatch(addChat(targetChat));
+        toast.success(toastMessage);
+      }
+
       dispatch(setCurrentChat(targetChat));
     } catch (error) {
       console.error('Lỗi khi tạo cuộc trò chuyện:', error);
@@ -158,6 +200,16 @@ export const Chat = () => {
 
     try {
       await chat.actionMessage(currentChat.id, messageId, action);
+      if (action === 'revoke' || action === 'remove') {
+        dispatch(
+          removeMessage({
+            chat_id: currentChat.id,
+            message_id: messageId,
+            type: action,
+          }),
+        );
+      }
+
       toast.success(
         `Tin nhắn ${action === 'like' ? 'đã được thích' : action === 'love' ? 'đã được yêu thích' : action === 'revoke' ? 'đã được thu hồi' : 'đã bị xóa'}`,
       );
@@ -174,7 +226,7 @@ export const Chat = () => {
       {/* Sidebar - Hidden on mobile, visible on larger screens */}
       <div className="hidden md:block md:w-64 lg:w-80 flex-shrink-0">
         <ChatSidebar
-          chats={chats.filter((c) => c.message !== null)}
+          chats={chats.filter((c) => c.message !== null || c.type === 'group')}
           activeChat={currentChat}
           currentUser={currentUser}
           isLoading={isLoading.sidebar}

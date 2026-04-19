@@ -150,7 +150,7 @@ export const ChatSidebar = ({
             {filteredChats.map((chat) => (
               <ChatItem
                 key={`${chat.id}-${chat.code}`}
-                {...chat}
+                chat={chat}
                 isActive={activeChat?.id === chat.id}
                 currentUser={currentUser}
                 onSelect={onSelectChat}

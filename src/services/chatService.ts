@@ -142,7 +142,9 @@ class ChatService {
     memberIds: number[],
     name: string,
     avatar?: string,
-  ): Promise<IChatItem> {
+  ): Promise<{
+    data: IChatItem;
+  }> {
     return this.chatSDK.addGroup(memberIds, name, avatar);
   }
   /**
@@ -156,7 +158,9 @@ class ChatService {
     chatId: number,
     name: string,
     avatar?: string,
-  ): Promise<IChatItem> {
+  ): Promise<{
+    data: IChatItem;
+  }> {
     return this.chatSDK.updateGroup(chatId, name, avatar);
   }
   /**

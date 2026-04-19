@@ -2,8 +2,9 @@ import { MoreVertical } from 'lucide-react';
 import { useState } from 'react';
 import type { IChatItem, ISChatUser } from '../../types/chat.type';
 
-interface ChatItemProps extends Omit<IChatItem, 'id'> {
-  id: number;
+interface ChatItemProps {
+  chat: IChatItem;
+  unreadCount?: number;
   isActive?: boolean;
   currentUser?: ISChatUser | null;
   onSelect: (chatId: number) => void;
@@ -37,8 +38,8 @@ const getChatDisplayName = (
   chat: IChatItem,
   currentUser?: ISChatUser | null,
 ): string => {
-  if (chat.type === 'group') {
-    return `Nhóm (${chat.members?.length || 0} thành viên)`;
+  if (chat.type === 'group' && chat.name) {
+    return chat.name;
   }
   // For single chat, get the other member's name
   if (currentUser) {
@@ -73,12 +74,8 @@ const getChatAvatar = (
 };
 
 export const ChatItem = ({
-  id,
-  members,
-  message,
-  type,
+  chat,
   unreadCount,
-  updated_at,
   isActive,
   currentUser,
   onSelect,
@@ -86,39 +83,15 @@ export const ChatItem = ({
 }: ChatItemProps) => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
 
-  const chatName = getChatDisplayName(
-    {
-      id,
-      members,
-      message,
-      type,
-      unreadCount,
-      updated_at,
-      create_at: '',
-      code: '',
-    },
-    currentUser,
-  );
-  const avatar = getChatAvatar(
-    {
-      id,
-      members,
-      message,
-      type,
-      unreadCount,
-      updated_at,
-      create_at: '',
-      code: '',
-    },
-    currentUser,
-  );
-  const lastMessageContent = message?.content;
-  const lastMessageTime = message?.created_at || updated_at;
+  const chatName = getChatDisplayName(chat, currentUser);
+  const avatar = getChatAvatar(chat, currentUser);
+  const lastMessageContent = chat.message?.content;
+  const lastMessageTime = chat.message?.created_at || chat.updated_at;
 
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onDelete) {
-      onDelete(id);
+      onDelete(chat.id);
     }
   };
 
@@ -131,7 +104,7 @@ export const ChatItem = ({
           border-b border-gray-50/50 last:border-b-0 h-16 relative z-10
           ${isActive ? 'bg-white' : 'hover:bg-gray-50/50'}
         `}
-        onClick={() => onSelect(id)}
+        onClick={() => onSelect(chat.id)}
       >
         {/* Avatar */}
         <div className="flex-shrink-0">

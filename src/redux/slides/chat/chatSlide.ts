@@ -58,6 +58,13 @@ const chatSlice = createSlice({
       state.currentChatMessages.push(message);
     },
     addChat: (state, action) => {
+      const chatIndex = state.chats.findIndex(
+        (c) => c.id === action.payload.id,
+      );
+      if (chatIndex !== -1) {
+        return;
+      }
+
       state.chats.unshift(action.payload);
     },
     updateChat: (state, action) => {
@@ -79,6 +86,32 @@ const chatSlice = createSlice({
         state.currentChatMessages = [];
       }
     },
+    removeMessage: (state, action) => {
+      const { chat_id, message_id, type } = action.payload;
+      const chat = state.chats.find((c) => c.id === chat_id);
+      if (
+        !chat ||
+        !chat.message ||
+        !message_id ||
+        chat.message.id !== message_id
+      )
+        return;
+
+      let content = 'Tin nhắn đã bị xóa';
+      if (type === 'revoke') {
+        content = 'Tin nhắn đã bị thu hồi';
+      }
+
+      chat.message.content = content;
+
+      if (!state.currentChat || chat_id !== state.currentChat?.id) return;
+      const message = state.currentChatMessages.find(
+        (m) => m.id === message_id,
+      );
+      if (message) {
+        message.content = content;
+      }
+    },
   },
 });
 
@@ -93,5 +126,6 @@ export const {
   removeChat,
   addChat,
   updateChat,
+  removeMessage,
 } = chatSlice.actions;
 export default chatSlice.reducer;

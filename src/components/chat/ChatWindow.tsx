@@ -306,9 +306,10 @@ export const ChatWindow = ({
                             >
                               <Heart size={18} />
                             </button>
-                            <div className="w-px bg-gray-200"></div>
+
                             {isCurrentUser && (
                               <>
+                                <div className="w-px bg-gray-200"></div>
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation();
