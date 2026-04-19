@@ -306,6 +306,14 @@ export interface ISChatEventPayloads {
 
 export type TMessageAction = 'like' | 'love' | 'revoke' | 'remove';
 
+export interface IPaginationInfo {
+  count: number;
+  currentPage: number;
+  per_page: number;
+  total: number;
+  total_pages: number;
+}
+
 export interface ISChatConstructor {
   new (): ISChatInstance;
 }

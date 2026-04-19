@@ -1,5 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
-import type { ISChatUser, IChatItem, IMessageItem } from '../../../types';
+import type {
+  ISChatUser,
+  IChatItem,
+  IMessageItem,
+  IPaginationInfo,
+} from '../../../types';
 
 type ChatState = {
   currentUser: ISChatUser | null;
@@ -8,6 +13,7 @@ type ChatState = {
   currentChatMessages: IMessageItem[];
   currentReceiver?: ISChatUser | null;
   members: ISChatUser[];
+  messagesPagination: IPaginationInfo | null;
 };
 
 const initialState: ChatState = {
@@ -17,6 +23,7 @@ const initialState: ChatState = {
   currentChatMessages: [],
   currentReceiver: null,
   members: [],
+  messagesPagination: null,
 };
 
 const chatSlice = createSlice({
@@ -40,6 +47,9 @@ const chatSlice = createSlice({
     },
     setCurrentReceiver: (state, action) => {
       state.currentReceiver = action.payload;
+    },
+    setMessagesPagination: (state, action) => {
+      state.messagesPagination = action.payload;
     },
     addNewMessage: (state, action) => {
       const { chat, message } = action.payload;
@@ -129,6 +139,7 @@ export const {
   setCurrentChatMessages,
   setMembers,
   setCurrentReceiver,
+  setMessagesPagination,
   addNewMessage,
   removeChat,
   addChat,
