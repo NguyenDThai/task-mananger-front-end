@@ -47,19 +47,31 @@ const chatSlide = createSlice({
         state.message[chatId] = [];
       }
       const existingMessages = state.message[chatId];
+      const index = existingMessages.findIndex((m) => m.id === message.id);
 
-      if (message.revoked || message.removed) {
-        // Nếu tin nhắn bị thu hồi -> Xóa khỏi mảng
-        state.message[chatId] = existingMessages.filter(
+      if (message.remove) {
+        // Loai bo tin nhan ra khoi danh sach
+        state.message[chat.id] = existingMessages.filter(
           (m) => m.id !== message.id,
         );
-      } else {
-        const index = existingMessages.findIndex((m) => m.id === message.id);
+      } else if (message.revoke) {
+        // Neu la thu hoi, cap nhat object tin nhan trang thai da thu hoi
+        const revokeMessage = {
+          ...message,
+          revoke: true,
+          content: 'Tin nhắn đã bị thu hồi',
+        };
+
         if (index !== -1) {
-          // Nếu đã tồn tại (ví dụ: cập nhật trạng thái) -> Ghi đè
+          state.message[chatId][index] = revokeMessage;
+        } else {
+          state.message[chatId].push(revokeMessage);
+        }
+      } else {
+        // Nếu là TIN NHẮN BÌNH THƯỜNG hoặc CẬP NHẬT (Like/Love)
+        if (index !== -1) {
           state.message[chatId][index] = message;
         } else {
-          // Nếu là tin nhắn mới hoàn toàn -> Đưa vào cuối mảng
           state.message[chatId].push(message);
         }
       }

@@ -35,6 +35,7 @@ const ScreenChat = ({
             // SDK trả về field thành viên trong item.member
             const sender = item.member || {};
             const isMine = (sender.code || item.sender_code) === user?._id;
+            const isRevoked = item.revoke;
 
             return (
               <div
@@ -44,44 +45,46 @@ const ScreenChat = ({
                 } animate-in fade-in slide-in-from-bottom-2 duration-500 cursor-default`}
               >
                 {/* Floating Action Menu */}
-                <div
-                  className={`absolute -top-4 ${isMine ? 'right-0' : 'left-0'} opacity-0 group-hover:opacity-100 group-hover:-top-9 transition-all duration-300 z-10 pointer-events-none group-hover:pointer-events-auto`}
-                >
-                  <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md px-1.5 py-1 rounded-full border border-slate-200/60 shadow-xl shadow-indigo-500/10">
-                    <button
-                      onClick={() => onMessageAction(item.id, 'like')}
-                      className="p-1.5 hover:bg-yellow-50 rounded-full text-slate-400 hover:text-yellow-500 transition-colors"
-                      title="Thích"
-                    >
-                      <ThumbsUp size={14} />
-                    </button>
-                    <button
-                      onClick={() => onMessageAction(item.id, 'love')}
-                      className="p-1.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500 transition-colors"
-                      title="Yêu thích"
-                    >
-                      <Heart size={14} />
-                    </button>
-                    {isMine && (
-                      <div className="flex items-center gap-1 ml-1 pl-1 border-l border-slate-100">
-                        <button
-                          onClick={() => onMessageAction(item.id, 'revoke')}
-                          className="p-1.5 hover:bg-indigo-50 rounded-full text-slate-400 hover:text-indigo-600 transition-colors"
-                          title="Thu hồi"
-                        >
-                          <RotateCcw size={14} />
-                        </button>
-                        <button
-                          onClick={() => onMessageAction(item.id, 'remove')}
-                          className="p-1.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-600 transition-colors"
-                          title="Xóa"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    )}
+                {!isRevoked && (
+                  <div
+                    className={`absolute -top-4 ${isMine ? 'right-0' : 'left-0'} opacity-0 group-hover:opacity-100 group-hover:-top-9 transition-all duration-300 z-10 pointer-events-none group-hover:pointer-events-auto`}
+                  >
+                    <div className="flex items-center gap-1 bg-white/95 backdrop-blur-md px-1.5 py-1 rounded-full border border-slate-200/60 shadow-xl shadow-indigo-500/10">
+                      <button
+                        onClick={() => onMessageAction(item.id, 'like')}
+                        className="p-1.5 hover:bg-yellow-50 rounded-full text-slate-400 hover:text-yellow-500 transition-colors"
+                        title="Thích"
+                      >
+                        <ThumbsUp size={14} />
+                      </button>
+                      <button
+                        onClick={() => onMessageAction(item.id, 'love')}
+                        className="p-1.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-500 transition-colors"
+                        title="Yêu thích"
+                      >
+                        <Heart size={14} />
+                      </button>
+                      {isMine && (
+                        <div className="flex items-center gap-1 ml-1 pl-1 border-l border-slate-100">
+                          <button
+                            onClick={() => onMessageAction(item.id, 'revoke')}
+                            className="p-1.5 hover:bg-indigo-50 rounded-full text-slate-400 hover:text-indigo-600 transition-colors"
+                            title="Thu hồi"
+                          >
+                            <RotateCcw size={14} />
+                          </button>
+                          <button
+                            onClick={() => onMessageAction(item.id, 'remove')}
+                            className="p-1.5 hover:bg-red-50 rounded-full text-slate-400 hover:text-red-600 transition-colors"
+                            title="Xóa"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Sender Avatar */}
                 {!isMine && (
@@ -116,15 +119,23 @@ const ScreenChat = ({
                   {/* Message Bubble */}
                   <div
                     className={`relative px-4 py-2.5 text-[13.5px] leading-relaxed transition-all duration-300 ${
-                      isMine
-                        ? 'bg-linear-to-br from-indigo-500 via-indigo-600 to-indigo-700 text-white rounded-[22px] rounded-br-[4px] shadow-md shadow-indigo-500/10'
-                        : 'bg-white text-slate-700 rounded-[22px] rounded-bl-[4px] border border-slate-100/80 shadow-sm shadow-slate-200/50 hover:border-slate-200'
+                      isRevoked
+                        ? 'bg-slate-100 text-slate-400 italic border border-slate-200 rounded-[22px]'
+                        : isMine
+                          ? 'bg-linear-to-br from-indigo-500 via-indigo-600 to-indigo-700 text-white rounded-[22px] rounded-br-[4px] shadow-md shadow-indigo-500/10'
+                          : 'bg-white text-slate-700 rounded-[22px] rounded-bl-[4px] border border-slate-100/80 shadow-sm shadow-slate-200/50 hover:border-slate-200'
                     }`}
                   >
-                    <div className="relative z-10">{item.content}</div>
+                    {isRevoked ? (
+                      <span className="opacity-60 text-[11px]">
+                        Tin nhắn đã được thu hồi
+                      </span>
+                    ) : (
+                      item.content
+                    )}
 
                     {/* Glass sheen for user messages */}
-                    {isMine && (
+                    {isMine && !isRevoked && (
                       <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-white/10 rounded-[22px] rounded-br-[4px] pointer-events-none"></div>
                     )}
                   </div>

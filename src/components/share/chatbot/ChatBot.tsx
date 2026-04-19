@@ -299,26 +299,20 @@ const ChatBot = () => {
     if (!currentChat) return;
 
     try {
-      await chatSDK.actionMessage(currentChat.id, messageId, action);
-
-      // Cập nhật UI mượt mà qua Redux
       if (action === 'remove' || action === 'revoke') {
-        const messageToUpdate = messages.find((m) => m.id === messageId);
-        if (messageToUpdate) {
-          // Gửi một "giả lập" tin nhắn đã bị thu hồi vào Redux để nó tự xóa
-          dispatch(
-            upsertMessage({
-              chat: currentChat,
-              message: { ...messageToUpdate, [action]: true },
-            }),
-          );
-        }
-        toast.success(
-          action === 'revoke'
-            ? 'Thu hồi tin nhắn thành công'
-            : 'Xóa tin nhắn thành công',
+        await chatSDK.actionMessage(currentChat.id, messageId, action);
+      }
+      // Cập nhật UI qua redux
+      const messageToUpdate = messages.find((m) => m.id === messageId);
+      if (messageToUpdate) {
+        dispatch(
+          upsertMessage({
+            chat: currentChat,
+            message: { ...messageToUpdate, [action]: true },
+          }),
         );
       } else {
+        // Like và Love: Chỉ hiện Toast (vì Server đang lỗi 500)
         toast.success(action === 'like' ? 'Đã thích tin nhắn' : 'Đã thả tim');
       }
     } catch (error) {
