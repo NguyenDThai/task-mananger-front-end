@@ -1,14 +1,11 @@
 import { useState } from 'react';
 import { X, Search, UserPlus } from 'lucide-react';
+import { useSelector } from 'react-redux';
+import { selectChatMembers } from '../../../redux/slides/chat/chatSlide';
 
-const AddMemberModal = ({
-  isOpen,
-  onClose,
-  systemMembers,
-  onAdd,
-  currentMembers,
-}: any) => {
+const AddMemberModal = ({ isOpen, onClose, systemMembers, onAdd }: any) => {
   const [searchTerm, setSearchTerm] = useState(''); // State tìm kiếm nội bộ
+  const currentMembers = useSelector(selectChatMembers);
 
   if (!isOpen) return null;
 
@@ -23,10 +20,7 @@ const AddMemberModal = ({
         );
 
   // 2. (Tùy chọn) Vẫn loại bỏ những người đã có trong nhóm nếu có dữ liệu
-  const currentMemberIds = currentMembers?.map((m: any) => m.id) || [];
-  const finalResults = filteredResults.filter(
-    (m: any) => !currentMemberIds.includes(m.id),
-  );
+  const joinedMemberIds = currentMembers?.map((m: any) => m.id) || [];
 
   return (
     <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
@@ -65,41 +59,53 @@ const AddMemberModal = ({
 
         {/* Kết quả tìm kiếm */}
         <div className="flex-1 overflow-y-auto min-h-[250px] max-h-[400px] p-2 space-y-1">
-          {finalResults.length > 0 ? (
-            finalResults.map((m: any) => (
-              <div
-                key={m.id}
-                className="flex items-center gap-3 p-2.5 hover:bg-indigo-50/50 rounded-2xl transition-all group"
-              >
-                <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border-2 border-white shadow-sm overflow-hidden">
-                  {m.avatar ? (
-                    <img
-                      src={m.avatar}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    m.name?.charAt(0)
+          {filteredResults.length > 0 ? (
+            filteredResults.map((m: any) => {
+              const isJoined = joinedMemberIds.includes(m.id);
+              return (
+                <div
+                  key={m.id}
+                  className="flex items-center gap-3 p-2.5 hover:bg-indigo-50/50 rounded-2xl transition-all group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-600 font-bold border-2 border-white shadow-sm overflow-hidden">
+                    {m.avatar ? (
+                      <img
+                        src={m.avatar}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      m.name?.charAt(0)
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="text-sm font-bold text-slate-700 truncate">
+                      {m.name}
+                    </h4>
+
+                    {isJoined ? (
+                      <p className="text-[10px] text-emerald-500 font-bold uppercase tracking-tight">
+                        ● Đã tham gia nhóm
+                      </p>
+                    ) : (
+                      <p className="text-[10px] text-slate-400 truncate">
+                        {m.email}
+                      </p>
+                    )}
+                  </div>
+                  {!isJoined && (
+                    <button
+                      onClick={() => {
+                        onAdd(m);
+                        setSearchTerm('');
+                      }}
+                      className="px-3 py-1.5 bg-indigo-600 text-white text-[11px] font-bold rounded-lg hover:bg-indigo-700 transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      Mời
+                    </button>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-bold text-slate-700 truncate">
-                    {m.name}
-                  </h4>
-                  <p className="text-[10px] text-slate-400 truncate">
-                    {m.email}
-                  </p>
-                </div>
-                <button
-                  onClick={() => {
-                    onAdd(m);
-                    setSearchTerm(''); // Xóa text sau khi mời thành công
-                  }}
-                  className="px-3 py-1.5 bg-indigo-600 text-white text-[11px] font-bold rounded-lg hover:bg-indigo-700 transition-all"
-                >
-                  Mời
-                </button>
-              </div>
-            ))
+              );
+            })
           ) : (
             <div className="flex flex-col items-center justify-center py-10 text-slate-400 opacity-60">
               <p className="text-[11px] text-center px-6">

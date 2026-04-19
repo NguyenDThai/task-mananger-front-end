@@ -2,9 +2,11 @@ import { useEffect, useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
   currentMessages,
+  selectChatMembers,
   selectIsChatInitialized,
   selectRecentChats,
   selectSystemUsers,
+  setChatMembers,
   setCurrentChatId,
   setRecentChats,
   upsertMessage,
@@ -48,6 +50,7 @@ const ChatBot = () => {
   const recentChats = useSelector(selectRecentChats);
   const messages = useSelector(currentMessages);
   const allSystemUsers = useSelector(selectSystemUsers);
+  const currentChatMembers = useSelector(selectChatMembers);
 
   // Áp dụng debounce cho giá trị search (500ms cho thong thả)
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -79,7 +82,7 @@ const ChatBot = () => {
 
   // Lấy tin nhắn của cuộc trò chuyện hiện tại
   useEffect(() => {
-    const fetchMessages = async () => {
+    const fetchMessagesAndMembers = async () => {
       if (!currentChat || !isInitialized) return;
       try {
         const res = await chatSDK.getMessages(currentChat.id);
@@ -89,12 +92,22 @@ const ChatBot = () => {
         [...data].reverse().forEach((m: any) => {
           dispatch(upsertMessage({ chat: currentChat, message: m }));
         });
+
+        // Lấy danh sách thành viên
+        if (currentChat.type === 'group') {
+          const resMem = await chatSDK.getMembers(currentChat.id);
+          if (resMem && resMem.data) {
+            dispatch(
+              setChatMembers({ chatId: currentChat.id, members: resMem.data }),
+            );
+          }
+        }
       } catch (error) {
         console.error('Lỗi khi lấy tin nhắn:', error);
       }
     };
 
-    fetchMessages();
+    fetchMessagesAndMembers();
   }, [currentChat, isInitialized, chatSDK, dispatch]);
 
   // Lấy danh sách chat gần đây
@@ -209,6 +222,22 @@ const ChatBot = () => {
     }
   };
 
+  const handleOpenAddMemberModal = async () => {
+    if (!currentChat?.id) return;
+
+    try {
+      const res = await chatSDK.getMembers(currentChat.id);
+      if (res && res.data) {
+        dispatch(setChatMembers({ chatId: currentChat.id, members: res.data }));
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách thành viên nhóm:', error);
+      toast.error('Không thể tải danh sách thành viên');
+    } finally {
+      setIsAddMemberModalOpen(true);
+    }
+  };
+
   // Hàm lấy member trong group
   const handleUpdateGroupName = async (chat: any) => {
     setEditingChat(chat);
@@ -222,6 +251,7 @@ const ChatBot = () => {
 
       if (res && res.data) {
         setSelectedMembers(res.data);
+        dispatch(setChatMembers({ chatId: chat.id, members: res.data }));
       } else {
         setSelectedMembers([]);
       }
@@ -299,6 +329,11 @@ const ChatBot = () => {
       await chatSDK.addMember(currentChat.id, member.id);
 
       toast.success(`Đã thêm ${member.name} vào nhóm`);
+
+      const updateMembers = [...currentChatMembers, member];
+      dispatch(
+        setChatMembers({ chatId: currentChat.id, members: updateMembers }),
+      );
     } catch (error) {
       console.error('Lỗi khi thêm thành viên:', error);
       toast.error('Không thể thêm thành viên này vào nhóm');
@@ -371,7 +406,7 @@ const ChatBot = () => {
                     {isGroupMode
                       ? 'Kết nối với đồng nghiệp của bạn'
                       : currentChat?.type === 'group'
-                        ? `${currentChat.member || 0} thành viên`
+                        ? `${currentChatMembers.length} thành viên`
                         : 'Đang hoạt động'}
                   </p>
                 </div>
@@ -492,7 +527,7 @@ const ChatBot = () => {
             setNewMessage={setNewMessage}
             handleSendMessage={handleSendMessage}
             onMessageAction={handleMessageAction}
-            onAddMemberClick={() => setIsAddMemberModalOpen(true)}
+            onAddMemberClick={handleOpenAddMemberModal}
           />
         </div>
       </div>
