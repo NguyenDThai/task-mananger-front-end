@@ -42,28 +42,42 @@ const chatSlice = createSlice({
       state.currentReceiver = action.payload;
     },
     addNewMessage: (state, action) => {
-      const isExisted = state.currentChatMessages.find(
-        (m) => m.id === action.payload.id,
-      );
-      if (isExisted || !action.payload.id) return;
-      const newMessage = action.payload as IMessageItem;
-      state.currentChatMessages.push(newMessage);
-      if (!state.currentChat) return;
+      const { chat, message } = action.payload;
 
-      const chatIndex = state.chats.findIndex(
-        (chat) => chat.id === state.currentChat?.id,
-      );
+      if (!message || !chat) return;
+
+      const chatIndex = state.chats.findIndex((c) => c.id === chat.id);
+
       if (chatIndex !== -1) {
-        state.chats[chatIndex].message = newMessage;
+        state.chats[chatIndex].message = message;
         const updatedChat = state.chats.splice(chatIndex, 1)[0];
         state.chats.unshift(updatedChat);
+      }
+
+      if (!state.currentChat || chat.id !== state.currentChat?.id) return;
+      state.currentChatMessages.push(message);
+    },
+    addChat: (state, action) => {
+      state.chats.unshift(action.payload);
+    },
+    updateChat: (state, action) => {
+      const updatedChat = action.payload;
+      const chatIndex = state.chats.findIndex(
+        (chat) => chat.id === updatedChat.id,
+      );
+      if (chatIndex !== -1) {
+        state.chats[chatIndex] = updatedChat;
+      }
+      if (state.currentChat?.id === updatedChat.id) {
+        state.currentChat = updatedChat;
       }
     },
     removeChat: (state, action) => {
       state.chats = state.chats.filter((chat) => chat.id !== action.payload);
-    },
-    addChat: (state, action) => {
-      state.chats.unshift(action.payload);
+      if (state.currentChat?.id === action.payload) {
+        state.currentChat = null;
+        state.currentChatMessages = [];
+      }
     },
   },
 });
@@ -78,5 +92,6 @@ export const {
   addNewMessage,
   removeChat,
   addChat,
+  updateChat,
 } = chatSlice.actions;
 export default chatSlice.reducer;

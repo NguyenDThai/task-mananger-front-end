@@ -9,13 +9,13 @@ export interface ISChatInstance {
 
   // Auth methods
   setAuth: (data: ISChatUser) => Promise<ISChatUser>;
-  getAuth: () => ISChatUser | null;
-  clearAuth: () => void;
+  getAuth: () => Promise<ISChatUser | null>;
+  clearAuth: () => Promise<void>;
 
   // Receiver methods
   setReceiver: (receiverData: ISChatUser) => Promise<ISChatUser>;
-  getReceiver: () => ISChatUser | null;
-  clearReceiver: () => void;
+  getReceiver: () => Promise<ISChatUser | null>;
+  clearReceiver: () => Promise<void>;
 
   // Manage member methods
   /**
@@ -243,6 +243,7 @@ export interface ISChatUser {
 export interface IChatItem {
   id: number;
   code: string;
+  name?: string; // Tên cuộc trò chuyện (chỉ có cho nhóm, chat 1-1 sẽ lấy tên từ thành viên)
   message: IMessageItem | null;
   members: ISChatUser[];
   unreadCount?: number;
@@ -268,21 +269,21 @@ export interface IMessageItem {
 export interface ISChatEventPayloads {
   'chats.created': { chat: IChatItem };
   'chats.updated': { chat: IChatItem };
-  'chats.deleted': { chatId: number };
+  'chats.deleted': { chat_id: number };
   'chats.member': {
     type: 'join' | 'leave';
-    chatId: number;
+    chat_id: number;
     member?: ISChatUser;
     member_id?: number;
   };
   'chats.action': {
-    chatId: number;
-    messageId: number;
+    chat_id: number;
+    message_id: number;
     action: TMessageAction;
-    userId: number;
+    user_id: number;
   };
   'chats.message': { chat: IChatItem; message: IMessageItem };
-  'projects.member': unknown; // Định nghĩa thêm nếu bạn có thông tin
+  'projects.member': unknown; // Định nghĩa thêm
   new_message: { new: number }; // Số tin nhắn chưa đọc
 }
 

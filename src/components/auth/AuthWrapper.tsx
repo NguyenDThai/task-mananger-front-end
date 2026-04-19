@@ -1,41 +1,28 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useGetMeQuery } from '../../redux/api/authApi';
 import { setCredentials } from '../../redux/slides/auth/authSlide';
 import { useNavigate } from 'react-router-dom';
-import { chat } from '../../services/chatService';
-import { setCurrentUser } from '../../redux/slides/chat/chatSlide';
+import { useChat } from '../../hooks/useChat';
 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { setChatAuth } = useChat();
   const { data, isSuccess, isError, isLoading } = useGetMeQuery();
+  const isInitializing = useRef(false);
 
   useEffect(() => {
-    const user = data?.user || {};
+    if (!isSuccess || isInitializing.current) return;
 
-    const setAuthForChat = async () => {
-      try {
-        if (user._id && user.name) {
-          const userData = {
-            code: user._id,
-            name: user.name,
-            avatar: user.avatar,
-            email: user.email,
-          };
-          const currentUserData = await chat.setAuth(userData);
-          dispatch(setCurrentUser(currentUserData));
-        }
-      } catch (error) {
-        console.error('Failed to set auth for chat:', error);
-      }
-    };
+    const user = data?.user;
 
-    if (isSuccess && user && user._id && user.name) {
-      dispatch(setCredentials({ user: user }));
-      setAuthForChat();
+    if (user?._id && user?.name) {
+      dispatch(setCredentials({ user }));
+      setChatAuth(user);
+      isInitializing.current = true;
     }
-  }, [isSuccess, data, dispatch]);
+  }, [isSuccess, data, dispatch, setChatAuth]);
 
   useEffect(() => {
     if (isError) {
