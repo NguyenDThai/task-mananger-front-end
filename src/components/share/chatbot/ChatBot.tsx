@@ -33,7 +33,6 @@ const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentChat, setCurrentChat] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [systemMembers, setSystemMembers] = useState<any[]>([]);
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingChat, setEditingChat] = useState<any>(null);
@@ -210,32 +209,27 @@ const ChatBot = () => {
     }
   };
 
-  // Hàm cập nhật tên nhóm
+  // Hàm lấy member trong group
   const handleUpdateGroupName = async (chat: any) => {
     setEditingChat(chat);
     setIsEditModalOpen(true);
     setGroupName(chat.name || '');
 
-    let allMembers = systemMembers;
+    setSelectedMembers([]);
 
-    if (allMembers.length === 0) {
-      try {
-        const res = await chatSDK.getMembers();
+    try {
+      const res = await chatSDK.getMembers(chat.id);
 
-        allMembers = res.data || [];
-
-        setSystemMembers(allMembers);
-      } catch (error) {
-        console.error('Lỗi khi load thành viên:', error);
+      if (res && res.data) {
+        setSelectedMembers(res.data);
+      } else {
+        setSelectedMembers([]);
       }
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách thành viên nhóm:', error);
+      toast.error('Không thể tải danh sách thành viên');
+      setSelectedMembers([]);
     }
-
-    const membersIds = chat.new ? Object.keys(chat.new).map(Number) : [];
-
-    const groupMembers = allMembers.filter((m) =>
-      membersIds.includes(Number(m.id)),
-    );
-    setSelectedMembers(groupMembers);
   };
 
   const handleSaveGroupNam = async () => {
