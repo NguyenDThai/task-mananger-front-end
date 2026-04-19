@@ -1,4 +1,14 @@
 import { chatSDK } from '../../../services/chat.service';
+import type { Chat, User } from '../../../redux/slides/chat/chatSlide';
+
+interface ChatbotSearchListProps {
+  m: User;
+  setCurrentChat: (chat: Chat) => void;
+  setSearchQuery: (query: string) => void;
+  isGroupMode: boolean;
+  isSelected: boolean;
+  toggleMemberSelection: (member: User) => void;
+}
 
 export const ChatbotSearchList = ({
   m,
@@ -7,7 +17,7 @@ export const ChatbotSearchList = ({
   isGroupMode,
   isSelected,
   toggleMemberSelection,
-}: any) => {
+}: ChatbotSearchListProps) => {
   const handleSelectMember = async () => {
     if (isGroupMode) {
       toggleMemberSelection(m);
@@ -16,17 +26,19 @@ export const ChatbotSearchList = ({
 
     try {
       await chatSDK.setReceiver({
-        code: m.code,
-        name: m.name,
-        avatar: m.avatar,
-        phone: m.phone,
-        email: m.email,
+        code: m.code as string,
+        name: m.name as string,
+        avatar: m.avatar as string,
+        phone: m.phone as string,
+        email: m.email as string,
       });
 
       // Tạo hoặc lấy cuộc trò chuyện
       const chatResponse = await chatSDK.addChat(m.id);
 
-      setCurrentChat(chatResponse.data);
+      if (chatResponse.data) {
+        setCurrentChat(chatResponse.data as Chat);
+      }
       setSearchQuery('');
     } catch (error) {
       console.error('Không thể khởi tạo chat', error);

@@ -8,6 +8,7 @@ import {
   setSystemUsers,
   setChatMembers,
 } from '../../../redux/slides/chat/chatSlide';
+import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 
 const ChatGlobalListener = () => {
   const dispatch = useDispatch();
@@ -18,21 +19,29 @@ const ChatGlobalListener = () => {
 
     const fetchSystemUsers = async () => {
       const res = await chatSDK.getMembers();
-      dispatch(setSystemUsers(res.data || []));
+      dispatch(setSystemUsers((res.data as User[]) || []));
     };
     fetchSystemUsers();
 
     // 1. Khi có tin nhắn mới hoặc các thao tác tin nhắn (revoke, remove, like...)
-    const handleMessage = (data: any) => {
-      const chat = data.chat || { id: data.chat_id };
-      const message = data.message || data;
+    const handleMessage = (data: unknown) => {
+      const payload = data as {
+        chat?: Chat;
+        chat_id?: number;
+        message?: Message;
+        id?: number;
+        message_id?: number;
+        type?: string;
+      };
+      const chat = payload.chat || ({ id: payload.chat_id } as Chat);
+      const message = payload.message || (payload as Message);
       if (!message) return;
       // PHIÊN DỊCH: Chuyển 'type' từ SDK sang 'revoke'/'remove' cho Redux hiểu
-      const processedMessage = {
+      const processedMessage: Message = {
         ...message,
-        id: message.id || message.message_id,
-        revoke: message.type === 'revoke',
-        remove: message.type === 'remove',
+        id: message.id || (payload.message_id as number),
+        revoke: payload.type === 'revoke',
+        remove: payload.type === 'remove',
       };
 
       // data nhận từ SDK thường là { chat: {...}, message: {...} }
@@ -49,24 +58,29 @@ const ChatGlobalListener = () => {
       // Reload lại danh sách chat gần đây để người dùng thấy chat mới hiện lên
       (async () => {
         const res = await chatSDK.getChats();
-        dispatch(setRecentChats(res.data || []));
+        dispatch(setRecentChats((res.data as Chat[]) || []));
       })();
     };
 
     // Xử lý khi thành viên thay đổi (Thêm/Xóa/Rời nhóm)
-    const handleMemberChange = (data: any) => {
-      const chatId = data.chat_id || data.id || data.chat?.id;
+    const handleMemberChange = (data: unknown) => {
+      const payload = data as {
+        chat_id?: number;
+        id?: number;
+        chat?: { id: number };
+      };
+      const chatId = payload.chat_id || payload.id || payload.chat?.id;
       if (chatId) {
         (async () => {
           try {
             // Lấy lại danh sách thành viên mới nhất
             const res = await chatSDK.getMembers(chatId);
             if (res && res.data) {
-              dispatch(setChatMembers({ chatId, members: res.data }));
+              dispatch(setChatMembers({ chatId, members: res.data as User[] }));
             }
             // Lấy lại danh sách chat để số lượng thành viên ở Sidebar nhảy số
             const chatListRes = await chatSDK.getChats();
-            dispatch(setRecentChats(chatListRes.data || []));
+            dispatch(setRecentChats((chatListRes.data as Chat[]) || []));
           } catch (error) {
             console.error('Lỗi cập nhật thành viên real-time:', error);
           }

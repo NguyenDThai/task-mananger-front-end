@@ -2,6 +2,15 @@ import { Ellipsis, Trash2, Edit3, UserRoundPlus } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { selectRecentChats } from '../../../redux/slides/chat/chatSlide';
+import type { Chat, User } from '../../../redux/slides/chat/chatSlide';
+
+interface RecentChatProps {
+  setCurrentChat: (chat: Chat) => void;
+  user: { _id?: string } | null;
+  onRemoveChat: (chatId: number) => void;
+  onUpdateGroupName: (chat: Chat) => void;
+  onAddMember: (chat: Chat) => void;
+}
 
 const RecentChat = ({
   setCurrentChat,
@@ -9,7 +18,7 @@ const RecentChat = ({
   onRemoveChat,
   onUpdateGroupName,
   onAddMember,
-}: any) => {
+}: RecentChatProps) => {
   const recentChats = useSelector(selectRecentChats);
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
 
@@ -21,14 +30,14 @@ const RecentChat = ({
   return (
     <>
       {recentChats.length > 0 ? (
-        recentChats.map((chat: any) => {
+        recentChats.map((chat: Chat) => {
           // Xử lý tên hiển thị cho từng item
           let displayName = chat.name || 'Nhóm chat';
           let displayAvatar = chat.avatar;
 
           if (chat.type === 'single') {
-            const partner = chat.members?.find(
-              (m: any) => m.code !== user?._id,
+            const partner = (chat.members as User[])?.find(
+              (m: User) => m.code !== user?._id,
             );
             displayName = partner ? partner.name : 'Người dùng';
             displayAvatar = partner ? partner.avatar : null;

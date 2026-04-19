@@ -2,8 +2,21 @@ import { useState } from 'react';
 import { X, Search, UserPlus } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { selectChatMembers } from '../../../redux/slides/chat/chatSlide';
+import type { User } from '../../../redux/slides/chat/chatSlide';
 
-const AddMemberModal = ({ isOpen, onClose, systemMembers, onAdd }: any) => {
+interface AddMemberModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  systemMembers: User[];
+  onAdd: (member: User) => void;
+}
+
+const AddMemberModal = ({
+  isOpen,
+  onClose,
+  systemMembers,
+  onAdd,
+}: AddMemberModalProps) => {
   const [searchTerm, setSearchTerm] = useState(''); // State tìm kiếm nội bộ
   const currentMembers = useSelector(selectChatMembers);
 
@@ -14,16 +27,18 @@ const AddMemberModal = ({ isOpen, onClose, systemMembers, onAdd }: any) => {
     searchTerm.trim() === ''
       ? [] // Nếu chưa nhập gì thì để mảng rỗng
       : systemMembers.filter(
-          (m: any) =>
+          (m: User) =>
             m.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.email?.toLowerCase().includes(searchTerm.toLowerCase()),
+            (m.email as string)
+              ?.toLowerCase()
+              .includes(searchTerm.toLowerCase()),
         );
 
   // 2. (Tùy chọn) Vẫn loại bỏ những người đã có trong nhóm nếu có dữ liệu
-  const joinedMemberIds = currentMembers?.map((m: any) => m.id) || [];
+  const joinedMemberIds = currentMembers?.map((m: User) => m.id) || [];
 
   return (
-    <div className="fixed inset-0 z-[10001] flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-10001 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
       <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="p-5 border-b border-slate-100 flex justify-between items-center">

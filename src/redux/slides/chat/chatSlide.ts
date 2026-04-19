@@ -1,13 +1,45 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+export interface Chat {
+  id: number;
+  name?: string;
+  type: 'single' | 'group';
+  avatar?: string | null;
+  message?: Message;
+  updated_at?: string;
+  members?: User[];
+  [key: string]: unknown;
+}
+
+export interface Message {
+  id: number;
+  content: string;
+  revoke?: boolean;
+  remove?: boolean;
+  created_at?: string;
+  sender_id?: number;
+  sender_code?: string;
+  member?: User;
+  [key: string]: unknown;
+}
+
+export interface User {
+  id: number;
+  name: string;
+  code: string;
+  avatar?: string | null;
+  email?: string | null;
+  [key: string]: unknown;
+}
+
 interface ChatState {
   isInitialized: boolean;
   unreadCount: number;
-  recentChats: any[];
-  message: Record<number, any[]>;
+  recentChats: Chat[];
+  message: Record<number, Message[]>;
   currentChatId: number | null;
-  systemUsers: any[]; // Danh bạ toàn hệ thống
-  chatMembers: Record<number, any[]>; //Lưu danh sách thành viên trong group
+  systemUsers: User[]; // Danh bạ toàn hệ thống
+  chatMembers: Record<number, User[]>; //Lưu danh sách thành viên trong group
 }
 
 const initialState: ChatState = {
@@ -32,13 +64,13 @@ const chatSlide = createSlice({
       state.currentChatId = action.payload;
     },
 
-    setRecentChats: (state, action: PayloadAction<any[]>) => {
+    setRecentChats: (state, action: PayloadAction<Chat[]>) => {
       state.recentChats = action.payload;
     },
 
     upsertMessage: (
       state,
-      action: PayloadAction<{ chat: any; message: any }>,
+      action: PayloadAction<{ chat: Chat; message: Message }>,
     ) => {
       const { chat, message } = action.payload;
       const chatId = chat.id;
@@ -53,12 +85,12 @@ const chatSlide = createSlice({
         // Tìm tin nhắn cũ đang có trong Store
         const oldMessage = index !== -1 ? state.message[chatId][index] : {};
         // Neu la thu hoi, cap nhat object tin nhan trang thai da thu hoi
-        const revokeMessage = {
+        const revokeMessage: Message = {
           ...oldMessage,
           ...message,
           revoke: true,
           content: 'Tin nhắn đã bị thu hồi',
-        };
+        } as Message;
 
         if (index !== -1) {
           state.message[chatId][index] = revokeMessage;
@@ -67,7 +99,7 @@ const chatSlide = createSlice({
         }
       } else if (message.remove) {
         // Loai bo tin nhan ra khoi danh sach
-        state.message[chat.id] = existingMessages.filter(
+        state.message[chatId] = existingMessages.filter(
           (m) => m.id !== message.id,
         );
       } else {
@@ -81,7 +113,7 @@ const chatSlide = createSlice({
       // --- B. Cập nhật danh sách chat gần đây (state.recentChats) ---
       // Đưa chat vừa có tin nhắn lên đầu danh sách
       const otherChats = state.recentChats.filter((c) => c.id !== chatId);
-      const updatedChat = {
+      const updatedChat: Chat = {
         ...chat,
         message: message,
         updated_at: message.created_at,
@@ -93,13 +125,13 @@ const chatSlide = createSlice({
       state.unreadCount = action.payload;
     },
 
-    setSystemUsers: (state, action: PayloadAction<any[]>) => {
+    setSystemUsers: (state, action: PayloadAction<User[]>) => {
       state.systemUsers = action.payload;
     },
     // Lưu danh sách thành viên trong group
     setChatMembers: (
       state,
-      action: PayloadAction<{ chatId: number; members: any[] }>,
+      action: PayloadAction<{ chatId: number; members: User[] }>,
     ) => {
       const { chatId, members } = action.payload;
       state.chatMembers[chatId] = members;

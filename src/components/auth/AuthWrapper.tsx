@@ -30,14 +30,14 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
           console.error('Chat SDK authentication failed:', err);
         });
     }
-  }, [isSuccess, data, dispatch, chatSDK]);
+  }, [isSuccess, data, dispatch]);
 
   useEffect(() => {
     if (isError) {
       chatSDK.clearAuth();
       navigate('/login');
     }
-  }, [isError, navigate, chatSDK]);
+  }, [isError, navigate]);
 
   if (isLoading) {
     return (

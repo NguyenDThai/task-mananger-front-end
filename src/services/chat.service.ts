@@ -113,22 +113,25 @@ class ChatService {
     return this.chatSDK.actionMessage(chatId, messageId, action);
   }
 
-  addEventListener(event: string, listener: (data: any) => void) {
+  addEventListener(event: string, listener: (data: unknown) => void) {
     this.chatSDK.addEventListener(event, listener);
   }
 
-  removeEventListener(event: string, listener?: (data: any) => void | null) {
+  removeEventListener(
+    event: string,
+    listener?: (data: unknown) => void | null,
+  ) {
     this.chatSDK.removeEventListener(event, listener);
   }
 
-  runEvent(name: string, data?: any) {
+  runEvent(name: string, data?: unknown) {
     this.chatSDK.runEvent(name, data);
   }
 
   setConfig(config: {
     debugMode?: boolean;
     maxRetries?: number;
-    [key: string]: any;
+    [key: string]: unknown;
   }) {
     this.chatSDK.setConfig(config);
   }

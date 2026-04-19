@@ -11,6 +11,7 @@ import {
   setRecentChats,
   upsertMessage,
 } from '../../../redux/slides/chat/chatSlide';
+import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 import { chatSDK } from '../../../services/chat.service';
 import useDebounce from '../../../hooks/useDebound';
 import { ChatbotSearchList } from './ChatbotSearchList';
@@ -19,7 +20,7 @@ import {
   MessageSquare,
   MoveLeft,
   Search,
-  User,
+  User as UserIcon,
   Users,
   X,
 } from 'lucide-react';
@@ -33,25 +34,28 @@ import AddMemberModal from './AddMemberModal';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentChat, setCurrentChat] = useState<any>(null);
+  const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingChat, setEditingChat] = useState<any>(null);
-  const [selectedMembers, setSelectedMembers] = useState<any[]>([]);
+  const [editingChat, setEditingChat] = useState<Chat | null>(null);
+  const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const isInitialized = useSelector(selectIsChatInitialized);
-  const { user } = useSelector((state: any) => state.auth);
+  const { user } = useSelector((state: { auth: { user: any } }) => state.auth);
 
   const dispatch = useDispatch();
   const recentChats = useSelector(selectRecentChats);
   const messages = useSelector(currentMessages);
   const allSystemUsers = useSelector(selectSystemUsers);
   const currentChatMembers = useSelector(selectChatMembers);
-  const allChatMembers = useSelector((state: any) => state.chat.chatMembers);
+  const allChatMembers = useSelector(
+    (state: { chat: { chatMembers: Record<number, User[]> } }) =>
+      state.chat.chatMembers,
+  );
 
   // Áp dụng debounce cho giá trị search (500ms cho thong thả)
   const debouncedSearchQuery = useDebounce(searchQuery, 500);
@@ -72,8 +76,10 @@ const ChatBot = () => {
 
     try {
       const res = await chatSDK.addMessage(currentChat.id, newMessage);
-      if (res.message) {
-        dispatch(upsertMessage({ chat: currentChat, message: res.message }));
+      if (res.data) {
+        dispatch(
+          upsertMessage({ chat: currentChat, message: res.data as Message }),
+        );
         setNewMessage('');
       }
     } catch (error) {
@@ -90,7 +96,7 @@ const ChatBot = () => {
         const data = res.data || [];
         dispatch(setCurrentChatId(currentChat.id));
         // Đẩy toàn bộ tin nhắn vào Redux qua loop (Sau này nên dùng setMessagesHistory để nhanh hơn)
-        [...data].reverse().forEach((m: any) => {
+        [...data].reverse().forEach((m: Message) => {
           dispatch(upsertMessage({ chat: currentChat, message: m }));
         });
 
@@ -131,7 +137,7 @@ const ChatBot = () => {
     if (!currentChat) return 'Tin nhắn';
     if (currentChat.type === 'single') {
       const partner = currentChat.members?.find(
-        (m: any) => m.code !== user?._id,
+        (m: User) => m.code !== user?._id,
       );
       return partner ? partner.name : 'Người dùng';
     }
@@ -149,7 +155,7 @@ const ChatBot = () => {
       index === self.findIndex((t) => t.code === m.code),
   );
 
-  const toggleMemberSelection = (member: any) => {
+  const toggleMemberSelection = (member: User) => {
     setSelectedMembers((prev) =>
       prev.find((m) => m.id === member.id)
         ? prev.filter((m) => m.id !== member.id)
@@ -184,7 +190,7 @@ const ChatBot = () => {
 
       // Tìm group vừa tạo theo tên và type
       const targetGroup = chats.find(
-        (c: any) => c.name === groupName && c.type === 'group',
+        (c: Chat) => c.name === groupName && c.type === 'group',
       );
 
       if (targetGroup) {
@@ -223,7 +229,7 @@ const ChatBot = () => {
     }
   };
 
-  const handleOpenAddMemberModal = async (chat?: any) => {
+  const handleOpenAddMemberModal = async (chat?: Chat) => {
     const targetChat = chat?.id ? chat : currentChat;
     if (!targetChat?.id) return;
 
@@ -245,7 +251,7 @@ const ChatBot = () => {
   };
 
   // Hàm lấy member trong group
-  const handleUpdateGroupName = async (chat: any) => {
+  const handleUpdateGroupName = async (chat: Chat) => {
     setEditingChat(chat);
     setIsEditModalOpen(true);
     setGroupName(chat.name || '');
@@ -322,7 +328,7 @@ const ChatBot = () => {
   };
 
   // Hàm thêm thành viên vào nhóm
-  const handleAddMember = async (member: any) => {
+  const handleAddMember = async (member: User) => {
     if (!currentChat || !member.id) return;
 
     try {
@@ -359,9 +365,9 @@ const ChatBot = () => {
       setSelectedMembers((prev) => prev.filter((m) => m.id !== memberId));
 
       // Cập nhật danh sách thành viên trong chat trên redux
-      const currentChatMembers = allChatMembers[editingChat.id] || [];
-      const updateMembers = currentChatMembers.filter(
-        (m: any) => m.id !== memberId,
+      const membersForThisChat = allChatMembers[editingChat.id] || [];
+      const updateMembers = membersForThisChat.filter(
+        (m: User) => m.id !== memberId,
       );
       dispatch(
         setChatMembers({ chatId: editingChat.id, members: updateMembers }),
@@ -369,9 +375,6 @@ const ChatBot = () => {
 
       if (isOwner) {
         setIsEditModalOpen(false);
-        setCurrentChat((prev: any) =>
-          prev.filter((c: any) => c.id !== editingChat.id),
-        );
         setCurrentChat(null);
       }
     } catch (error) {
@@ -410,7 +413,7 @@ const ChatBot = () => {
               </h3>
               {(isGroupMode || currentChat) && (
                 <div className="flex items-center gap-2">
-                  <User size={14} />
+                  <UserIcon size={14} />
                   <p className="text-[11px] text-indigo-100/80 font-medium">
                     {isGroupMode
                       ? 'Kết nối với đồng nghiệp của bạn'
@@ -502,7 +505,6 @@ const ChatBot = () => {
                     Trò chuyện gần đây
                   </p>
                   <RecentChat
-                    recentChats={recentChats}
                     setCurrentChat={setCurrentChat}
                     user={user}
                     onRemoveChat={handleRemoveChat}
@@ -521,17 +523,16 @@ const ChatBot = () => {
             setGroupName={setGroupName}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            selectedMembers={selectedMembers}
-            onToggleMember={toggleMemberSelection}
-            filteredMembers={filteredMembers}
+            selectedMembers={selectedMembers as any}
+            onToggleMember={toggleMemberSelection as any}
+            filteredMembers={filteredMembers as any}
             onCreateGroup={handleCreateGroup}
           />
 
           {/* Màn hình Chat */}
           <ScreenChat
             scrollRef={scrollRef}
-            messages={messages}
-            user={user}
+            user={user as any}
             currentChat={currentChat}
             newMessage={newMessage}
             setNewMessage={setNewMessage}
@@ -563,7 +564,6 @@ const ChatBot = () => {
         onClose={() => setIsAddMemberModalOpen(false)}
         systemMembers={allSystemUsers}
         onAdd={handleAddMember}
-        currentMembers={selectedMembers}
       />
 
       <button

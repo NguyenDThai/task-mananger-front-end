@@ -9,6 +9,21 @@ import {
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { currentMessages } from '../../../redux/slides/chat/chatSlide';
+import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
+
+interface ScreenChatProps {
+  scrollRef: React.RefObject<HTMLDivElement | null>;
+  user: { _id?: string; [key: string]: unknown } | null;
+  currentChat: Chat | null;
+  newMessage: string;
+  setNewMessage: (msg: string) => void;
+  handleSendMessage: () => void;
+  onMessageAction: (
+    messageId: number,
+    action: 'like' | 'love' | 'revoke' | 'remove',
+  ) => void;
+  onAddMemberClick: (chat?: Chat) => void;
+}
 
 const ScreenChat = ({
   scrollRef,
@@ -19,7 +34,7 @@ const ScreenChat = ({
   handleSendMessage,
   onMessageAction,
   onAddMemberClick,
-}: any) => {
+}: ScreenChatProps) => {
   const messages = useSelector(currentMessages);
 
   return (
@@ -31,10 +46,12 @@ const ScreenChat = ({
         className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scrollbar-hide scroll-smooth"
       >
         {messages.length > 0 ? (
-          messages.map((item: any) => {
+          messages.map((item: Message) => {
             // SDK trả về field thành viên trong item.member
-            const sender = item.member || {};
-            const isMine = (sender.code || item.sender_code) === user?._id;
+            const sender = (item.member as User) || ({} as User);
+            const isMine =
+              ((sender.code as string) || (item.sender_code as string)) ===
+              user?._id;
             const isRevoked = item.revoke;
 
             return (
@@ -92,13 +109,13 @@ const ScreenChat = ({
                     <div className="w-9 h-9 rounded-2xl overflow-hidden bg-linear-to-tr from-indigo-50 to-white flex items-center justify-center text-[10px] font-bold text-indigo-600 shadow-sm border border-slate-100 group-hover/avatar:border-indigo-200 transition-colors">
                       {sender.avatar ? (
                         <img
-                          src={sender.avatar}
+                          src={sender.avatar as string}
                           className="w-full h-full object-cover transition-transform duration-300 group-hover/avatar:scale-110"
                           alt=""
                         />
                       ) : (
                         <span className="text-xs uppercase">
-                          {sender.name?.charAt(0) || 'U'}
+                          {(sender.name as string)?.charAt(0) || 'U'}
                         </span>
                       )}
                     </div>
@@ -112,7 +129,7 @@ const ScreenChat = ({
                   {/* Sender Name (for group chats) */}
                   {currentChat?.type === 'group' && !isMine && (
                     <span className="text-[11px] font-semibold text-slate-500 px-2 tracking-tight">
-                      {sender.name}
+                      {sender.name as string}
                     </span>
                   )}
 
@@ -145,10 +162,13 @@ const ScreenChat = ({
                     className={`flex items-center gap-1.5 px-2 ${isMine ? 'flex-row-reverse' : 'flex-row'}`}
                   >
                     <span className="text-[9px] font-medium text-slate-400 uppercase tracking-widest">
-                      {new Date(item.created_at).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                      {new Date(item.created_at as string).toLocaleTimeString(
+                        [],
+                        {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        },
+                      )}
                     </span>
                   </div>
                 </div>
