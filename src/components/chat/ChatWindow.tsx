@@ -12,7 +12,7 @@ interface ChatWindowProps {
   messages: IMessageItem[];
   isLoading?: boolean;
   currentUserId?: number;
-  onSendMessage: (content: string) => void;
+  onSendMessage: (content: string, files: File[]) => void;
   onMessageAction?: (messageId: number, action: TMessageAction) => void;
 }
 
@@ -35,6 +35,8 @@ export const ChatWindow = ({
     number | null
   >(null);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
+  const [selectedImages, setSelectedImages] = React.useState<File[]>([]);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const emojiPickerRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
@@ -90,15 +92,35 @@ export const ChatWindow = ({
   }, [openReactionMenuId, isEmojiPickerOpen]);
 
   const handleSend = () => {
-    if (messageInput.trim()) {
-      onSendMessage(messageInput);
+    if (messageInput.trim() || selectedImages.length > 0) {
+      // Đảm bảo content không rỗng và files là mảng
+      onSendMessage(messageInput.trim() || ' ', selectedImages);
       setMessageInput('');
+      setSelectedImages([]);
     }
   };
 
   const handleEmojiClick = (emoji: string) => {
     setMessageInput((prev) => prev + emoji);
     // Không đóng picker để user có thể thêm nhiều emoji
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const imageFiles = Array.from(files).filter((file) =>
+        file.type.startsWith('image/'),
+      );
+      setSelectedImages((prev) => [...prev, ...imageFiles]);
+    }
+    // Reset input để có thể select cùng file lần nữa
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -380,6 +402,38 @@ export const ChatWindow = ({
 
       {/* Input */}
       <div className="px-4 py-3 border-t border-gray-100 bg-white">
+        {/* Selected Images Preview */}
+        {selectedImages.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {selectedImages.map((file, index) => (
+              <div key={`${file.name}-${index}`} className="relative group">
+                <img
+                  src={URL.createObjectURL(file)}
+                  alt={`Preview ${index}`}
+                  className="h-16 w-16 rounded object-cover"
+                />
+                <button
+                  onClick={() => handleRemoveImage(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                  title="Xóa ảnh"
+                >
+                  <svg
+                    className="w-4 h-4"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex gap-2">
           <div className="flex-1 relative">
             <textarea
@@ -390,15 +444,46 @@ export const ChatWindow = ({
               rows={1}
               className="w-full px-3 py-2 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 resize-none transition-all"
             />
-            {/* Emoji Picker Button */}
-            <button
-              data-emoji-button
-              onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 pb-2 text-gray-400 hover:text-gray-600 transition-colors"
-              title="Thêm emoji"
-            >
-              <Smile size={18} />
-            </button>
+            <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+              {/* Image Upload Button */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleImageSelect}
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="p-1 pb-2 text-gray-400 hover:text-gray-600 transition-colors"
+                title="Thêm ảnh"
+              >
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </button>
+
+              {/* Emoji Picker Button */}
+              <button
+                data-emoji-button
+                onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                className="p-1 pb-2 text-gray-400 hover:text-gray-600 transition-colors"
+                title="Thêm emoji"
+              >
+                <Smile size={18} />
+              </button>
+            </div>
 
             {/* Emoji Picker Popup */}
             {isEmojiPickerOpen && (
@@ -428,7 +513,9 @@ export const ChatWindow = ({
           </div>
           <button
             onClick={handleSend}
-            disabled={!messageInput.trim() || isLoading}
+            disabled={
+              (!messageInput.trim() && selectedImages.length === 0) || isLoading
+            }
             className="px-4 py-2 bg-gray-900 text-white rounded font-medium text-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
           >
             Gửi

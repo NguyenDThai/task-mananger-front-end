@@ -187,9 +187,19 @@ export const Chat = () => {
     setIsCreatingNewChat(false);
   };
 
-  const handleSendMessage = async (content: string) => {
+  const handleSendMessage = async (content: string, files: File[]) => {
     if (!currentUser || !chat || !currentChat) return;
-    await chat?.addMessage(currentChat.id, content);
+    try {
+      // Gửi message với content (bắt buộc) và files (có thể rỗng)
+      await chat?.addMessage(
+        currentChat.id,
+        content,
+        files.length > 0 ? files : null,
+      );
+    } catch (error) {
+      console.error('Lỗi khi gửi tin nhắn:', error);
+      toast.error('Không thể gửi tin nhắn');
+    }
   };
 
   const handleMessageAction = async (
