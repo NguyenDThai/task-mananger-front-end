@@ -79,6 +79,13 @@ const chatSlice = createSlice({
         state.currentChat = updatedChat;
       }
     },
+    updateChatAvatar: (state, action) => {
+      const { chatId, avatar } = action.payload;
+      const chatIndex = state.chats.findIndex((chat) => chat.id === chatId);
+      if (chatIndex !== -1) {
+        state.chats[chatIndex].avatar = avatar;
+      }
+    },
     removeChat: (state, action) => {
       state.chats = state.chats.filter((chat) => chat.id !== action.payload);
       if (state.currentChat?.id === action.payload) {
@@ -126,6 +133,7 @@ export const {
   removeChat,
   addChat,
   updateChat,
+  updateChatAvatar,
   removeMessage,
 } = chatSlice.actions;
 export default chatSlice.reducer;

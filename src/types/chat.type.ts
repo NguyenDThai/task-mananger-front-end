@@ -248,6 +248,7 @@ export interface IChatItem {
   id: number;
   code: string;
   name?: string; // Tên cuộc trò chuyện (chỉ có cho nhóm, chat 1-1 sẽ lấy tên từ thành viên)
+  avatar?: string | null; // URL ảnh đại diện (chỉ có cho nhóm, chat 1-1 sẽ lấy avatar từ thành viên)
   message: IMessageItem | null;
   members: ISChatUser[];
   type: 'single' | 'group';

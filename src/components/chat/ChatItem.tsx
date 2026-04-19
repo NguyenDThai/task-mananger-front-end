@@ -58,8 +58,8 @@ const getChatAvatar = (
   chat: IChatItem,
   currentUser?: ISChatUser | null,
 ): string | undefined => {
-  if (chat.type === 'group') {
-    return chat.members?.[0]?.avatar;
+  if (chat.type === 'group' && chat.avatar) {
+    return chat.avatar;
   }
   // For single chat, get the other member's avatar
   if (currentUser) {

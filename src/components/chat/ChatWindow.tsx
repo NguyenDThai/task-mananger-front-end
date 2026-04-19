@@ -34,7 +34,29 @@ export const ChatWindow = ({
   const [openReactionMenuId, setOpenReactionMenuId] = React.useState<
     number | null
   >(null);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
+  const emojiPickerRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+
+  // Popular emojis
+  const emojis = [
+    '😀',
+    '😂',
+    '😍',
+    '🥰',
+    '😭',
+    '😢',
+    '😡',
+    '🤔',
+    '👍',
+    '👎',
+    '❤️',
+    '🔥',
+    '🎉',
+    '🎊',
+    '✨',
+    '🚀',
+  ];
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -52,19 +74,31 @@ export const ChatWindow = ({
         setOpenReactionMenuId(null);
         setHoveredMessageId(null);
       }
+      // Đóng emoji picker nếu click ngoài (nhưng không phải click vào button emoji)
+      if (
+        !target.closest('[data-emoji-picker]') &&
+        !target.closest('[data-emoji-button]')
+      ) {
+        setIsEmojiPickerOpen(false);
+      }
     };
 
-    if (openReactionMenuId !== null) {
+    if (openReactionMenuId !== null || isEmojiPickerOpen) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
     }
-  }, [openReactionMenuId]);
+  }, [openReactionMenuId, isEmojiPickerOpen]);
 
   const handleSend = () => {
     if (messageInput.trim()) {
       onSendMessage(messageInput);
       setMessageInput('');
     }
+  };
+
+  const handleEmojiClick = (emoji: string) => {
+    setMessageInput((prev) => prev + emoji);
+    // Không đóng picker để user có thể thêm nhiều emoji
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -347,14 +381,51 @@ export const ChatWindow = ({
       {/* Input */}
       <div className="px-4 py-3 border-t border-gray-100 bg-white">
         <div className="flex gap-2">
-          <textarea
-            value={messageInput}
-            onChange={(e) => setMessageInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Nhập tin nhắn..."
-            rows={1}
-            className="flex-1 px-3 py-2 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 resize-none transition-all"
-          />
+          <div className="flex-1 relative">
+            <textarea
+              value={messageInput}
+              onChange={(e) => setMessageInput(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Nhập tin nhắn..."
+              rows={1}
+              className="w-full px-3 py-2 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 resize-none transition-all"
+            />
+            {/* Emoji Picker Button */}
+            <button
+              data-emoji-button
+              onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 pb-2 text-gray-400 hover:text-gray-600 transition-colors"
+              title="Thêm emoji"
+            >
+              <Smile size={18} />
+            </button>
+
+            {/* Emoji Picker Popup */}
+            {isEmojiPickerOpen && (
+              <div
+                ref={emojiPickerRef}
+                data-emoji-picker
+                className="absolute bottom-full mb-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-50 w-64"
+              >
+                <div className="grid grid-cols-6 gap-2">
+                  {emojis.map((emoji) => (
+                    <button
+                      key={emoji}
+                      data-emoji-picker
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEmojiClick(emoji);
+                      }}
+                      className="text-xl hover:bg-gray-100 p-2 rounded transition-colors text-center"
+                      title={emoji}
+                    >
+                      {emoji}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <button
             onClick={handleSend}
             disabled={!messageInput.trim() || isLoading}

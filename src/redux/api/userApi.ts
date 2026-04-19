@@ -3,6 +3,7 @@ import { baseApi } from './baseApi';
 import { setCredentials } from '../slides/auth/authSlide';
 import { updateUserLocal } from '../slides/user/userSlide';
 import { updateAssigneeAvatarLocal } from '../slides/task/taskSlide';
+import { updateChatAvatar } from '../slides/chat/chatSlide';
 
 export const userApi = baseApi.injectEndpoints({
   endpoints: (builder) => ({
@@ -33,6 +34,30 @@ export const userApi = baseApi.injectEndpoints({
               }),
             );
           }
+        } catch (error) {
+          console.error('Failed to update avatar:', error);
+        }
+      },
+    }),
+    updateGroupAvatar: builder.mutation<
+      { message: string; avatar: string; groupId: string },
+      { groupId: string; file: FormData }
+    >({
+      query: ({ groupId, file }) => ({
+        url: `/auth/update-avatar/group/${groupId}`,
+        method: 'POST',
+        body: file,
+      }),
+      async onQueryStarted(_, { dispatch, queryFulfilled }) {
+        try {
+          const { data } = await queryFulfilled;
+          const { avatar, groupId } = data;
+          dispatch(
+            updateChatAvatar({
+              chatId: groupId,
+              avatar,
+            }),
+          );
         } catch (error) {
           console.error('Failed to update avatar:', error);
         }
