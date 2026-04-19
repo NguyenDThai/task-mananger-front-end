@@ -72,18 +72,24 @@ const ChatBot = () => {
 
   // Hàm gửi tin nhắn
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !currentChat || !isInitialized) return;
+    const messageToSend = newMessage.trim();
+    if (!messageToSend || !currentChat || !isInitialized) return;
+
+    // Clear ô input ngay lập tức để tạo cảm giác mượt mà cho người dùng
+    setNewMessage('');
 
     try {
-      const res = await chatSDK.addMessage(currentChat.id, newMessage);
+      const res = await chatSDK.addMessage(currentChat.id, messageToSend);
       if (res.data) {
         dispatch(
           upsertMessage({ chat: currentChat, message: res.data as Message }),
         );
-        setNewMessage('');
       }
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
+      // Nếu lỗi, khôi phục lại nội dung cũ để người dùng có thể gửi lại
+      setNewMessage(messageToSend);
+      toast.error('Không thể gửi tin nhắn, vui lòng thử lại');
     }
   };
 
