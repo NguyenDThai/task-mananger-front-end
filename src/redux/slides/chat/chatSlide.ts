@@ -49,14 +49,12 @@ const chatSlide = createSlice({
       const existingMessages = state.message[chatId];
       const index = existingMessages.findIndex((m) => m.id === message.id);
 
-      if (message.remove) {
-        // Loai bo tin nhan ra khoi danh sach
-        state.message[chat.id] = existingMessages.filter(
-          (m) => m.id !== message.id,
-        );
-      } else if (message.revoke) {
+      if (message.revoke) {
+        // Tìm tin nhắn cũ đang có trong Store
+        const oldMessage = index !== -1 ? state.message[chatId][index] : {};
         // Neu la thu hoi, cap nhat object tin nhan trang thai da thu hoi
         const revokeMessage = {
+          ...oldMessage,
           ...message,
           revoke: true,
           content: 'Tin nhắn đã bị thu hồi',
@@ -67,6 +65,11 @@ const chatSlide = createSlice({
         } else {
           state.message[chatId].push(revokeMessage);
         }
+      } else if (message.remove) {
+        // Loai bo tin nhan ra khoi danh sach
+        state.message[chat.id] = existingMessages.filter(
+          (m) => m.id !== message.id,
+        );
       } else {
         // Nếu là TIN NHẮN BÌNH THƯỜNG hoặc CẬP NHẬT (Like/Love)
         if (index !== -1) {

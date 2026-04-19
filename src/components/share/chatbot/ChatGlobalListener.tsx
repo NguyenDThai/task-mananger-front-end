@@ -23,8 +23,24 @@ const ChatGlobalListener = () => {
 
     // 1. Khi có tin nhắn mới hoặc các thao tác tin nhắn (revoke, remove, like...)
     const handleMessage = (data: any) => {
+      const chat = data.chat || { id: data.chat_id };
+      const message = data.message || data;
+      if (!message) return;
+      // PHIÊN DỊCH: Chuyển 'type' từ SDK sang 'revoke'/'remove' cho Redux hiểu
+      const processedMessage = {
+        ...message,
+        id: message.id || message.message_id,
+        revoke: message.type === 'revoke',
+        remove: message.type === 'remove',
+      };
+
       // data nhận từ SDK thường là { chat: {...}, message: {...} }
-      dispatch(upsertMessage(data));
+      dispatch(
+        upsertMessage({
+          chat: chat,
+          message: processedMessage,
+        }),
+      );
     };
 
     // 2. Khi có cuộc trò chuyện mới được tạo (nhóm mới hoặc chat 1-1 mới)
