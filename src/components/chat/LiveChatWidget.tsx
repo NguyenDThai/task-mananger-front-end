@@ -43,8 +43,6 @@ interface Position {
 }
 
 const STORAGE_KEY = 'live-chat-widget-position';
-const WIDGET_WIDTH = 320; // w-80
-const WIDGET_HEIGHT = 500; // h-[500px]
 const BUTTON_SIZE = 48; // w-12 h-12
 
 export const LiveChatWidget = ({
@@ -65,7 +63,7 @@ export const LiveChatWidget = ({
 }: LiveChatWidgetProps) => {
   const [widgetView, setWidgetView] = useState<WidgetView>('collapsed');
   const [totalUnread, setTotalUnread] = useState(unreadCount);
-  const [position, setPosition] = useState<Position>({ x: 1280, y: 600 });
+  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState<Position>({ x: 0, y: 0 });
   const widgetRef = useRef<HTMLDivElement>(null);
@@ -73,8 +71,8 @@ export const LiveChatWidget = ({
 
   // (Set default position)
   const setDefaultPosition = useCallback(() => {
-    const x = window.innerWidth - WIDGET_WIDTH - 16; // 16px = 4 (Tailwind)
-    const y = window.innerHeight - WIDGET_HEIGHT - 16;
+    const x = window.innerWidth - BUTTON_SIZE - 16; // 16px = 4 (Tailwind)
+    const y = window.innerHeight - BUTTON_SIZE - 16;
     setPosition({ x, y });
   }, []);
 

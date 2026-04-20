@@ -157,7 +157,7 @@ export const ChatItem = ({
           flex items-center justify-end
           /* Hiệu ứng nền: Mờ + Gradient đen nhạt mượt */
           backdrop-blur-sm 
-          bg-gradient-to-l from-black/20 via-black/10 to-transparent
+          bg-gradient-to-l from-blue-500/20 via-blue-500/10 to-transparent
           /* Hiệu ứng chuyển động*/
           opacity-0 translate-x-2 
           /* Trạng thái Hover: Hiện + Trượt vào đúng vị trí */
