@@ -112,11 +112,30 @@ const ChatBot = () => {
 
         // Lấy danh sách thành viên
         if (currentChat.type === 'group') {
-          const resMem = await chatSDK.getMembers(currentChat.id);
-          if (resMem && resMem.data) {
+          // Ưu tiên sử dụng dữ liệu thành viên từ object chat hiện tại (nếu có)
+          if (currentChat.members && currentChat.members.length > 0) {
             dispatch(
-              setChatMembers({ chatId: currentChat.id, members: resMem.data }),
+              setChatMembers({
+                chatId: currentChat.id,
+                members: currentChat.members as User[],
+              }),
             );
+          }
+
+          try {
+            // Thử fetch danh sách thành viên đầy đủ từ server
+            const resMem = await chatSDK.getMembers(currentChat.id, 100, 1);
+            if (resMem && resMem.data) {
+              dispatch(
+                setChatMembers({
+                  chatId: currentChat.id,
+                  members: resMem.data,
+                }),
+              );
+            }
+          } catch (memError) {
+            console.error('Lỗi khi lấy danh sách thành viên nhóm:', memError);
+            // Nếu lỗi (như 404), ta vẫn giữ data đã dispatch từ currentChat.members ở trên
           }
         }
       } catch (error) {

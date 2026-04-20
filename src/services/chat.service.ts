@@ -45,8 +45,8 @@ class ChatService {
 
   public async getMembers(
     chatId?: number,
-    limit?: number,
-    page?: number,
+    limit: number = 20,
+    page: number = 1,
     include?: string,
   ) {
     return this.chatSDK.getMembers(chatId, limit, page, include);

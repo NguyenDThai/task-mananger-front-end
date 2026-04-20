@@ -38,14 +38,15 @@ const ChatGlobalListener = () => {
         // 1. Nếu có chatId, thử cập nhật danh sách thành viên
         if (chatId) {
           try {
-            const res = await chatSDK.getMembers(chatId);
+            const res = await chatSDK.getMembers(chatId, 100, 1);
             if (res && res.data) {
               dispatch(setChatMembers({ chatId, members: res.data as User[] }));
             }
-          } catch {
+          } catch (error) {
             console.warn(
-              'Không thể lấy thành viên (có thể đã bị xóa khỏi nhóm):',
+              'Không thể lấy thành viên (có thể đã bị xóa khỏi nhóm hoặc lỗi API):',
               chatId,
+              error,
             );
           }
         }
