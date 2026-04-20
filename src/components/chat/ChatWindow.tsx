@@ -9,6 +9,7 @@ import {
   Reply,
   X,
   ChevronLeft,
+  MoreVertical,
 } from 'lucide-react';
 
 interface ChatWindowProps {
@@ -46,9 +47,13 @@ export const ChatWindow = React.memo(
     const [hoveredMessageId, setHoveredMessageId] = React.useState<
       number | null
     >(null);
-    const [openReactionMenuId, setOpenReactionMenuId] = React.useState<
-      number | null
-    >(null);
+    const [openMenuId, setOpenMenuId] = React.useState<{
+      messageId: number | null;
+      type: 'reaction' | 'more' | null;
+    }>({
+      messageId: null,
+      type: null,
+    });
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
     const [selectedImages, setSelectedImages] = React.useState<File[]>([]);
     const [replyingTo, setReplyingTo] = React.useState<IMessageItem | null>(
@@ -83,16 +88,25 @@ export const ChatWindow = React.memo(
     };
 
     React.useEffect(() => {
+      if (isLoading) return;
       scrollToBottom();
-    }, [messages]);
+    }, [messages, isLoading]);
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
         const target = event.target as HTMLElement;
         // Chỉ đóng menu nếu click vào element không phải là phần của reaction menu
         if (!target.closest('[data-reaction-menu]')) {
-          setOpenReactionMenuId(null);
+          if (openMenuId.type === 'reaction') {
+            setOpenMenuId({ messageId: null, type: null });
+          }
           setHoveredMessageId(null);
+        }
+        // Đóng more menu nếu click ngoài
+        if (!target.closest('[data-more-menu]')) {
+          if (openMenuId.type === 'more') {
+            setOpenMenuId({ messageId: null, type: null });
+          }
         }
         // Đóng emoji picker nếu click ngoài (nhưng không phải click vào button emoji)
         if (
@@ -103,11 +117,11 @@ export const ChatWindow = React.memo(
         }
       };
 
-      if (openReactionMenuId !== null || isEmojiPickerOpen) {
+      if (openMenuId.type !== null || isEmojiPickerOpen) {
         document.addEventListener('click', handleClickOutside);
         return () => document.removeEventListener('click', handleClickOutside);
       }
-    }, [openReactionMenuId, isEmojiPickerOpen]);
+    }, [openMenuId, isEmojiPickerOpen]);
 
     const handleSend = () => {
       if (messageInput.trim() || selectedImages.length > 0) {
@@ -156,7 +170,7 @@ export const ChatWindow = React.memo(
     const handleMessageAction = (messageId: number, action: TMessageAction) => {
       if (onMessageAction) {
         onMessageAction(messageId, action);
-        setOpenReactionMenuId(null);
+        setOpenMenuId({ messageId: null, type: null });
       }
     };
 
@@ -309,7 +323,7 @@ export const ChatWindow = React.memo(
                     onMouseEnter={() => setHoveredMessageId(message.id)}
                     onMouseLeave={() => {
                       // Nếu menu đang mở, giữ hoveredMessageId để menu vẫn hiển thị
-                      if (openReactionMenuId !== message.id) {
+                      if (openMenuId.messageId !== message.id) {
                         setHoveredMessageId(null);
                       }
                     }}
@@ -388,10 +402,11 @@ export const ChatWindow = React.memo(
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
-                              setOpenReactionMenuId(
-                                openReactionMenuId === message.id
-                                  ? null
-                                  : message.id,
+                              setOpenMenuId(
+                                openMenuId.messageId === message.id &&
+                                  openMenuId.type === 'reaction'
+                                  ? { messageId: null, type: null }
+                                  : { messageId: message.id, type: 'reaction' },
                               );
                             }}
                             className="p-1 text-white bg-gray-400 hover:bg-gray-500 rounded-full transition-all duration-200"
@@ -401,74 +416,120 @@ export const ChatWindow = React.memo(
                           </button>
 
                           {/* Reaction Actions Menu */}
-                          {openReactionMenuId === message.id && (
-                            <div
-                              className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2
-                          ${isCurrentUser ? '-left-37' : 'left-0'}
+                          {openMenuId.messageId === message.id &&
+                            openMenuId.type === 'reaction' && (
+                              <div
+                                className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2
+                          ${isCurrentUser ? '-left-16' : 'left-0'}
                         `}
-                              data-reaction-menu
-                            >
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMessageAction(message.id, 'like');
-                                }}
-                                title="Thích"
-                                className="p-2 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-200 hover:scale-110"
+                                data-reaction-menu
                               >
-                                <ThumbsUp size={18} />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleMessageAction(message.id, 'love');
-                                }}
-                                title="Yêu thích"
-                                className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-500 rounded-lg transition-all duration-200 hover:scale-110"
-                              >
-                                <Heart size={18} />
-                              </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMessageAction(message.id, 'like');
+                                  }}
+                                  title="Thích"
+                                  className="p-2 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-200 hover:scale-110"
+                                >
+                                  <ThumbsUp size={18} />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleMessageAction(message.id, 'love');
+                                  }}
+                                  title="Yêu thích"
+                                  className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-500 rounded-lg transition-all duration-200 hover:scale-110"
+                                >
+                                  <Heart size={18} />
+                                </button>
+                              </div>
+                            )}
 
-                              <div className="w-px bg-gray-200"></div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setReplyingTo(message);
-                                  setOpenReactionMenuId(null);
-                                }}
-                                title="Trả lời"
-                                className="p-2 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-200 hover:scale-110"
-                              >
-                                <Reply size={18} />
-                              </button>
+                          {/* More Button */}
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenMenuId(
+                                openMenuId.messageId === message.id &&
+                                  openMenuId.type === 'more'
+                                  ? { messageId: null, type: null }
+                                  : { messageId: message.id, type: 'more' },
+                              );
+                            }}
+                            className="p-1 text-white bg-gray-400 hover:bg-gray-500 rounded-full transition-all duration-200"
+                            title="Thêm tùy chọn"
+                            data-more-menu
+                          >
+                            <MoreVertical size={16} />
+                          </button>
 
-                              {isCurrentUser && (
-                                <>
-                                  <div className="w-px bg-gray-200"></div>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleMessageAction(message.id, 'revoke');
-                                    }}
-                                    title="Thu hồi"
-                                    className="p-2 hover:bg-amber-50 text-gray-600 hover:text-amber-600 rounded-lg transition-all duration-200 hover:scale-110"
-                                  >
-                                    <RotateCcw size={18} />
-                                  </button>
-                                  <button
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleMessageAction(message.id, 'remove');
-                                    }}
-                                    title="Xóa"
-                                    className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-lg transition-all duration-200 hover:scale-110"
-                                  >
-                                    <Trash2 size={18} />
-                                  </button>
-                                </>
-                              )}
-                            </div>
-                          )}
+                          {/* More Menu */}
+                          {openMenuId.messageId === message.id &&
+                            openMenuId.type === 'more' && (
+                              <div
+                                className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2 z-50
+                          ${isCurrentUser ? '-left-16' : 'left-0'}
+                        `}
+                                data-more-menu
+                              >
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setReplyingTo(message);
+                                    setOpenMenuId({
+                                      messageId: null,
+                                      type: null,
+                                    });
+                                  }}
+                                  title="Trả lời"
+                                  className="p-2 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-200 hover:scale-110"
+                                >
+                                  <Reply size={18} />
+                                </button>
+
+                                {isCurrentUser && (
+                                  <>
+                                    <div className="w-px bg-gray-200"></div>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMessageAction(
+                                          message.id,
+                                          'revoke',
+                                        );
+                                        setOpenMenuId({
+                                          messageId: null,
+                                          type: null,
+                                        });
+                                      }}
+                                      title="Thu hồi"
+                                      className="p-2 hover:bg-amber-50 text-gray-600 hover:text-amber-600 rounded-lg transition-all duration-200 hover:scale-110"
+                                    >
+                                      <RotateCcw size={18} />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleMessageAction(
+                                          message.id,
+                                          'remove',
+                                        );
+                                        setOpenMenuId({
+                                          messageId: null,
+                                          type: null,
+                                        });
+                                      }}
+                                      title="Xóa"
+                                      className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-lg transition-all duration-200 hover:scale-110"
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            )}
                         </div>
                       )}
                   </div>

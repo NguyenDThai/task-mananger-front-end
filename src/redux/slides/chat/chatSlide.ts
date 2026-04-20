@@ -112,20 +112,18 @@ const chatSlice = createSlice({
     removeMessage: (state, action) => {
       const { chat_id, message_id, type } = action.payload;
       const chat = state.chats.find((c) => c.id === chat_id);
-      if (
-        !chat ||
-        !chat.message ||
-        !message_id ||
-        chat.message.id !== message_id
-      )
+      if (!chat || !chat.message || !message_id) {
         return;
+      }
 
       let content = 'Tin nhắn đã bị xóa';
       if (type === 'revoke') {
         content = 'Tin nhắn đã bị thu hồi';
       }
 
-      chat.message.content = content;
+      if (chat.message.id === message_id) {
+        chat.message.content = content;
+      }
 
       if (!state.currentChat || chat_id !== state.currentChat?.id) return;
       const message = state.currentChatMessages.find(
