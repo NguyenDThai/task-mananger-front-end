@@ -6,7 +6,7 @@ class ChatService {
   constructor() {
     this.chatSDK = new initSChat();
     this.chatSDK.setConfig({
-      debugMode: true,
+      debugMode: false,
       maxRetries: 3,
     });
     this.EVENTS = this.chatSDK.EVENTS;
@@ -43,21 +43,17 @@ class ChatService {
     return this.chatSDK.clearReceiver();
   }
 
-  public async getMembers(
-    chatId?: number,
-    limit: number = 20,
-    page: number = 1,
-    include?: string,
-  ) {
-    return this.chatSDK.getMembers(chatId, limit, page, include);
+  public async getMembers(chatId?: number, limit = 100, page = 1) {
+    if (!chatId) return this.chatSDK.getMembers();
+    return this.chatSDK.getMembers(String(chatId) as any, limit, page);
   }
 
   public async addMember(chatId: number, memberId: number) {
-    return this.chatSDK.addMember(chatId, memberId);
+    return this.chatSDK.addMember(String(chatId) as any, memberId);
   }
 
   public async removeMember(chatId: number, memberId: number) {
-    return this.chatSDK.removeMember(chatId, memberId);
+    return this.chatSDK.removeMember(String(chatId) as any, memberId);
   }
 
   public async getChats(limit?: number, page?: number) {

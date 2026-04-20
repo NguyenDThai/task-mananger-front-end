@@ -11,6 +11,7 @@ import {
   setCurrentChatId,
   setRecentChats,
   upsertMessage,
+  setChatActivated,
 } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 import { chatSDK } from '../../../services/chat.service';
@@ -611,7 +612,10 @@ const ChatBot = () => {
       />
 
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={() => {
+          setIsOpen(true);
+          dispatch(setChatActivated(true));
+        }}
         className={`w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg transition-all ${isOpen ? 'scale-0' : 'scale-100'}`}
       >
         <MessageSquare size={20} />
