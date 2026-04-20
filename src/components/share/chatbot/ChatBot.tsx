@@ -3,6 +3,7 @@ import { useSelector } from 'react-redux';
 import {
   currentMessages,
   selectChatMembers,
+  selectCurrentChatId,
   selectIsChatInitialized,
   selectRecentChats,
   selectSystemUsers,
@@ -98,9 +99,12 @@ const ChatBot = () => {
     const fetchMessagesAndMembers = async () => {
       if (!currentChat || !isInitialized) return;
       try {
+        // Cập nhật ID vào Redux ngay lập tức để đồng bộ trạng thái
+        dispatch(setCurrentChatId(currentChat.id));
+
         const res = await chatSDK.getMessages(currentChat.id);
         const data = res.data || [];
-        dispatch(setCurrentChatId(currentChat.id));
+
         // Đẩy toàn bộ tin nhắn vào Redux qua loop (Sau này nên dùng setMessagesHistory để nhanh hơn)
         [...data].reverse().forEach((m: Message) => {
           dispatch(upsertMessage({ chat: currentChat, message: m }));
@@ -137,6 +141,24 @@ const ChatBot = () => {
 
     fetchRecentChats();
   }, [isInitialized, isOpen, chatSDK]);
+
+  const reduxCurrentChatId = useSelector(selectCurrentChatId);
+  const prevReduxChatIdRef = useRef(reduxCurrentChatId);
+
+  // Đồng bộ currentChat (local) với currentChatId (Redux)
+  // Xử lý trường hợp bị kick khỏi nhóm: ChatGlobalListener sẽ set reduxCurrentChatId = null
+  useEffect(() => {
+    // Chỉ reset local currentChat nếu reduxCurrentChatId thực sự bị chuyển từ có (non-null) sang không (null)
+    // Điều này tránh tranh chấp trạng thái (race condition) khi người dùng vừa mới click vào chat
+    if (
+      prevReduxChatIdRef.current !== null &&
+      reduxCurrentChatId === null &&
+      currentChat !== null
+    ) {
+      setCurrentChat(null);
+    }
+    prevReduxChatIdRef.current = reduxCurrentChatId;
+  }, [reduxCurrentChatId, currentChat]);
 
   // Hàm hiển thị tên chat không phải tên của mình
   const getChatName = () => {

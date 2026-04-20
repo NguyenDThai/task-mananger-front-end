@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { chatSDK } from '../../../services/chat.service';
 import {
@@ -7,12 +7,21 @@ import {
   setRecentChats,
   setSystemUsers,
   setChatMembers,
+  selectCurrentChatId,
+  setCurrentChatId,
 } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 
 const ChatGlobalListener = () => {
   const dispatch = useDispatch();
   const isInitialized = useSelector(selectIsChatInitialized);
+  const currentChatId = useSelector(selectCurrentChatId);
+  const currentChatIdRef = useRef(currentChatId);
+
+  // Luôn cập nhật ref để các handler bất đồng bộ lấy được giá trị mới nhất của chat đang mở
+  useEffect(() => {
+    currentChatIdRef.current = currentChatId;
+  }, [currentChatId]);
 
   useEffect(() => {
     if (!isInitialized) return;
@@ -22,6 +31,43 @@ const ChatGlobalListener = () => {
       dispatch(setSystemUsers((res.data as User[]) || []));
     };
     fetchSystemUsers();
+
+    // Hàm chung để cập nhật danh sách chat và kiểm tra xem có bị kick không
+    const refreshChatData = async (chatId?: number) => {
+      try {
+        // 1. Nếu có chatId, thử cập nhật danh sách thành viên
+        if (chatId) {
+          try {
+            const res = await chatSDK.getMembers(chatId);
+            if (res && res.data) {
+              dispatch(setChatMembers({ chatId, members: res.data as User[] }));
+            }
+          } catch {
+            console.warn(
+              'Không thể lấy thành viên (có thể đã bị xóa khỏi nhóm):',
+              chatId,
+            );
+          }
+        }
+
+        // 2. LUÔN lấy lại danh sách chat mới nhất
+        const chatListRes = await chatSDK.getChats();
+        const chats = (chatListRes.data as Chat[]) || [];
+        dispatch(setRecentChats(chats));
+
+        // 3. Nếu chat đang mở không còn trong danh sách -> Reset màn hình chat
+        if (currentChatIdRef.current) {
+          const stillExists = chats.some(
+            (c) => c.id === currentChatIdRef.current,
+          );
+          if (!stillExists) {
+            dispatch(setCurrentChatId(null));
+          }
+        }
+      } catch (error) {
+        console.error('Lỗi khi làm mới dữ liệu chat real-time:', error);
+      }
+    };
 
     // 1. Khi có tin nhắn mới hoặc các thao tác tin nhắn (revoke, remove, like...)
     const handleMessage = (data: unknown) => {
@@ -55,14 +101,10 @@ const ChatGlobalListener = () => {
 
     // 2. Khi có cuộc trò chuyện mới được tạo (nhóm mới hoặc chat 1-1 mới)
     const handleChatCreated = () => {
-      // Reload lại danh sách chat gần đây để người dùng thấy chat mới hiện lên
-      (async () => {
-        const res = await chatSDK.getChats();
-        dispatch(setRecentChats((res.data as Chat[]) || []));
-      })();
+      refreshChatData();
     };
 
-    // Xử lý khi thành viên thay đổi (Thêm/Xóa/Rời nhóm)
+    // 3. Khi thành viên thay đổi (Thêm/Xóa/Rời nhóm)
     const handleMemberChange = (data: unknown) => {
       const payload = data as {
         chat_id?: number;
@@ -70,28 +112,25 @@ const ChatGlobalListener = () => {
         chat?: { id: number };
       };
       const chatId = payload.chat_id || payload.id || payload.chat?.id;
-      if (chatId) {
-        (async () => {
-          try {
-            // Lấy lại danh sách thành viên mới nhất
-            const res = await chatSDK.getMembers(chatId);
-            if (res && res.data) {
-              dispatch(setChatMembers({ chatId, members: res.data as User[] }));
-            }
-            // Lấy lại danh sách chat để số lượng thành viên ở Sidebar nhảy số
-            const chatListRes = await chatSDK.getChats();
-            dispatch(setRecentChats((chatListRes.data as Chat[]) || []));
-          } catch (error) {
-            console.error('Lỗi cập nhật thành viên real-time:', error);
-          }
-        })();
-      }
+      refreshChatData(chatId);
+    };
+
+    // 4. Khi một cuộc trò chuyện bị xóa (mình bị kích ra khỏi nhóm thường nhận event này)
+    const handleChatDeleted = () => {
+      refreshChatData();
+    };
+
+    // 5. Khi thông tin nhóm thay đổi (tên, avatar...)
+    const handleChatUpdated = () => {
+      refreshChatData();
     };
 
     // ĐĂNG KÝ SỰ KIỆN VỚI SDK
     chatSDK.addEventListener(chatSDK.EVENTS.chats_message, handleMessage);
     chatSDK.addEventListener(chatSDK.EVENTS.chats_created, handleChatCreated);
     chatSDK.addEventListener(chatSDK.EVENTS.chats_member, handleMemberChange);
+    chatSDK.addEventListener(chatSDK.EVENTS.chats_deleted, handleChatDeleted);
+    chatSDK.addEventListener(chatSDK.EVENTS.chats_updated, handleChatUpdated);
 
     return () => {
       // HỦY ĐĂNG KÝ KHI UNMOUNT
@@ -104,10 +143,18 @@ const ChatGlobalListener = () => {
         chatSDK.EVENTS.chats_member,
         handleMemberChange,
       );
+      chatSDK.removeEventListener(
+        chatSDK.EVENTS.chats_deleted,
+        handleChatDeleted,
+      );
+      chatSDK.removeEventListener(
+        chatSDK.EVENTS.chats_updated,
+        handleChatUpdated,
+      );
     };
   }, [isInitialized, dispatch]);
 
-  return null; // Component này không hiển thị gì cả, chỉ làm nhiệm vụ lắng nghe
+  return null;
 };
 
 export default ChatGlobalListener;
