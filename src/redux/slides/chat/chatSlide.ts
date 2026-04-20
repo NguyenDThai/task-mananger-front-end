@@ -51,6 +51,12 @@ const chatSlice = createSlice({
     setMessagesPagination: (state, action) => {
       state.messagesPagination = action.payload;
     },
+    prependMessages: (state, action) => {
+      const messages = action.payload;
+      if (Array.isArray(messages) && messages.length > 0) {
+        state.currentChatMessages.unshift(...messages);
+      }
+    },
     addNewMessage: (state, action) => {
       const { chat, message } = action.payload;
 
@@ -140,6 +146,7 @@ export const {
   setMembers,
   setCurrentReceiver,
   setMessagesPagination,
+  prependMessages,
   addNewMessage,
   removeChat,
   addChat,

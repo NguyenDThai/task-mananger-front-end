@@ -136,7 +136,7 @@ export const Chat = () => {
       }
 
       try {
-        const response = await chat.getMessages(currentChat.id, 20, 1);
+        const response = await chat.getMessages(currentChat.id, 100, 1);
         const messagesList = response?.data || [];
         dispatch(setCurrentChatMessages(messagesList.toReversed()));
       } catch (error) {

@@ -2,8 +2,9 @@ import { useEffect, useRef } from 'react';
 import { useDispatch } from 'react-redux';
 import { useGetMeQuery } from '../../redux/api/authApi';
 import { setCredentials } from '../../redux/slides/auth/authSlide';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useChat } from '../../hooks/useChat';
+import { LiveChatWidgetContainer } from '../chat/LiveChatWidgetContainer';
 
 const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const dispatch = useDispatch();
@@ -11,6 +12,8 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
   const { setChatAuth } = useChat();
   const { data, isSuccess, isError, isLoading } = useGetMeQuery();
   const isInitializing = useRef(false);
+  const location = useLocation();
+  const isOnChatPage = location.pathname === '/chat';
 
   useEffect(() => {
     if (!isSuccess || isInitializing.current) return;
@@ -38,7 +41,14 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
     );
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      {!isOnChatPage && (
+        <LiveChatWidgetContainer enabledOnlyIfLoggedIn={true} />
+      )}
+    </>
+  );
 };
 
 export default AuthWrapper;
