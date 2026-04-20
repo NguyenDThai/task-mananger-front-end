@@ -234,7 +234,7 @@ export const LiveChatWidget = ({
         widgetView === 'chat' ||
         widgetView === 'new-chat') && (
         <div
-          className="absolute right-full bottom-0 mr-3 w-80 h-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+          className="absolute right-full bottom-0 mr-3 w-90 h-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
           style={{ pointerEvents: 'auto' }}
         >
           {/* Widget Header */}

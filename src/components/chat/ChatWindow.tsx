@@ -87,6 +87,18 @@ export const ChatWindow = React.memo(
       messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     };
 
+    const scrollToMessage = (messageId: number) => {
+      const element = document.getElementById(`message-${messageId}`);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Highlight the message briefly
+        element.classList.add('bg-yellow-100');
+        setTimeout(() => {
+          element.classList.remove('bg-yellow-100');
+        }, 2000);
+      }
+    };
+
     React.useEffect(() => {
       if (isLoading) return;
       scrollToBottom();
@@ -317,9 +329,10 @@ export const ChatWindow = React.memo(
                 return (
                   <div
                     key={message.id}
+                    id={`message-${message.id}`}
                     className={`flex gap-2 justify-start items-center relative ${
                       isCurrentUser ? 'flex-row-reverse' : ''
-                    } `}
+                    } transition-colors duration-300`}
                     onMouseEnter={() => setHoveredMessageId(message.id)}
                     onMouseLeave={() => {
                       // Nếu menu đang mở, giữ hoveredMessageId để menu vẫn hiển thị
@@ -356,7 +369,8 @@ export const ChatWindow = React.memo(
                         {/* Reply Preview */}
                         {message.reply && (
                           <div
-                            className={`mb-2 p-2 rounded text-xs border-l-2 ${
+                            onClick={() => scrollToMessage(message.reply!.id)}
+                            className={`mb-2 p-2 rounded text-xs border-l-2 cursor-pointer transition-all hover:opacity-80 ${
                               isCurrentUser
                                 ? 'bg-blue-800 border-blue-400'
                                 : 'bg-white/30 border-blue-300'
@@ -396,7 +410,10 @@ export const ChatWindow = React.memo(
                       !message.revoke &&
                       !message.remove && (
                         <div
-                          className="flex items-center gap-2 relative"
+                          className={`
+                            flex items-center gap-2 relative
+                            ${isCurrentUser ? 'flex-row-reverse' : ''}  
+                          `}
                           data-reaction-menu
                         >
                           <button
@@ -420,8 +437,8 @@ export const ChatWindow = React.memo(
                             openMenuId.type === 'reaction' && (
                               <div
                                 className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2
-                          ${isCurrentUser ? '-left-16' : 'left-0'}
-                        `}
+                                  ${isCurrentUser ? '-left-8' : 'left-0'}
+                                `}
                                 data-reaction-menu
                               >
                                 <button
@@ -470,7 +487,7 @@ export const ChatWindow = React.memo(
                             openMenuId.type === 'more' && (
                               <div
                                 className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2 z-50
-                          ${isCurrentUser ? '-left-16' : 'left-0'}
+                          ${isCurrentUser ? '-left-26' : 'left-7'}
                         `}
                                 data-more-menu
                               >
