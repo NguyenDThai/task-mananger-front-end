@@ -21,6 +21,7 @@ interface ChatWindowProps {
   chatAvatar?: string;
   messages: IMessageItem[];
   isLoading?: boolean;
+  isLoadingOldMessages?: boolean;
   currentUserId?: number;
   onSendMessage: (
     content: string,
@@ -28,6 +29,7 @@ interface ChatWindowProps {
     replyId?: number | null,
   ) => void;
   onMessageAction?: (messageId: number, action: TMessageAction) => void;
+  onLoadOldMessages?: () => void;
   onBack?: () => void;
 }
 
@@ -38,9 +40,11 @@ export const ChatWindow = React.memo(
     chatAvatar,
     messages = [],
     isLoading = false,
+    isLoadingOldMessages = false,
     currentUserId,
     onSendMessage,
     onMessageAction,
+    onLoadOldMessages,
     onBack,
   }: ChatWindowProps) => {
     const [messageInput, setMessageInput] = React.useState('');
@@ -62,6 +66,14 @@ export const ChatWindow = React.memo(
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const emojiPickerRef = React.useRef<HTMLDivElement>(null);
     const messagesEndRef = React.useRef<HTMLDivElement>(null);
+    const messagesStartRef = React.useRef<HTMLDivElement>(null);
+    const intersectionObserverRef = React.useRef<IntersectionObserver | null>(
+      null,
+    );
+
+    const [isReadyForInfiniteScroll, setIsReadyForInfiniteScroll] =
+      React.useState(false);
+    const lastMessageIdRef = React.useRef<number | null>(null);
 
     // Popular emojis
     const emojis = [
@@ -100,9 +112,71 @@ export const ChatWindow = React.memo(
     };
 
     React.useEffect(() => {
-      if (isLoading) return;
-      scrollToBottom();
+      lastMessageIdRef.current = null;
+      setIsReadyForInfiniteScroll(false);
+    }, [chatId]);
+
+    React.useEffect(() => {
+      if (!isLoading && messages.length > 0 && !isReadyForInfiniteScroll) {
+        // Đợi một khoảng ngắn để trình duyệt hoàn tất việc scroll xuống dưới
+        const timer = setTimeout(() => {
+          setIsReadyForInfiniteScroll(true);
+        }, 500);
+        return () => clearTimeout(timer);
+      }
+    }, [messages, isLoading, isReadyForInfiniteScroll]);
+
+    React.useEffect(() => {
+      if (isLoading || messages.length === 0) return;
+
+      const currentLastMessage = messages[messages.length - 1];
+      const prevLastMessageId = lastMessageIdRef.current;
+
+      if (
+        prevLastMessageId === null ||
+        currentLastMessage.id !== prevLastMessageId
+      ) {
+        scrollToBottom();
+      }
+
+      lastMessageIdRef.current = currentLastMessage.id;
     }, [messages, isLoading]);
+
+    // Infinity scroll: Load old messages when user scrolls to top
+    React.useEffect(() => {
+      if (
+        !messagesStartRef.current ||
+        !onLoadOldMessages ||
+        isLoadingOldMessages ||
+        !isReadyForInfiniteScroll
+      ) {
+        return;
+      }
+
+      const handleIntersection = (entries: IntersectionObserverEntry[]) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && !isLoadingOldMessages) {
+          onLoadOldMessages();
+        }
+      };
+
+      intersectionObserverRef.current = new IntersectionObserver(
+        handleIntersection,
+        {
+          root: messagesStartRef.current.parentElement,
+          rootMargin: '20px 0px',
+          threshold: 0.1,
+        },
+      );
+
+      intersectionObserverRef.current.observe(messagesStartRef.current);
+
+      return () => {
+        if (intersectionObserverRef.current) {
+          intersectionObserverRef.current.disconnect();
+        }
+      };
+    }, [onLoadOldMessages, isLoadingOldMessages, isReadyForInfiniteScroll]);
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -320,6 +394,17 @@ export const ChatWindow = React.memo(
             </div>
           ) : (
             <>
+              <div ref={messagesStartRef} />
+              {isLoadingOldMessages && (
+                <div className="flex items-center justify-center py-4">
+                  <div className="text-center">
+                    <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-gray-600 animate-spin mx-auto mb-1"></div>
+                    <p className="text-xs text-gray-400">
+                      Đang tải tin nhắn cũ...
+                    </p>
+                  </div>
+                </div>
+              )}
               {messages.map((message, index) => {
                 const senderInfo = getSenderInfo(message);
                 // Determine if this is a message from current user

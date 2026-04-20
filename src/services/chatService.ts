@@ -97,7 +97,7 @@ class ChatService {
     data: IChatItem[];
     pagination: {
       count: number;
-      currentPage: number;
+      current_page: number;
       per_page: number;
       total: number;
       total_pages: number;
@@ -205,7 +205,7 @@ class ChatService {
     data: IMessageItem[];
     pagination: {
       count: number;
-      currentPage: number;
+      current_page: number;
       per_page: number;
       total: number;
       total_pages: number;

@@ -56,7 +56,7 @@ export interface ISChatInstance {
     data: IChatItem[];
     pagination: {
       count: number;
-      currentPage: number;
+      current_page: number;
       per_page: number;
       total: number;
       total_pages: number;
@@ -148,7 +148,7 @@ export interface ISChatInstance {
     data: IMessageItem[];
     pagination: {
       count: number;
-      currentPage: number;
+      current_page: number;
       per_page: number;
       total: number;
       total_pages: number;
@@ -308,7 +308,7 @@ export type TMessageAction = 'like' | 'love' | 'revoke' | 'remove';
 
 export interface IPaginationInfo {
   count: number;
-  currentPage: number;
+  current_page: number;
   per_page: number;
   total: number;
   total_pages: number;

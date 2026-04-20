@@ -10,6 +10,8 @@ import {
   removeChat,
   addChat,
   removeMessage,
+  setMessagesPagination,
+  prependMessages,
 } from '../../redux/slides/chat/chatSlide';
 import type { ISChatUser, TMessageAction } from '../../types';
 
@@ -19,10 +21,17 @@ export const Chat = () => {
     sidebar: false,
     chatWindow: false,
   });
+  const [isLoadingOldMessages, setIsLoadingOldMessages] = useState(false);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
 
-  const { chats, members, currentUser, currentChat, currentChatMessages } =
-    useSelector((state: RootState) => state.chat);
+  const {
+    chats,
+    members,
+    currentUser,
+    currentChat,
+    currentChatMessages,
+    messagesPagination,
+  } = useSelector((state: RootState) => state.chat);
 
   const handleDeleteChat = async (chatId: number) => {
     if (!chat) return;
@@ -131,17 +140,23 @@ export const Chat = () => {
 
       if (!currentChat?.id) {
         dispatch(setCurrentChatMessages([]));
+        dispatch(setMessagesPagination(null));
         setIsLoading((prev) => ({ ...prev, chatWindow: false }));
         return;
       }
 
       try {
-        const response = await chat.getMessages(currentChat.id, 100, 1);
+        const response = await chat.getMessages(currentChat.id, 20, 1);
         const messagesList = response?.data || [];
+        const pagination = response?.pagination;
         dispatch(setCurrentChatMessages(messagesList.toReversed()));
+        if (pagination) {
+          dispatch(setMessagesPagination(pagination));
+        }
       } catch (error) {
         console.error('Lỗi khi lấy tin nhắn:', error);
         dispatch(setCurrentChatMessages([]));
+        dispatch(setMessagesPagination(null));
       } finally {
         setIsLoading((prev) => ({ ...prev, chatWindow: false }));
       }
@@ -236,6 +251,44 @@ export const Chat = () => {
     }
   };
 
+  const handleLoadOldMessages = async () => {
+    if (
+      !chat ||
+      !currentChat?.id ||
+      !messagesPagination ||
+      isLoadingOldMessages ||
+      currentChatMessages.length === 0
+    ) {
+      return;
+    }
+
+    // Check if there are more pages to load
+    if (messagesPagination.current_page >= messagesPagination.total_pages) {
+      return;
+    }
+
+    setIsLoadingOldMessages(true);
+
+    try {
+      const nextPage = messagesPagination.current_page + 1;
+      const response = await chat.getMessages(currentChat.id, 20, nextPage);
+      const messagesList = response?.data || [];
+      const pagination = response?.pagination;
+
+      if (messagesList.length > 0) {
+        dispatch(prependMessages(messagesList.toReversed()));
+        if (pagination) {
+          dispatch(setMessagesPagination(pagination));
+        }
+      }
+    } catch (error) {
+      console.error('Lỗi khi lấy tin nhắn cũ:', error);
+      toast.error('Không thể tải tin nhắn cũ');
+    } finally {
+      setIsLoadingOldMessages(false);
+    }
+  };
+
   return (
     <div className="h-screen flex gap-0 no-header hidden-y hidden-x">
       {/* Sidebar - Hidden on mobile, visible on larger screens */}
@@ -268,9 +321,11 @@ export const Chat = () => {
             chatAvatar={getActiveChatAvatar()}
             messages={currentChatMessages}
             isLoading={isLoading.chatWindow}
+            isLoadingOldMessages={isLoadingOldMessages}
             currentUserId={currentUser?.id}
             onSendMessage={handleSendMessage}
             onMessageAction={handleMessageAction}
+            onLoadOldMessages={handleLoadOldMessages}
           />
         )}
       </div>
