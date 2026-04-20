@@ -17,6 +17,7 @@ interface LiveChatWidgetProps {
   currentUser?: ISChatUser | null;
   messages?: IMessageItem[];
   isLoading?: boolean;
+  isLoadingOldMessages?: boolean;
   unreadCount?: number;
   onSelectChat?: (chatId: number) => void;
   onDeleteChat?: (chatId: number) => void;
@@ -31,6 +32,7 @@ interface LiveChatWidgetProps {
     receivers: ISChatUser[],
     groupName?: string,
   ) => Promise<void>;
+  onLoadOldMessages?: () => Promise<void>;
 }
 
 type WidgetView = 'collapsed' | 'sidebar' | 'chat' | 'new-chat';
@@ -52,12 +54,14 @@ export const LiveChatWidget = ({
   currentUser = null,
   messages = [],
   isLoading = false,
+  isLoadingOldMessages = false,
   unreadCount = 0,
   onSelectChat = () => {},
   onDeleteChat = () => {},
   onSendMessage = () => {},
   onMessageAction = () => {},
   onCreateNewChat = async () => {},
+  onLoadOldMessages = async () => {},
 }: LiveChatWidgetProps) => {
   const [widgetView, setWidgetView] = useState<WidgetView>('collapsed');
   const [totalUnread, setTotalUnread] = useState(unreadCount);
@@ -283,9 +287,11 @@ export const LiveChatWidget = ({
                 chatAvatar={getActiveChatAvatar()}
                 messages={messages}
                 isLoading={isLoading}
+                isLoadingOldMessages={isLoadingOldMessages}
                 currentUserId={currentUser?.id}
                 onSendMessage={handleSendMessage}
                 onMessageAction={onMessageAction}
+                onLoadOldMessages={onLoadOldMessages}
                 onBack={handleBackToChat}
               />
             )}

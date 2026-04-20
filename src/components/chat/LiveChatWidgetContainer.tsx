@@ -9,6 +9,8 @@ import {
   removeMessage,
   setCurrentChat,
   setCurrentChatMessages,
+  setMessagesPagination,
+  prependMessages,
 } from '../../redux/slides/chat/chatSlide';
 import type { ISChatUser, TMessageAction } from '../../types/chat.type';
 
@@ -27,9 +29,16 @@ export const LiveChatWidgetContainer = ({
   enabledOnlyIfLoggedIn = true,
 }: LiveChatWidgetContainerProps) => {
   const dispatch = useDispatch();
-  const { currentUser, chats, currentChat, currentChatMessages, members } =
-    useSelector((state: RootState) => state.chat);
+  const {
+    currentUser,
+    chats,
+    currentChat,
+    currentChatMessages,
+    members,
+    messagesPagination,
+  } = useSelector((state: RootState) => state.chat);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingOldMessages, setIsLoadingOldMessages] = useState(false);
 
   // Lấy messages từ store khi currentChat thay đổi
   useEffect(() => {
@@ -37,14 +46,21 @@ export const LiveChatWidgetContainer = ({
       if (currentChat?.id) {
         // Fetch messages for the selected chat
         try {
-          const result = await chat.getMessages(currentChat.id);
-          dispatch(setCurrentChatMessages(result.data.toReversed()));
+          const result = await chat.getMessages(currentChat.id, 20, 1);
+          const messagesList = result?.data || [];
+          const pagination = result?.pagination;
+          dispatch(setCurrentChatMessages(messagesList.toReversed()));
+          if (pagination) {
+            dispatch(setMessagesPagination(pagination));
+          }
         } catch (error) {
           console.error('Failed to fetch messages:', error);
           dispatch(setCurrentChatMessages([]));
+          dispatch(setMessagesPagination(null));
         }
       } else {
         dispatch(setCurrentChatMessages([]));
+        dispatch(setMessagesPagination(null));
       }
     };
 
@@ -151,6 +167,43 @@ export const LiveChatWidgetContainer = ({
     }
   };
 
+  // Xử lý load tin nhắn cũ (infinite scroll)
+  const handleLoadOldMessages = async () => {
+    if (
+      !currentChat?.id ||
+      !messagesPagination ||
+      isLoadingOldMessages ||
+      currentChatMessages.length === 0
+    ) {
+      return;
+    }
+
+    // Check if there are more pages to load
+    if (messagesPagination.current_page >= messagesPagination.total_pages) {
+      return;
+    }
+
+    setIsLoadingOldMessages(true);
+
+    try {
+      const nextPage = messagesPagination.current_page + 1;
+      const response = await chat.getMessages(currentChat.id, 20, nextPage);
+      const messagesList = response?.data || [];
+      const pagination = response?.pagination;
+
+      if (messagesList.length > 0) {
+        dispatch(prependMessages(messagesList.toReversed()));
+        if (pagination) {
+          dispatch(setMessagesPagination(pagination));
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load old messages:', error);
+    } finally {
+      setIsLoadingOldMessages(false);
+    }
+  };
+
   // Nếu bật chỉ khi đã đăng nhập và chưa đăng nhập thì không hiển thị
   if (enabledOnlyIfLoggedIn && !currentUser?.id) {
     return null;
@@ -161,6 +214,7 @@ export const LiveChatWidgetContainer = ({
       chats={chats}
       members={members}
       isLoading={isLoading}
+      isLoadingOldMessages={isLoadingOldMessages}
       currentChat={currentChat}
       currentUser={currentUser}
       messages={currentChatMessages}
@@ -169,6 +223,7 @@ export const LiveChatWidgetContainer = ({
       onSendMessage={handleSendMessage}
       onMessageAction={handleMessageAction}
       onCreateNewChat={handleCreateNewChat}
+      onLoadOldMessages={handleLoadOldMessages}
     />
   );
 };
