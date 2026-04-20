@@ -103,12 +103,20 @@ const chatSlide = createSlice({
           (m) => m.id !== message.id,
         );
       } else {
+        // TẠO THAM CHIẾU MẢNG MỚI ĐỂ ÉP RE-RENDER
         const newMessages = [...state.message[chatId]];
+
         if (index !== -1) {
-          newMessages[index] = message;
+          // HÒA TRỘN (Merge) dữ liệu thay vì ghi đè để tránh mất content/sender khi Like/Love
+          newMessages[index] = {
+            ...newMessages[index],
+            ...message,
+          };
         } else {
+          // Nếu là tin nhắn mới, push vào cuối
           newMessages.push(message);
         }
+
         state.message[chatId] = newMessages;
       }
 

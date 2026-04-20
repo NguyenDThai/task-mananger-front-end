@@ -38,12 +38,12 @@ const ChatGlobalListener = () => {
     };
     fetchSystemUsers();
 
-    const refreshChatData = async (chatId?: number) => {
+    // refreshChatData bây giờ có thêm cờ includeMembers (mặc định là false)
+    const refreshChatData = async (chatId?: number, includeMembers = false) => {
       const now = Date.now();
       if (now - lastRefreshTimeRef.current < 1000) return;
       lastRefreshTimeRef.current = now;
 
-      // Đợi server ổn định dữ liệu
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       try {
@@ -53,6 +53,7 @@ const ChatGlobalListener = () => {
         dispatch(setRecentChats(chats));
 
         if (targetId) {
+          // A. Luôn kéo tin nhắn mới
           try {
             const res = await chatSDK.getMessages(targetId, 50, 1);
             if (res.data) {
@@ -67,18 +68,25 @@ const ChatGlobalListener = () => {
             /* ignore */
           }
 
-          try {
-            const resMem = await chatSDK.getMembers(targetId as number, 100, 1);
-            if (resMem?.data) {
-              dispatch(
-                setChatMembers({
-                  chatId: targetId as number,
-                  members: resMem.data as User[],
-                }),
+          // B. CHỈ kéo thành viên nếu được yêu cầu (Tiết kiệm API)
+          if (includeMembers) {
+            try {
+              const resMem = await chatSDK.getMembers(
+                targetId as number,
+                100,
+                1,
               );
+              if (resMem?.data) {
+                dispatch(
+                  setChatMembers({
+                    chatId: targetId as number,
+                    members: resMem.data as User[],
+                  }),
+                );
+              }
+            } catch {
+              /* ignore */
             }
-          } catch {
-            /* ignore */
           }
         }
 
@@ -102,7 +110,6 @@ const ChatGlobalListener = () => {
         message_id?: number;
         type?: string;
       };
-
       const chatId = Number(
         payload.chat_id || payload.chat?.id || payload.message?.chat_id,
       );
@@ -133,9 +140,10 @@ const ChatGlobalListener = () => {
 
     const handleMemberChange = (data: any) => {
       const chatId = Number(data?.chat_id || data?.id);
-      refreshChatData(chatId);
+      // KHI CÓ THAY ĐỔI THÀNH VIÊN -> Mới gọi API lấy list member
+      refreshChatData(chatId, true);
       setTimeout(() => {
-        refreshChatData(chatId);
+        refreshChatData(chatId, true);
       }, 2000);
     };
 
