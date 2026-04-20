@@ -22,6 +22,9 @@ export interface Message {
   sender_id?: number;
   sender_code?: string;
   member?: User;
+  files?: Array<{ [key: string]: unknown }>;
+  reply_id?: number;
+  reply?: Message | null;
   [key: string]: unknown;
 }
 

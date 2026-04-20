@@ -45,6 +45,7 @@ const ChatBot = () => {
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [newMessage, setNewMessage] = useState('');
+  const [replyMessage, setReplyMessage] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const isInitialized = useSelector(selectIsChatInitialized);
   const { user } = useSelector((state: { auth: { user: any } }) => state.auth);
@@ -73,24 +74,49 @@ const ChatBot = () => {
   }, [messages]);
 
   // Hàm gửi tin nhắn
-  const handleSendMessage = async () => {
-    const messageToSend = newMessage.trim();
-    if (!messageToSend || !currentChat || !isInitialized) return;
+  const handleSendMessage = async (
+    content?: string,
+    files?: FileList | null,
+  ) => {
+    const textContent = content !== undefined ? content : newMessage;
+    const trimmedText = textContent.trim();
+    // Gửi null nếu chỉ có file (theo docs)
+    const messageToSend = trimmedText || null;
 
-    // Clear ô input ngay lập tức để tạo cảm giác mượt mà cho người dùng
+    // Yêu cầu có tin nhắn HOẶC có file
+    if (!messageToSend && (!files || files.length === 0)) return;
+    if (!currentChat || !isInitialized) return;
+
+    // Lưu lại replyId và reset trạng thái reply ngay
+    const replyId = replyMessage?.id;
     setNewMessage('');
+    setReplyMessage(null);
 
     try {
-      const res = await chatSDK.addMessage(currentChat.id, messageToSend);
+      const fileArray = files ? Array.from(files) : undefined;
+      // Theo docs: addMessage(chatId, content, files, replyId)
+      const res = await chatSDK.addMessage(
+        String(currentChat.id) as any,
+        messageToSend,
+        fileArray,
+        replyId,
+      );
+
       if (res.data) {
         dispatch(
-          upsertMessage({ chat: currentChat, message: res.data as Message }),
+          upsertMessage({
+            chat: currentChat,
+            message: {
+              ...(res.data as Message),
+              reply: replyMessage, // Đưa hẳn object reply vào để hiện ngay
+              reply_id: replyId ? Number(replyId) : undefined,
+            },
+          }),
         );
       }
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
-      // Nếu lỗi, khôi phục lại nội dung cũ để người dùng có thể gửi lại
-      setNewMessage(messageToSend);
+      if (messageToSend) setNewMessage(messageToSend);
       toast.error('Không thể gửi tin nhắn, vui lòng thử lại');
     }
   };
@@ -584,6 +610,8 @@ const ChatBot = () => {
             handleSendMessage={handleSendMessage}
             onMessageAction={handleMessageAction}
             onAddMemberClick={handleOpenAddMemberModal}
+            replyMessage={replyMessage}
+            setReplyMessage={setReplyMessage}
           />
         </div>
       </div>

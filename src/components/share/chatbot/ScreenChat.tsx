@@ -1,11 +1,14 @@
 import {
   Heart,
   MessageSquareMore,
+  Paperclip,
   Plus,
+  Reply,
   RotateCcw,
   Send,
   ThumbsUp,
   Trash2,
+  X,
 } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { currentMessages } from '../../../redux/slides/chat/chatSlide';
@@ -17,12 +20,14 @@ interface ScreenChatProps {
   currentChat: Chat | null;
   newMessage: string;
   setNewMessage: (msg: string) => void;
-  handleSendMessage: () => void;
+  handleSendMessage: (content?: string, files?: FileList | null) => void;
   onMessageAction: (
     messageId: number,
     action: 'like' | 'love' | 'revoke' | 'remove',
   ) => void;
   onAddMemberClick: (chat?: Chat) => void;
+  replyMessage: Message | null;
+  setReplyMessage: (msg: Message | null) => void;
 }
 
 const ScreenChat = ({
@@ -34,6 +39,8 @@ const ScreenChat = ({
   handleSendMessage,
   onMessageAction,
   onAddMemberClick,
+  replyMessage,
+  setReplyMessage,
 }: ScreenChatProps) => {
   const messages = useSelector(currentMessages);
 
@@ -57,6 +64,7 @@ const ScreenChat = ({
             return (
               <div
                 key={item.id}
+                id={`msg-${item.id}`}
                 className={`group relative flex items-end gap-3 ${
                   isMine ? 'flex-row-reverse' : 'flex-row'
                 } animate-in fade-in slide-in-from-bottom-2 duration-500 cursor-default`}
@@ -80,6 +88,13 @@ const ScreenChat = ({
                         title="Yêu thích"
                       >
                         <Heart size={14} />
+                      </button>
+                      <button
+                        onClick={() => setReplyMessage(item)}
+                        className="p-1.5 hover:bg-indigo-50 rounded-full text-slate-400 hover:text-indigo-600 transition-colors"
+                        title="Trả lời"
+                      >
+                        <Reply size={14} />
                       </button>
                       {isMine && (
                         <div className="flex items-center gap-1 ml-1 pl-1 border-l border-slate-100">
@@ -148,7 +163,56 @@ const ScreenChat = ({
                         Tin nhắn đã được thu hồi
                       </span>
                     ) : (
-                      item.content
+                      <>
+                        {/* HIỂN THỊ TIN NHẮN GỐC (NẾU LÀ TRẢ LỜI) */}
+                        {(item.reply || item.reply_id) && (
+                          <div
+                            className={`mb-2 p-2 rounded-lg border-l-2 text-[11px] truncate max-w-full cursor-pointer transition-colors ${
+                              isMine
+                                ? 'bg-indigo-700/30 border-indigo-300 text-indigo-50'
+                                : 'bg-slate-50 border-slate-300 text-slate-500 hover:bg-slate-100'
+                            }`}
+                            onClick={() => {
+                              const rId = item.reply?.id || item.reply_id;
+                              const el = document.getElementById(`msg-${rId}`);
+                              el?.scrollIntoView({
+                                behavior: 'smooth',
+                                block: 'center',
+                              });
+                            }}
+                          >
+                            {(() => {
+                              const originalMsg =
+                                item.reply ||
+                                messages.find(
+                                  (m) => m.id === Number(item.reply_id),
+                                );
+                              if (!originalMsg)
+                                return (
+                                  <span className="italic">
+                                    Tin nhắn không còn tồn tại
+                                  </span>
+                                );
+                              return (
+                                <>
+                                  <span className="font-bold block mb-0.5">
+                                    {(originalMsg.member as any)?.name ||
+                                      'Người dùng'}
+                                  </span>
+                                  <span className="opacity-80">
+                                    {originalMsg.content ||
+                                      (originalMsg.files &&
+                                      (originalMsg.files as any).length
+                                        ? 'Một tệp tin'
+                                        : '...')}
+                                  </span>
+                                </>
+                              );
+                            })()}
+                          </div>
+                        )}
+                        {item.content}
+                      </>
                     )}
 
                     {/* Reactions */}
@@ -204,7 +268,51 @@ const ScreenChat = ({
           </div>
         )}
       </div>
+      {/* Thanh hiển thị tin nhắn đang trả lời */}
+      {replyMessage && (
+        <div className="px-4 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+          <div className="flex flex-col border-l-2 border-indigo-500 pl-3">
+            <span className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">
+              Đang trả lời {replyMessage.member?.name || 'Người dùng'}
+            </span>
+            <span className="text-xs text-slate-500 truncate max-w-[250px]">
+              {replyMessage.content ||
+                (replyMessage.files && replyMessage.files.length > 0
+                  ? 'Một tệp tin'
+                  : '...')}
+            </span>
+          </div>
+          <button
+            onClick={() => setReplyMessage(null)}
+            className="text-slate-400 hover:text-slate-600"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
+
       <div className="p-4 bg-white flex gap-2">
+        {/* Input file ẩn */}
+        <input
+          type="file"
+          id="chat-file-input"
+          multiple
+          style={{ display: 'none' }}
+          onChange={async (e) => {
+            if (e.target.files && e.target.files.length > 0) {
+              await handleSendMessage(newMessage, e.target.files);
+              e.target.value = ''; // Reset input
+            }
+          }}
+        />
+        <button
+          onClick={() => document.getElementById('chat-file-input')?.click()}
+          className="w-10 h-10 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center hover:bg-slate-200 transition-colors"
+          title="Đính kèm tệp"
+        >
+          <Paperclip size={20} />
+        </button>
+
         <input
           type="text"
           value={newMessage}
@@ -216,8 +324,8 @@ const ScreenChat = ({
           className="flex-1 bg-slate-100 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
         />
         <button
-          onClick={handleSendMessage}
-          disabled={!newMessage.trim()}
+          onClick={() => handleSendMessage()}
+          disabled={!newMessage.trim() && !replyMessage}
           className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 disabled:bg-slate-200 disabled:shadow-none"
         >
           <Send size={20} />
