@@ -151,6 +151,26 @@ const ScreenChat = ({
                       item.content
                     )}
 
+                    {/* Reactions */}
+                    {(item.like || item.love) && !isRevoked && (
+                      <div
+                        className={`absolute -bottom-2 ${isMine ? '-left-1' : '-right-1'} flex items-center gap-0.5 bg-white px-1.5 py-0.5 rounded-full shadow-md border border-slate-100 z-10 transition-all duration-300 animate-in zoom-in-50`}
+                      >
+                        {item.like && (
+                          <ThumbsUp
+                            size={10}
+                            className="text-yellow-500 fill-yellow-500"
+                          />
+                        )}
+                        {item.love && (
+                          <Heart
+                            size={10}
+                            className="text-red-500 fill-red-500"
+                          />
+                        )}
+                      </div>
+                    )}
+
                     {/* Glass sheen for user messages */}
                     {isMine && !isRevoked && (
                       <div className="absolute inset-0 bg-linear-to-tr from-transparent via-white/5 to-white/10 rounded-[22px] rounded-br-[4px] pointer-events-none"></div>

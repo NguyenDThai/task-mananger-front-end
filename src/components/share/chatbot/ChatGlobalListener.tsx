@@ -90,6 +90,12 @@ const ChatGlobalListener = () => {
         remove: payload.type === 'remove',
       };
 
+      // 2. CHỈ cập nhật Like/Love nếu đúng là sự kiện đó
+      if (payload.type === 'like') processedMessage.like = true;
+      if (payload.type === 'unlike') processedMessage.like = false;
+      if (payload.type === 'love') processedMessage.love = true;
+      if (payload.type === 'unlove') processedMessage.love = false;
+
       // data nhận từ SDK thường là { chat: {...}, message: {...} }
       dispatch(
         upsertMessage({

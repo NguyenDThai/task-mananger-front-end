@@ -16,6 +16,8 @@ export interface Message {
   content: string;
   revoke?: boolean;
   remove?: boolean;
+  like?: boolean;
+  love?: boolean;
   created_at?: string;
   sender_id?: number;
   sender_code?: string;

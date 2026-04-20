@@ -333,10 +333,10 @@ const ChatBot = () => {
     if (!currentChat) return;
 
     try {
-      if (action === 'remove' || action === 'revoke') {
-        await chatSDK.actionMessage(currentChat.id, messageId, action);
-      }
-      // Cập nhật UI qua redux
+      // Gọi SDK cho tất cả các loại action
+      await chatSDK.actionMessage(currentChat.id, messageId, action);
+
+      // Cập nhật UI qua redux ngay lập tức
       const messageToUpdate = messages.find((m) => m.id === messageId);
       if (messageToUpdate) {
         dispatch(
@@ -345,9 +345,6 @@ const ChatBot = () => {
             message: { ...messageToUpdate, [action]: true },
           }),
         );
-      } else {
-        // Like và Love: Chỉ hiện Toast (vì Server đang lỗi 500)
-        toast.success(action === 'like' ? 'Đã thích tin nhắn' : 'Đã thả tim');
       }
     } catch (error) {
       console.error(`Lỗi khi thực hiện action ${action}:`, error);
