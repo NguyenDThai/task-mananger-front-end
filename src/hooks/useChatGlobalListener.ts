@@ -23,6 +23,8 @@ export const useChatGlobalListener = () => {
   const currentMember = useSelector(selectCurrentUser);
   const currentChatIdRef = useRef(currentChatId);
   const currentMemberRef = useRef(currentMember);
+  const lastRefreshTimeRef = useRef(0);
+  const isRefreshingRef = useRef(false);
 
   useEffect(() => {
     currentChatIdRef.current = currentChatId;
@@ -46,7 +48,20 @@ export const useChatGlobalListener = () => {
     fetchSystemUsers();
 
     // Hàm làm mới dữ liệu chat
-    const refreshChatData = async (chatId?: number, includeMembers = false) => {
+    const refreshChatData = async (
+      chatId?: number,
+      includeMembers = false,
+      force = false,
+    ) => {
+      const now = Date.now();
+      // Chặn nếu các sự kiện bắn ra quá dày đặc (trong vòng 1s) - Trừ khi là lệnh ép buộc (force)
+      if (!force && now - lastRefreshTimeRef.current < 1000) return;
+      lastRefreshTimeRef.current = now;
+
+      // Khóa trạng thái để tránh gọi API lồng nhau
+      if (isRefreshingRef.current && !force) return;
+      isRefreshingRef.current = true;
+
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       try {
@@ -99,6 +114,8 @@ export const useChatGlobalListener = () => {
         }
       } catch (error) {
         console.error('Chat Real-time refresh error:', error);
+      } finally {
+        isRefreshingRef.current = false;
       }
     };
 
@@ -122,54 +139,58 @@ export const useChatGlobalListener = () => {
 
       const processedMessage: Message = {
         ...message,
-        id: message.id || (payload.message_id as number),
+        id: Number(message.id || payload.message_id),
         revoke: payload.type === 'revoke',
         remove: payload.type === 'remove',
       };
 
       if (payload.type === 'love') processedMessage.love = true;
       if (payload.type === 'unlove') processedMessage.love = false;
+      if (payload.type === 'like') processedMessage.like = true;
+      if (payload.type === 'unlike') processedMessage.like = false;
 
       // Xử lý unread: Nếu tin nhắn đến từ người khác
       const senderId =
         processedMessage.sender_id || (processedMessage.member as any)?.id;
       if (senderId && senderId !== currentMemberRef.current?.id) {
-        // Làm mới ngay lập tức
-        refreshChatData();
+        // Làm mới ngay lập tức (với cờ force) nếu là tin nhắn từ người khác
+        refreshChatData(chatId, false, true);
       }
 
       dispatch(upsertMessage({ chat: chat, message: processedMessage }));
     };
 
     const handleChatCreated = () => {
-      refreshChatData();
+      refreshChatData(undefined, false, true);
     };
 
     const handleMemberChange = (data: any) => {
       const chatId = Number(data?.chat_id || data?.id);
-      refreshChatData(chatId, true);
+
+      // Ép buộc xóa cache và lấy lại toàn bộ danh sách chat + member
+      refreshChatData(chatId, true, true);
+
+      // Gọi thêm một lần sau 2s để chắc chắn server đã hoàn tất mọi tiến trình ngầm (như cập nhật socket)
       setTimeout(() => {
-        refreshChatData(chatId, true);
+        refreshChatData(chatId, true, true);
       }, 2000);
     };
 
-    const handleChatDeleted = (data: any) => {
-      const chatId = Number(data?.chat_id || data?.id);
-      if (chatId === currentChatIdRef.current) dispatch(setCurrentChatId(null));
-      refreshChatData();
+    const handleChatDeleted = () => {
+      refreshChatData(undefined, false, true);
     };
 
     const handleChatUpdated = () => {
-      refreshChatData();
+      refreshChatData(undefined, false, true);
     };
     const handleChatAction = () => {
-      refreshChatData();
+      refreshChatData(undefined, false, true);
     };
     const handleNewMessage = (data: any) => {
       if (data && typeof data.new === 'number') {
         dispatch(setUnreadCount(data.new));
       }
-      refreshChatData();
+      refreshChatData(undefined, false, true);
     };
 
     chatSDK.addEventListener(chatSDK.EVENTS.chats_message, handleMessage);
