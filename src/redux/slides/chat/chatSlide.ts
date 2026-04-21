@@ -105,6 +105,21 @@ const chatSlice = createSlice({
         state.chats[chatIndex].avatar = avatar;
       }
     },
+    updateMessage: (state, action) => {
+      const { chat_id, message } = action.payload;
+      if (!message || !chat_id) return;
+
+      if (state.currentChat?.id !== chat_id) {
+        return;
+      }
+
+      const messageIndex = state.currentChatMessages.findIndex(
+        (m) => m.id === message.id,
+      );
+      if (messageIndex !== -1) {
+        state.currentChatMessages[messageIndex] = message;
+      }
+    },
     removeChat: (state, action) => {
       state.chats = state.chats.filter((chat) => chat.id !== action.payload);
       if (state.currentChat?.id === action.payload) {
@@ -164,5 +179,6 @@ export const {
   updateChat,
   updateChatAvatar,
   removeMessage,
+  updateMessage,
 } = chatSlice.actions;
 export default chatSlice.reducer;

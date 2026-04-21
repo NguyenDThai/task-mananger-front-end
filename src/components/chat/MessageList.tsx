@@ -161,7 +161,7 @@ const getFileTypeInfo = (fileExt: string): FileTypeInfo => {
   ) {
     return {
       icon: <FileText size={18} className="flex-shrink-0" />,
-      colorClass: 'bg-red-800 border-red-600 hover:bg-red-700',
+      colorClass: 'bg-white border-black-600 hover:bg-gray-200',
       type: 'document',
     };
   }
@@ -229,6 +229,46 @@ const sortFiles = (files: IFileItem[]): IFileItem[] => {
   });
 };
 
+// Sub-component để render message actions (like, love, etc.)
+const MessageActions = memo(
+  ({ actions }: { actions: { [name: string]: number } }) => {
+    if (!actions || Object.keys(actions).length === 0) return null;
+
+    const actionList = Object.entries(actions).filter(([, count]) => count > 0);
+    if (actionList.length === 0) return null;
+
+    return (
+      <div className="flex items-center gap-1 mt-2 flex-wrap">
+        {actionList.map(([actionName, count]) => {
+          let icon: React.ReactNode = null;
+          let bgColor = 'bg-gray-100';
+
+          if (actionName === 'like') {
+            icon = <ThumbsUp size={14} />;
+            bgColor = 'bg-blue-100';
+          } else if (actionName === 'love') {
+            icon = <Heart size={14} />;
+            bgColor = 'bg-red-100';
+          }
+
+          return (
+            <div
+              key={actionName}
+              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${bgColor} text-gray-700`}
+              title={`${actionName}: ${count}`}
+            >
+              {icon}
+              <span>{count}</span>
+            </div>
+          );
+        })}
+      </div>
+    );
+  },
+);
+
+MessageActions.displayName = 'MessageActions';
+
 // Sub-component để render file attachments
 const MessageFiles = memo(
   ({
@@ -278,7 +318,7 @@ const MessageFiles = memo(
                 isCurrentUser
                   ? `${fileTypeInfo.colorClass}`
                   : 'bg-white/20 border-gray-300 hover:bg-white/30'
-              } text-white`}
+              } text-black`}
             >
               {fileTypeInfo.icon || (
                 <File size={18} className="flex-shrink-0" />
@@ -419,7 +459,7 @@ const MessageItem = memo(
           <div
             className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded relative group ${
               isCurrentUser
-                ? 'bg-blue-900 text-white'
+                ? 'bg-blue-800/90 text-white'
                 : 'bg-blue-100 text-gray-900'
             }`}
           >
@@ -455,6 +495,12 @@ const MessageItem = memo(
                 isCurrentUser={isCurrentUser}
               />
             ) : null}
+            {/* Message Actions - show likes, loves, etc. */}
+            {!message.revoked &&
+              message.action &&
+              Object.keys(message.action).length > 0 && (
+                <MessageActions actions={message.action} />
+              )}
             <div
               className={`flex items-end gap-2 ${isCurrentUser ? 'flex-row-reverse justify-end' : 'flex-row justify-start'}`}
             >

@@ -263,7 +263,9 @@ export interface IChatItem {
 export interface IMessageItem {
   id: number;
   type: 'text';
-  action: string[];
+  action: {
+    [name: string]: number; // Số lượng tương tác của từng loại (like, love, etc.)
+  };
   member: ISChatUser;
   content: string | null; // Nội dung tin nhắn (có thể null nếu chỉ có file đính kèm)
   files?: IFileItem[]; // Danh sách file gửi kèm (nếu có)

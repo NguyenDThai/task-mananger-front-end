@@ -9,6 +9,7 @@ import {
   updateChat,
   removeChat,
   removeMessage,
+  updateMessage,
 } from '../redux/slides/chat/chatSlide';
 import type { ISChatEventPayloads, User } from '../types';
 
@@ -61,6 +62,11 @@ export const useChat = () => {
             type,
           }),
         );
+        return;
+      }
+
+      if (type === 'love' || type === 'like') {
+        dispatch(updateMessage({ chat_id, message }));
         return;
       }
     }
