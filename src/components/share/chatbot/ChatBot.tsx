@@ -19,7 +19,7 @@ import useDebounce from '../../../hooks/useDebound';
 import { ChatbotSearchList } from './ChatbotSearchList';
 import {
   CircleX,
-  MessageSquare,
+  MessageSquareMore,
   MoveLeft,
   Search,
   User as UserIcon,
@@ -36,6 +36,13 @@ import AddMemberModal from './AddMemberModal';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [position, setPosition] = useState({
+    x: window.innerWidth - 80,
+    y: window.innerHeight - 80,
+  });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
   const [currentChat, setCurrentChat] = useState<Chat | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isGroupMode, setIsGroupMode] = useState(false);
@@ -47,7 +54,28 @@ const ChatBot = () => {
   const [newMessage, setNewMessage] = useState('');
   const [replyMessage, setReplyMessage] = useState<Message | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const isInitialized = useSelector(selectIsChatInitialized);
+
+  // Xử lý click ngoài để đóng chat
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        containerRef.current &&
+        !containerRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
+
   const { user } = useSelector((state: { auth: { user: any } }) => state.auth);
 
   const dispatch = useDispatch();
@@ -72,6 +100,49 @@ const ChatBot = () => {
       });
     }
   }, [messages]);
+
+  // Xử lý kéo thả icon
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => {
+      if (!isDragging) return;
+      const dx = e.clientX - dragStartPos.current.x;
+      const dy = e.clientY - dragStartPos.current.y;
+      if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasMoved.current = true;
+
+      setPosition({
+        x: Math.max(20, Math.min(window.innerWidth - 70, e.clientX - 30)),
+        y: Math.max(20, Math.min(window.innerHeight - 70, e.clientY - 30)),
+      });
+    };
+    const handleMouseUp = () => {
+      setIsDragging(false);
+      document.body.style.userSelect = '';
+    };
+
+    if (isDragging) {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mouseup', handleMouseUp);
+    }
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, [isDragging]);
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    hasMoved.current = false;
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    document.body.style.userSelect = 'none';
+  };
+
+  const handleToggleChat = (open: boolean) => {
+    if (hasMoved.current) return;
+    if (open) {
+      dispatch(setChatActivated(true));
+    }
+    setIsOpen(open);
+  };
 
   // Hàm gửi tin nhắn
   const handleSendMessage = async (
@@ -454,10 +525,31 @@ const ChatBot = () => {
     }
   };
 
+  const isRightSide = position.x > window.innerWidth / 2;
+  const isBottomSide = position.y > window.innerHeight / 2;
+
   return (
-    <div className="fixed bottom-6 right-6 z-[9999] font-sans">
+    <div
+      ref={containerRef}
+      className="fixed z-50 font-sans"
+      style={{ left: position.x, top: position.y }}
+    >
       <div
-        className={`absolute bottom-0 right-0 w-[400px] h-[640px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ${isOpen ? 'scale-100 opacity-100' : 'scale-90 opacity-0 pointer-events-none'}`}
+        className={`absolute w-[400px] h-[640px] bg-white rounded-3xl shadow-2xl flex flex-col overflow-hidden transition-all duration-500 ${
+          isOpen
+            ? 'scale-100 opacity-100'
+            : 'scale-90 opacity-0 pointer-events-none'
+        } ${isRightSide ? 'right-0' : 'left-0'} ${isBottomSide ? 'bottom-full mb-4' : 'top-full mt-4'}`}
+        style={{
+          transformOrigin: `${isRightSide ? 'bottom right' : 'top left'}`,
+          // Giới hạn để không bao giờ tràn màn hình ngang
+          marginLeft:
+            !isRightSide && position.x + 400 > window.innerWidth
+              ? -(position.x + 400 - window.innerWidth + 20)
+              : 0,
+          marginRight:
+            isRightSide && position.x - 400 < 0 ? -(400 - position.x + 20) : 0,
+        }}
       >
         {/* Header */}
         <div className="bg-linear-to-r from-indigo-600 to-violet-600 p-5 text-white flex justify-between items-center shrink-0">
@@ -639,15 +731,19 @@ const ChatBot = () => {
         onAdd={handleAddMember}
       />
 
-      <button
-        onClick={() => {
-          setIsOpen(true);
-          dispatch(setChatActivated(true));
-        }}
-        className={`w-16 h-16 rounded-2xl bg-indigo-600 text-white flex items-center justify-center shadow-lg transition-all ${isOpen ? 'scale-0' : 'scale-100'}`}
-      >
-        <MessageSquare size={20} />
-      </button>
+      {!isOpen && (
+        <button
+          onMouseDown={handleMouseDown}
+          onClick={() => handleToggleChat(true)}
+          className={`absolute -translate-x-1/2 -translate-y-1/2 w-14 h-14 bg-linear-to-tr from-indigo-500 to-indigo-700 text-white rounded-2xl flex items-center justify-center shadow-2xl hover:scale-110 active:scale-95 z-50 group cursor-grab active:cursor-grabbing transition-transform will-change-transform ${isDragging ? 'scale-105 opacity-90' : ''}`}
+        >
+          <div className="absolute inset-0 bg-white/20 rounded-2xl animate-ping group-hover:hidden pointer-events-none"></div>
+          <MessageSquareMore
+            size={28}
+            className="relative z-10 pointer-events-none"
+          />
+        </button>
+      )}
     </div>
   );
 };
