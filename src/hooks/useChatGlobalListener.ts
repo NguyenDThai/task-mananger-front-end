@@ -23,7 +23,6 @@ export const useChatGlobalListener = () => {
   const currentMember = useSelector(selectCurrentUser);
   const currentChatIdRef = useRef(currentChatId);
   const currentMemberRef = useRef(currentMember);
-  const lastRefreshTimeRef = useRef(0);
 
   useEffect(() => {
     currentChatIdRef.current = currentChatId;
@@ -48,10 +47,6 @@ export const useChatGlobalListener = () => {
 
     // Hàm làm mới dữ liệu chat
     const refreshChatData = async (chatId?: number, includeMembers = false) => {
-      const now = Date.now();
-      if (now - lastRefreshTimeRef.current < 3000) return;
-      lastRefreshTimeRef.current = now;
-
       await new Promise((resolve) => setTimeout(resolve, 500));
 
       try {
@@ -139,8 +134,7 @@ export const useChatGlobalListener = () => {
       const senderId =
         processedMessage.sender_id || (processedMessage.member as any)?.id;
       if (senderId && senderId !== currentMemberRef.current?.id) {
-        // Ép làm mới danh sách chat để lấy số 'new' từ server
-        lastRefreshTimeRef.current = 0;
+        // Làm mới ngay lập tức
         refreshChatData();
       }
 
@@ -186,13 +180,7 @@ export const useChatGlobalListener = () => {
     chatSDK.addEventListener(chatSDK.EVENTS.chats_action, handleChatAction);
     chatSDK.addEventListener(chatSDK.EVENTS.new_message, handleNewMessage);
 
-    const handleFocus = () => {
-      if (currentChatIdRef.current) refreshChatData();
-    };
-    window.addEventListener('focus', handleFocus);
-
     return () => {
-      window.removeEventListener('focus', handleFocus);
       chatSDK.removeEventListener(chatSDK.EVENTS.chats_message, handleMessage);
       chatSDK.removeEventListener(
         chatSDK.EVENTS.chats_created,
