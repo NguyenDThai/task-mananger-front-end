@@ -1,7 +1,10 @@
-import React from 'react';
+import { useChatGlobalListener } from './hooks/useChatGlobalListener';
 
 const App = () => {
-  return <div className=""></div>;
+  // Kích hoạt lắng nghe các sự kiện chat global
+  useChatGlobalListener();
+
+  return null;
 };
 
 export default App;

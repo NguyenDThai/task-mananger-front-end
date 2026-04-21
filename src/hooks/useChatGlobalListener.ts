@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { chatSDK } from '../../../services/chat.service';
+import { chatSDK } from '../services/chat.service';
 import {
   selectIsChatInitialized,
   selectIsChatActivated,
@@ -10,10 +10,10 @@ import {
   setChatMembers,
   selectCurrentChatId,
   setCurrentChatId,
-} from '../../../redux/slides/chat/chatSlide';
-import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
+} from '../redux/slides/chat/chatSlide';
+import type { Chat, Message, User } from '../redux/slides/chat/chatSlide';
 
-const ChatGlobalListener = () => {
+export const useChatGlobalListener = () => {
   const dispatch = useDispatch();
   const isInitialized = useSelector(selectIsChatInitialized);
   const isActivated = useSelector(selectIsChatActivated);
@@ -38,7 +38,6 @@ const ChatGlobalListener = () => {
     };
     fetchSystemUsers();
 
-    // refreshChatData bây giờ có thêm cờ includeMembers (mặc định là false)
     const refreshChatData = async (chatId?: number, includeMembers = false) => {
       const now = Date.now();
       if (now - lastRefreshTimeRef.current < 1000) return;
@@ -53,7 +52,6 @@ const ChatGlobalListener = () => {
         dispatch(setRecentChats(chats));
 
         if (targetId) {
-          // A. Luôn kéo tin nhắn mới
           try {
             const res = await chatSDK.getMessages(targetId, 50, 1);
             if (res.data) {
@@ -68,7 +66,6 @@ const ChatGlobalListener = () => {
             /* ignore */
           }
 
-          // B. CHỈ kéo thành viên nếu được yêu cầu (Tiết kiệm API)
           if (includeMembers) {
             try {
               const resMem = await chatSDK.getMembers(
@@ -140,7 +137,6 @@ const ChatGlobalListener = () => {
 
     const handleMemberChange = (data: any) => {
       const chatId = Number(data?.chat_id || data?.id);
-      // KHI CÓ THAY ĐỔI THÀNH VIÊN -> Mới gọi API lấy list member
       refreshChatData(chatId, true);
       setTimeout(() => {
         refreshChatData(chatId, true);
@@ -194,8 +190,4 @@ const ChatGlobalListener = () => {
       chatSDK.removeEventListener(chatSDK.EVENTS.new_message, handleNewMessage);
     };
   }, [isInitialized, isActivated, dispatch]);
-
-  return null;
 };
-
-export default ChatGlobalListener;
