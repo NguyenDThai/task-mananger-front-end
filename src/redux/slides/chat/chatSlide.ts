@@ -152,6 +152,22 @@ const chatSlide = createSlice({
     setAuth: (state, action: PayloadAction<User | null>) => {
       state.currentUser = action.payload;
     },
+    updateChatUnread: (
+      state,
+      action: PayloadAction<{
+        chatId: number;
+        unreadData: Record<string, number>;
+      }>,
+    ) => {
+      const { chatId, unreadData } = action.payload;
+      const chatIndex = state.recentChats.findIndex((c) => c.id === chatId);
+      if (chatIndex !== -1) {
+        state.recentChats[chatIndex] = {
+          ...state.recentChats[chatIndex],
+          new: unreadData,
+        };
+      }
+    },
   },
 });
 
@@ -165,6 +181,7 @@ export const {
   setSystemUsers,
   setChatMembers,
   setAuth,
+  updateChatUnread,
 } = chatSlide.actions;
 
 export default chatSlide.reducer;

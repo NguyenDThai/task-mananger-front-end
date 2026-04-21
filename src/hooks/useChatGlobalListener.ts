@@ -10,6 +10,8 @@ import {
   setChatMembers,
   selectCurrentChatId,
   setCurrentChatId,
+  selectCurrentUser,
+  setUnreadCount,
 } from '../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../redux/slides/chat/chatSlide';
 
@@ -18,12 +20,18 @@ export const useChatGlobalListener = () => {
   const isInitialized = useSelector(selectIsChatInitialized);
   const isActivated = useSelector(selectIsChatActivated);
   const currentChatId = useSelector(selectCurrentChatId);
+  const currentMember = useSelector(selectCurrentUser);
   const currentChatIdRef = useRef(currentChatId);
+  const currentMemberRef = useRef(currentMember);
   const lastRefreshTimeRef = useRef(0);
 
   useEffect(() => {
     currentChatIdRef.current = currentChatId;
   }, [currentChatId]);
+
+  useEffect(() => {
+    currentMemberRef.current = currentMember;
+  }, [currentMember]);
 
   useEffect(() => {
     if (!isInitialized || !isActivated) return;
@@ -38,6 +46,7 @@ export const useChatGlobalListener = () => {
     };
     fetchSystemUsers();
 
+    // Hàm làm mới dữ liệu chat
     const refreshChatData = async (chatId?: number, includeMembers = false) => {
       const now = Date.now();
       if (now - lastRefreshTimeRef.current < 3000) return;
@@ -123,10 +132,17 @@ export const useChatGlobalListener = () => {
         remove: payload.type === 'remove',
       };
 
-      if (payload.type === 'like') processedMessage.like = true;
-      if (payload.type === 'unlike') processedMessage.like = false;
       if (payload.type === 'love') processedMessage.love = true;
       if (payload.type === 'unlove') processedMessage.love = false;
+
+      // Xử lý unread: Nếu tin nhắn đến từ người khác
+      const senderId =
+        processedMessage.sender_id || (processedMessage.member as any)?.id;
+      if (senderId && senderId !== currentMemberRef.current?.id) {
+        // Ép làm mới danh sách chat để lấy số 'new' từ server
+        lastRefreshTimeRef.current = 0;
+        refreshChatData();
+      }
 
       dispatch(upsertMessage({ chat: chat, message: processedMessage }));
     };
@@ -152,7 +168,13 @@ export const useChatGlobalListener = () => {
     const handleChatUpdated = () => {
       refreshChatData();
     };
-    const handleNewMessage = () => {
+    const handleChatAction = () => {
+      refreshChatData();
+    };
+    const handleNewMessage = (data: any) => {
+      if (data && typeof data.new === 'number') {
+        dispatch(setUnreadCount(data.new));
+      }
       refreshChatData();
     };
 
@@ -161,6 +183,7 @@ export const useChatGlobalListener = () => {
     chatSDK.addEventListener(chatSDK.EVENTS.chats_member, handleMemberChange);
     chatSDK.addEventListener(chatSDK.EVENTS.chats_deleted, handleChatDeleted);
     chatSDK.addEventListener(chatSDK.EVENTS.chats_updated, handleChatUpdated);
+    chatSDK.addEventListener(chatSDK.EVENTS.chats_action, handleChatAction);
     chatSDK.addEventListener(chatSDK.EVENTS.new_message, handleNewMessage);
 
     const handleFocus = () => {
@@ -186,6 +209,10 @@ export const useChatGlobalListener = () => {
       chatSDK.removeEventListener(
         chatSDK.EVENTS.chats_updated,
         handleChatUpdated,
+      );
+      chatSDK.removeEventListener(
+        chatSDK.EVENTS.chats_action,
+        handleChatAction,
       );
       chatSDK.removeEventListener(chatSDK.EVENTS.new_message, handleNewMessage);
     };

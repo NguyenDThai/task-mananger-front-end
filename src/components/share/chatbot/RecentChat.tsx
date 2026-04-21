@@ -1,7 +1,10 @@
 import { Ellipsis, Trash2, Edit3, UserRoundPlus } from 'lucide-react';
 import React, { useState } from 'react';
 import { useSelector } from 'react-redux';
-import { selectRecentChats } from '../../../redux/slides/chat/chatSlide';
+import {
+  selectRecentChats,
+  selectCurrentUser,
+} from '../../../redux/slides/chat/chatSlide';
 import type { Chat, User } from '../../../redux/slides/chat/chatSlide';
 
 interface RecentChatProps {
@@ -20,6 +23,7 @@ const RecentChat = ({
   onAddMember,
 }: RecentChatProps) => {
   const recentChats = useSelector(selectRecentChats);
+  const currentMember = useSelector(selectCurrentUser);
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
 
   const toggleMenu = (e: React.MouseEvent, chatId: number) => {
@@ -43,6 +47,12 @@ const RecentChat = ({
             displayAvatar = partner ? partner.avatar : null;
           }
 
+          // Lấy số tin nhắn chưa đọc của người dùng hiện tại
+          const unreadCount =
+            chat.new && currentMember?.id
+              ? (chat.new as Record<string, number>)[currentMember.id] || 0
+              : 0;
+
           return (
             <div
               key={chat.id}
@@ -64,6 +74,11 @@ const RecentChat = ({
                   </div>
                 )}
                 <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                {unreadCount > 0 && (
+                  <div className="absolute -top-1 -left-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full text-[10px] font-bold shadow-sm border border-white animate-in zoom-in">
+                    {unreadCount > 99 ? '99+' : unreadCount}
+                  </div>
+                )}
               </div>
 
               <div className="flex-1 min-w-0">

@@ -13,6 +13,7 @@ import {
   upsertMessage,
   setChatActivated,
   selectCurrentUser,
+  updateChatUnread,
 } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 import { chatSDK } from '../../../services/chat.service';
@@ -306,6 +307,26 @@ const ChatBot = () => {
         ? prev.filter((m) => m.id !== member.id)
         : [...prev, member],
     );
+  };
+
+  const handleSelectChat = async (chat: Chat) => {
+    setCurrentChat(chat);
+    try {
+      await chatSDK.readChat(chat.id);
+      if (currentMember?.id) {
+        dispatch(
+          updateChatUnread({
+            chatId: chat.id,
+            unreadData: {
+              ...((chat.new as any) || {}),
+              [currentMember.id]: 0,
+            },
+          }),
+        );
+      }
+    } catch (error) {
+      console.error('Lỗi khi đánh dấu đã đọc:', error);
+    }
   };
 
   // Tạo nhóm chat
@@ -656,7 +677,7 @@ const ChatBot = () => {
                     <div key={m.id}>
                       <ChatbotSearchList
                         m={m}
-                        setCurrentChat={setCurrentChat}
+                        setCurrentChat={handleSelectChat}
                         setSearchQuery={setSearchQuery}
                         isGroupMode={isGroupMode}
                         isSelected={selectedMembers.some(
@@ -673,7 +694,7 @@ const ChatBot = () => {
                     Trò chuyện gần đây
                   </p>
                   <RecentChat
-                    setCurrentChat={setCurrentChat}
+                    setCurrentChat={handleSelectChat}
                     user={user}
                     onRemoveChat={handleRemoveChat}
                     onUpdateGroupName={handleUpdateGroupName}
