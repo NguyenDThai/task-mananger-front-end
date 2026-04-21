@@ -44,6 +44,8 @@ interface Position {
 
 const STORAGE_KEY = 'live-chat-widget-position';
 const BUTTON_SIZE = 48; // w-12 h-12
+const WIDGET_WIDTH = 360; // w-90 = 360px
+const WIDGET_HEIGHT = 400; // h-[400px]
 
 export const LiveChatWidget = ({
   chats = [],
@@ -65,9 +67,10 @@ export const LiveChatWidget = ({
   const [totalUnread, setTotalUnread] = useState(unreadCount);
   const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState<Position>({ x: 0, y: 0 });
   const widgetRef = useRef<HTMLDivElement>(null);
+  const innerWidgetRef = useRef<HTMLDivElement>(null);
   const positionOnDragStart = useRef<Position>({ x: 0, y: 0 });
+  const currentDragOffset = useRef<Position>({ x: 0, y: 0 });
 
   // (Set default position)
   const setDefaultPosition = useCallback(() => {
@@ -156,10 +159,10 @@ export const LiveChatWidget = ({
     if (isButton) {
       positionOnDragStart.current = { ...position };
       setIsDragging(true);
-      setDragStart({
+      currentDragOffset.current = {
         x: e.clientX - position.x,
         y: e.clientY - position.y,
-      });
+      };
     }
   };
 
@@ -168,8 +171,8 @@ export const LiveChatWidget = ({
     if (!isDragging) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      let newX = e.clientX - dragStart.x;
-      let newY = e.clientY - dragStart.y;
+      let newX = e.clientX - currentDragOffset.current.x;
+      let newY = e.clientY - currentDragOffset.current.y;
 
       // (Set boundary limits)
       const maxX = window.innerWidth - BUTTON_SIZE;
@@ -178,16 +181,52 @@ export const LiveChatWidget = ({
       newX = Math.max(0, Math.min(newX, maxX));
       newY = Math.max(0, Math.min(newY, maxY));
 
-      setPosition({ x: newX, y: newY });
+      // Update DOM directly to avoid re-render during drag
+      if (widgetRef.current) {
+        widgetRef.current.style.left = `${newX}px`;
+        widgetRef.current.style.top = `${newY}px`;
+      }
+
+      // (Real-time Flip Direction - no setState)
+      if (innerWidgetRef.current) {
+        const isNearLeft = newX < WIDGET_WIDTH;
+        const isNearTop = newY < WIDGET_HEIGHT;
+
+        // Update horizontal positioning
+        if (isNearLeft) {
+          innerWidgetRef.current.classList.add('left-full');
+          innerWidgetRef.current.classList.add('ml-3');
+          innerWidgetRef.current.classList.remove('right-full');
+          innerWidgetRef.current.classList.remove('mr-3');
+        } else {
+          innerWidgetRef.current.classList.add('right-full');
+          innerWidgetRef.current.classList.add('mr-3');
+          innerWidgetRef.current.classList.remove('left-full');
+          innerWidgetRef.current.classList.remove('ml-3');
+        }
+
+        // Update vertical positioning
+        if (isNearTop) {
+          innerWidgetRef.current.classList.add('top-0');
+          innerWidgetRef.current.classList.remove('bottom-0');
+        } else {
+          innerWidgetRef.current.classList.add('bottom-0');
+          innerWidgetRef.current.classList.remove('top-0');
+        }
+      }
     };
 
     const handleMouseUp = () => {
       setIsDragging(false);
-      // (Save final position)
-      setPosition((prevPosition) => {
-        savePosition(prevPosition);
-        return prevPosition;
-      });
+      // Get final position from DOM and save to state + localStorage
+      if (widgetRef.current) {
+        const finalX = parseInt(widgetRef.current.style.left, 10);
+        const finalY = parseInt(widgetRef.current.style.top, 10);
+        const finalPosition = { x: finalX, y: finalY };
+
+        setPosition(finalPosition);
+        savePosition(finalPosition);
+      }
     };
 
     document.addEventListener('mousemove', handleMouseMove);
@@ -197,7 +236,7 @@ export const LiveChatWidget = ({
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDragging, dragStart, widgetView]);
+  }, [isDragging]);
 
   // Get chat name from members or use default
   const getActiveChatName = () => {
@@ -220,6 +259,39 @@ export const LiveChatWidget = ({
     return otherMember?.avatar;
   };
 
+  // (Viewport-Aware Positioning)
+  const isNearLeft = position.x < WIDGET_WIDTH;
+  const isNearTop = position.y < WIDGET_HEIGHT;
+
+  // Generate dynamic positioning classes
+  const expandedWidgetClasses = `absolute ${isNearLeft ? 'left-full' : 'right-full'} ${isNearTop ? 'top-0' : 'bottom-0'} ml-3 mr-3 w-90 h-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 transition-all duration-200`;
+
+  // (Sync innerWidgetRef classes when widgetView changes - initial render)
+  useEffect(() => {
+    if (innerWidgetRef.current && widgetView !== 'collapsed') {
+      const localIsNearLeft = position.x < WIDGET_WIDTH;
+      const localIsNearTop = position.y < WIDGET_HEIGHT;
+
+      // Apply horizontal classes
+      if (localIsNearLeft) {
+        innerWidgetRef.current.classList.add('left-full', 'ml-3');
+        innerWidgetRef.current.classList.remove('right-full', 'mr-3');
+      } else {
+        innerWidgetRef.current.classList.add('right-full', 'mr-3');
+        innerWidgetRef.current.classList.remove('left-full', 'ml-3');
+      }
+
+      // Apply vertical classes
+      if (localIsNearTop) {
+        innerWidgetRef.current.classList.add('top-0');
+        innerWidgetRef.current.classList.remove('bottom-0');
+      } else {
+        innerWidgetRef.current.classList.add('bottom-0');
+        innerWidgetRef.current.classList.remove('top-0');
+      }
+    }
+  }, [widgetView, position]);
+
   return (
     <div
       ref={widgetRef}
@@ -236,7 +308,8 @@ export const LiveChatWidget = ({
         widgetView === 'chat' ||
         widgetView === 'new-chat') && (
         <div
-          className="absolute right-full bottom-0 mr-3 w-90 h-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200"
+          ref={innerWidgetRef}
+          className={expandedWidgetClasses}
           style={{ pointerEvents: 'auto' }}
         >
           {/* Widget Header */}
@@ -286,7 +359,6 @@ export const LiveChatWidget = ({
                 messages={messages}
                 isLoading={isLoading}
                 isLoadingOldMessages={isLoadingOldMessages}
-                currentUserId={currentUser?.id}
                 onSendMessage={handleSendMessage}
                 onMessageAction={onMessageAction}
                 onLoadOldMessages={onLoadOldMessages}
