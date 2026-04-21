@@ -10,6 +10,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
+import { useState } from 'react';
 import { useSelector } from 'react-redux';
 import { currentMessages } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
@@ -42,7 +43,29 @@ const ScreenChat = ({
   replyMessage,
   setReplyMessage,
 }: ScreenChatProps) => {
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const messages = useSelector(currentMessages);
+
+  const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const newFiles = Array.from(e.target.files);
+      setSelectedFiles((prev) => [...prev, ...newFiles]);
+      e.target.value = ''; // Reset input to allow re-selecting same file
+    }
+  };
+
+  const removeFile = (index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const onSend = () => {
+    if (!newMessage.trim() && selectedFiles.length === 0 && !replyMessage)
+      return;
+    // Chuyển mảng File[] sang FileList (nếu cần) hoặc truyền trực tiếp nếu SDK hỗ trợ
+    handleSendMessage(newMessage, selectedFiles as any);
+    setSelectedFiles([]);
+    setNewMessage('');
+  };
 
   return (
     <div
@@ -199,16 +222,91 @@ const ScreenChat = ({
                                     {(originalMsg.member as any)?.name ||
                                       'Người dùng'}
                                   </span>
-                                  <span className="opacity-80">
-                                    {originalMsg.content ||
-                                      (originalMsg.files &&
-                                      (originalMsg.files as any).length
-                                        ? 'Một tệp tin'
-                                        : '...')}
-                                  </span>
+                                  <div className="flex items-center gap-2">
+                                    {originalMsg.files &&
+                                      (originalMsg.files as any[]).length > 0 &&
+                                      [
+                                        'jpg',
+                                        'jpeg',
+                                        'png',
+                                        'gif',
+                                        'webp',
+                                      ].includes(
+                                        (
+                                          originalMsg.files as any[]
+                                        )[0].ext?.toLowerCase(),
+                                      ) && (
+                                        <img
+                                          src={
+                                            (originalMsg.files as any[])[0].link
+                                          }
+                                          alt=""
+                                          className="w-8 h-8 rounded-md object-cover border border-white/20"
+                                        />
+                                      )}
+                                    <span className="opacity-80 truncate">
+                                      {originalMsg.content ||
+                                        ((originalMsg.files as any[]).length > 0
+                                          ? 'Một tệp tin'
+                                          : '...')}
+                                    </span>
+                                  </div>
                                 </>
                               );
                             })()}
+                          </div>
+                        )}
+                        {/* HIỂN THỊ HÌNH ẢNH (NẾU CÓ) */}
+                        {item.files && (item.files as any[]).length > 0 && (
+                          <div
+                            className={`flex flex-col gap-2 ${item.content ? 'mb-2' : ''}`}
+                          >
+                            {(item.files as any[]).map((file: any) => {
+                              const isImg = [
+                                'jpg',
+                                'jpeg',
+                                'png',
+                                'gif',
+                                'webp',
+                              ].includes(file.ext?.toLowerCase());
+                              if (isImg) {
+                                return (
+                                  <div
+                                    key={file.id}
+                                    className="relative group/img overflow-hidden rounded-xl border border-black/5"
+                                  >
+                                    <img
+                                      src={file.link}
+                                      alt={file.name}
+                                      className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
+                                      onClick={() =>
+                                        window.open(file.link, '_blank')
+                                      }
+                                    />
+                                  </div>
+                                );
+                              }
+                              return (
+                                <div
+                                  key={file.id}
+                                  className={`flex items-center gap-2 p-2 rounded-lg border ${
+                                    isMine
+                                      ? 'bg-white/10 border-white/20'
+                                      : 'bg-slate-50 border-slate-200'
+                                  }`}
+                                >
+                                  <Paperclip size={16} />
+                                  <a
+                                    href={file.link}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="text-xs hover:underline truncate max-w-[150px]"
+                                  >
+                                    {file.name}
+                                  </a>
+                                </div>
+                              );
+                            })}
                           </div>
                         )}
                         {item.content}
@@ -277,7 +375,7 @@ const ScreenChat = ({
             </span>
             <span className="text-xs text-slate-500 truncate max-w-[250px]">
               {replyMessage.content ||
-                (replyMessage.files && replyMessage.files.length > 0
+                (replyMessage.files && (replyMessage.files as any[]).length > 0
                   ? 'Một tệp tin'
                   : '...')}
             </span>
@@ -291,6 +389,44 @@ const ScreenChat = ({
         </div>
       )}
 
+      {/* THANH PREVIEW FILE TRƯỚC KHI GỬI */}
+      {selectedFiles.length > 0 && (
+        <div className="px-4 py-3 bg-white border-t border-slate-100 flex gap-3 overflow-x-auto scrollbar-hide animate-in slide-in-from-bottom-2">
+          {selectedFiles.map((file, index) => {
+            const isImg = file.type.startsWith('image/');
+            const previewUrl = isImg ? URL.createObjectURL(file) : null;
+
+            return (
+              <div
+                key={`${file.name}-${index}`}
+                className="relative shrink-0 w-20 h-20 rounded-xl border border-slate-200 bg-slate-50 group"
+              >
+                {isImg ? (
+                  <img
+                    src={previewUrl!}
+                    alt="preview"
+                    className="w-full h-full object-cover rounded-xl"
+                  />
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center p-2 text-center">
+                    <Paperclip size={20} className="text-slate-400 mb-1" />
+                    <span className="text-[8px] text-slate-500 line-clamp-2">
+                      {file.name}
+                    </span>
+                  </div>
+                )}
+                <button
+                  onClick={() => removeFile(index)}
+                  className="absolute -top-2 -right-2 w-6 h-6 bg-slate-800 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-red-500 transition-colors"
+                >
+                  <X size={12} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="p-4 bg-white flex gap-2">
         {/* Input file ẩn */}
         <input
@@ -298,12 +434,7 @@ const ScreenChat = ({
           id="chat-file-input"
           multiple
           style={{ display: 'none' }}
-          onChange={async (e) => {
-            if (e.target.files && e.target.files.length > 0) {
-              await handleSendMessage(newMessage, e.target.files);
-              e.target.value = ''; // Reset input
-            }
-          }}
+          onChange={onFileSelect}
         />
         <button
           onClick={() => document.getElementById('chat-file-input')?.click()}
@@ -318,14 +449,16 @@ const ScreenChat = ({
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') handleSendMessage();
+            if (e.key === 'Enter') onSend();
           }}
           placeholder="Nhập tin nhắn..."
           className="flex-1 bg-slate-100 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
         />
         <button
-          onClick={() => handleSendMessage()}
-          disabled={!newMessage.trim() && !replyMessage}
+          onClick={onSend}
+          disabled={
+            !newMessage.trim() && selectedFiles.length === 0 && !replyMessage
+          }
           className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition-colors shadow-lg shadow-indigo-100 disabled:bg-slate-200 disabled:shadow-none"
         >
           <Send size={20} />
