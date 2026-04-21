@@ -126,6 +126,9 @@ const chatSlice = createSlice({
 
       if (chat.message.id === message_id) {
         chat.message.content = content;
+        chat.message.files = [];
+        chat.message.revoked = type === 'revoke';
+        chat.message.removed = type === 'remove';
       }
 
       if (!state.currentChat || chat_id !== state.currentChat?.id) return;
@@ -134,6 +137,9 @@ const chatSlice = createSlice({
       );
       if (message) {
         message.content = content;
+        message.files = [];
+        message.revoked = type === 'revoke';
+        message.removed = type === 'remove';
       }
     },
     setCurrentChatMembers: (state, action) => {

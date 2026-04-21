@@ -48,7 +48,7 @@ export const ChatWindow = React.memo(
       type: null,
     });
     const [isEmojiPickerOpen, setIsEmojiPickerOpen] = React.useState(false);
-    const [selectedImages, setSelectedImages] = React.useState<File[]>([]);
+    const [selectedFiles, setSelectedFiles] = React.useState<File[]>([]);
     const [replyingTo, setReplyingTo] = React.useState<IMessageItem | null>(
       null,
     );
@@ -85,7 +85,10 @@ export const ChatWindow = React.memo(
     ];
 
     const scrollToBottom = () => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      messagesEndRef.current?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'end',
+      });
     };
 
     const scrollToMessage = (messageId: number) => {
@@ -199,15 +202,15 @@ export const ChatWindow = React.memo(
     }, [openMenuId, isEmojiPickerOpen]);
 
     const handleSend = () => {
-      if (messageInput.trim() || selectedImages.length > 0) {
+      if (messageInput.trim() || selectedFiles.length > 0) {
         // Đảm bảo content không rỗng và files là mảng
         onSendMessage(
           messageInput.trim() || ' ',
-          selectedImages,
+          selectedFiles,
           replyingTo?.id,
         );
         setMessageInput('');
-        setSelectedImages([]);
+        setSelectedFiles([]);
         setReplyingTo(null);
       }
     };
@@ -217,13 +220,11 @@ export const ChatWindow = React.memo(
       // Không đóng picker để user có thể thêm nhiều emoji
     };
 
-    const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
       if (files) {
-        const imageFiles = Array.from(files).filter((file) =>
-          file.type.startsWith('image/'),
-        );
-        setSelectedImages((prev) => [...prev, ...imageFiles]);
+        const selectedFileList = Array.from(files);
+        setSelectedFiles((prev) => [...prev, ...selectedFileList]);
       }
       // Reset input để có thể select cùng file lần nữa
       if (fileInputRef.current) {
@@ -231,8 +232,8 @@ export const ChatWindow = React.memo(
       }
     };
 
-    const handleRemoveImage = (index: number) => {
-      setSelectedImages((prev) => prev.filter((_, i) => i !== index));
+    const handleRemoveFile = (index: number) => {
+      setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
     };
 
     const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -386,35 +387,76 @@ export const ChatWindow = React.memo(
               </button>
             </div>
           )}
-          {/* Selected Images Preview */}
-          {selectedImages.length > 0 && (
+          {/* Selected Files Preview */}
+          {selectedFiles.length > 0 && (
             <div className="mb-2 flex flex-wrap gap-2">
-              {selectedImages.map((file, index) => (
-                <div key={`${file.name}-${index}`} className="relative group">
-                  <img
-                    src={URL.createObjectURL(file)}
-                    alt={`Preview ${index}`}
-                    className="h-16 w-16 rounded object-cover"
-                  />
-                  <button
-                    onClick={() => handleRemoveImage(index)}
-                    className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
-                    title="Xóa ảnh"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
+              {selectedFiles.map((file: File, index: number) => {
+                const isImage = file.type.startsWith('image/');
+                const fileSize = (file.size / 1024).toFixed(1);
+
+                return (
+                  <div key={`${file.name}-${index}`} className="relative group">
+                    {isImage ? (
+                      <div className="relative">
+                        <img
+                          src={URL.createObjectURL(file)}
+                          alt={`Preview ${index}`}
+                          className="h-16 w-16 rounded object-cover"
+                        />
+                        <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs p-1 rounded-b">
+                          {fileSize} KB
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="h-16 w-16 rounded bg-gray-100 flex flex-col items-center justify-center border border-gray-200 group-hover:border-gray-300 transition-colors">
+                        <svg
+                          className="w-6 h-6 text-gray-400 mb-0.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                          />
+                        </svg>
+                        <p className="text-xs font-medium text-gray-600 truncate w-full px-1 text-center">
+                          {file.name.split('.').pop()?.toUpperCase() || 'FILE'}
+                        </p>
+                      </div>
+                    )}
+                    {/* File Info Below Preview */}
+                    <div className="mt-1 max-w-[80px]">
+                      <p
+                        className="text-xs font-medium text-gray-900 truncate"
+                        title={file.name}
+                      >
+                        {file.name}
+                      </p>
+                      <p className="text-xs text-gray-500">{fileSize} KB</p>
+                    </div>
+                    <button
+                      onClick={() => handleRemoveFile(index)}
+                      className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1 opacity-100 transition-opacity"
+                      title="Xóa file"
                     >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
-                </div>
-              ))}
+                      <svg
+                        className="w-4 h-4"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
 
@@ -429,19 +471,18 @@ export const ChatWindow = React.memo(
                 className="w-full px-3 py-2 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 resize-none transition-all"
               />
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                {/* Image Upload Button */}
+                {/* File Upload Button */}
                 <input
                   ref={fileInputRef}
                   type="file"
                   multiple
-                  accept="image/*"
-                  onChange={handleImageSelect}
+                  onChange={handleFileSelect}
                   className="hidden"
                 />
                 <button
                   onClick={() => fileInputRef.current?.click()}
                   className="p-1 pb-2 text-gray-400 hover:text-gray-600 transition-colors"
-                  title="Thêm ảnh"
+                  title="Thêm file"
                 >
                   <svg
                     className="w-5 h-5"
@@ -498,7 +539,7 @@ export const ChatWindow = React.memo(
             <button
               onClick={handleSend}
               disabled={
-                (!messageInput.trim() && selectedImages.length === 0) ||
+                (!messageInput.trim() && selectedFiles.length === 0) ||
                 isLoading
               }
               className="px-4 py-2 bg-gray-900 text-white rounded font-medium text-sm hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"

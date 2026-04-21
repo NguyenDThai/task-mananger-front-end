@@ -1,5 +1,10 @@
 import { memo, useMemo } from 'react';
-import type { IMessageItem, ISChatUser, TMessageAction } from '../../types';
+import type {
+  IMessageItem,
+  ISChatUser,
+  TMessageAction,
+  IFileItem,
+} from '../../types';
 import type { RootState } from '../../redux/store';
 import { useSelector } from 'react-redux';
 import {
@@ -10,6 +15,13 @@ import {
   Smile,
   ThumbsUp,
   Trash2,
+  Download,
+  File,
+  FileText,
+  Music,
+  Video,
+  Archive,
+  Code,
 } from 'lucide-react';
 
 const formatTime = (isoString: string) => {
@@ -32,6 +44,263 @@ const formatTime = (isoString: string) => {
     });
   }
 };
+
+// Helper function to detect file type and return icon + color info
+interface FileTypeInfo {
+  icon: React.ReactNode;
+  colorClass: string;
+  type: 'image' | 'video' | 'audio' | 'document' | 'code' | 'archive' | 'other';
+}
+
+const getFileTypeInfo = (fileExt: string): FileTypeInfo => {
+  const ext = fileExt.toLowerCase().split('/')[1] || fileExt.toLowerCase();
+
+  // Image types
+  if (
+    ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg+xml', 'bmp', 'ico'].includes(ext)
+  ) {
+    return { icon: null, colorClass: '', type: 'image' };
+  }
+
+  // Video types
+  if (
+    [
+      'mp4',
+      'webm',
+      'avi',
+      'mov',
+      'mkv',
+      'flv',
+      'wmv',
+      'mpeg',
+      '3gpp',
+      'quicktime',
+    ].includes(ext)
+  ) {
+    return {
+      icon: <Video size={18} className="flex-shrink-0" />,
+      colorClass: 'bg-purple-800 border-purple-600 hover:bg-purple-700',
+      type: 'video',
+    };
+  }
+
+  // Audio types
+  if (
+    ['mp3', 'wav', 'ogg', 'aac', 'flac', 'm4a', 'wma', 'opus', 'mpeg'].includes(
+      ext,
+    )
+  ) {
+    return {
+      icon: <Music size={18} className="flex-shrink-0" />,
+      colorClass: 'bg-green-800 border-green-600 hover:bg-green-700',
+      type: 'audio',
+    };
+  }
+
+  // Archive types
+  if (
+    ['zip', 'rar', '7z', 'tar', 'gz', 'bz2', 'xz', 'iso', 'exe'].includes(ext)
+  ) {
+    return {
+      icon: <Archive size={18} className="flex-shrink-0" />,
+      colorClass: 'bg-orange-800 border-orange-600 hover:bg-orange-700',
+      type: 'archive',
+    };
+  }
+
+  // Code types
+  if (
+    [
+      'js',
+      'ts',
+      'tsx',
+      'jsx',
+      'py',
+      'java',
+      'cpp',
+      'c',
+      'cs',
+      'php',
+      'rb',
+      'go',
+      'rs',
+      'sql',
+      'html',
+      'css',
+      'json',
+      'xml',
+      'yaml',
+      'yml',
+      'gradle',
+      'maven',
+    ].includes(ext)
+  ) {
+    return {
+      icon: <Code size={18} className="flex-shrink-0" />,
+      colorClass: 'bg-slate-800 border-slate-600 hover:bg-slate-700',
+      type: 'code',
+    };
+  }
+
+  // Document types (PDF, Word, Excel, etc.)
+  if (
+    [
+      'pdf',
+      'doc',
+      'docx',
+      'xls',
+      'xlsx',
+      'ppt',
+      'pptx',
+      'txt',
+      'rtf',
+      'odt',
+      'ods',
+      'odp',
+    ].includes(ext)
+  ) {
+    return {
+      icon: <FileText size={18} className="flex-shrink-0" />,
+      colorClass: 'bg-red-800 border-red-600 hover:bg-red-700',
+      type: 'document',
+    };
+  }
+
+  // Default
+  return {
+    icon: <File size={18} className="flex-shrink-0" />,
+    colorClass: 'bg-gray-800 border-gray-600 hover:bg-gray-700',
+    type: 'other',
+  };
+};
+
+// Helper function to get sort priority for files
+// Priority: 1 = Media (Images/Videos), 2 = Common Documents, 3 = Others/Archives
+const getFileSortPriority = (fileExt: string): number => {
+  const ext = fileExt.toLowerCase().split('/')[1] || fileExt.toLowerCase();
+
+  // Media (Images/Videos) - Priority 1
+  const mediaExts = [
+    'jpg',
+    'jpeg',
+    'png',
+    'gif',
+    'webp',
+    'svg+xml',
+    'bmp',
+    'ico',
+    'mp4',
+    'webm',
+    'avi',
+    'mov',
+    'mkv',
+    'flv',
+    'wmv',
+    'mpeg',
+    '3gpp',
+    'quicktime',
+  ];
+  if (mediaExts.includes(ext)) {
+    return 1;
+  }
+
+  // Common Documents - Priority 2
+  const commonDocExts = ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx'];
+  if (commonDocExts.includes(ext)) {
+    return 2;
+  }
+
+  // Others/Archives - Priority 3
+  return 3;
+};
+
+// Helper function to sort files
+const sortFiles = (files: IFileItem[]): IFileItem[] => {
+  return [...files].sort((a, b) => {
+    const priorityA = getFileSortPriority(a.ext);
+    const priorityB = getFileSortPriority(b.ext);
+
+    if (priorityA !== priorityB) {
+      return priorityA - priorityB;
+    }
+
+    // If same priority, sort by name
+    return a.name.localeCompare(b.name);
+  });
+};
+
+// Sub-component để render file attachments
+const MessageFiles = memo(
+  ({
+    files,
+    isCurrentUser,
+  }: {
+    files: IFileItem[];
+    isCurrentUser: boolean;
+  }) => {
+    if (!files?.length) return null;
+
+    const sortedFiles = sortFiles(files);
+
+    return (
+      <div className="flex flex-wrap gap-2 mt-2">
+        {sortedFiles.map((file) => {
+          const fileTypeInfo = getFileTypeInfo(file.ext);
+
+          // Image - render as thumbnail
+          if (fileTypeInfo.type === 'image') {
+            return (
+              <a
+                key={file.id}
+                href={file.link}
+                download={file.name}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <img
+                  src={file.link}
+                  alt={file.name}
+                  className="max-w-xs max-h-64 rounded object-cover hover:opacity-80 transition-opacity cursor-pointer"
+                />
+              </a>
+            );
+          }
+
+          // Video, Audio, Document, Code, Archive, Other - render as file card
+          return (
+            <a
+              key={file.id}
+              href={file.link}
+              download={file.name}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`flex items-center gap-2 px-3 py-2 rounded border transition-all hover:scale-105 ${
+                isCurrentUser
+                  ? `${fileTypeInfo.colorClass}`
+                  : 'bg-white/20 border-gray-300 hover:bg-white/30'
+              } text-white`}
+            >
+              {fileTypeInfo.icon || (
+                <File size={18} className="flex-shrink-0" />
+              )}
+              <div className="flex flex-col gap-0.5 min-w-0">
+                <p className="text-xs font-medium truncate">{file.name}</p>
+                {file.size && (
+                  <p className="text-xs opacity-70">
+                    {(file.size / 1024).toFixed(1)} KB
+                  </p>
+                )}
+              </div>
+              <Download size={16} className="flex-shrink-0 opacity-60" />
+            </a>
+          );
+        })}
+      </div>
+    );
+  },
+);
+
+MessageFiles.displayName = 'MessageFiles';
 
 // Helper function to get member avatar and name
 const getSenderInfo = (message: IMessageItem) => {
@@ -75,7 +344,56 @@ const MessageItem = memo(
   }) => {
     const senderInfo = getSenderInfo(message);
     const isHovered = hoveredId === message.id;
-    const showReactions = isHovered && !message.revoke && !message.remove;
+    const showReactions = isHovered && !message.revoked && !message.removed;
+
+    // Handle remove state - return null for entire message
+    if (message.removed) {
+      return null;
+    }
+
+    // Handle revoke state - hide files, show only revoke text
+    if (message.revoked) {
+      return (
+        <div
+          key={message.id}
+          id={`message-${message.id}`}
+          className={`flex gap-2 justify-start items-center relative ${
+            isCurrentUser ? 'flex-row-reverse' : ''
+          } transition-colors duration-300`}
+          onMouseEnter={() => onHover(message.id)}
+          onMouseLeave={onHoverLeave}
+        >
+          {senderInfo.avatar && shouldShowAvatar ? (
+            <img
+              src={senderInfo.avatar}
+              alt={senderInfo.name}
+              className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5 self-end"
+            />
+          ) : (
+            !isCurrentUser && <div className="w-7 h-7"></div>
+          )}
+
+          <div className="flex flex-col gap-1">
+            <div
+              className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded relative group ${
+                isCurrentUser
+                  ? 'bg-blue-900 text-white'
+                  : 'bg-blue-100 text-gray-900'
+              }`}
+            >
+              {!isCurrentUser && (
+                <p className="text-xs font-medium mb-0.5 opacity-70">
+                  {senderInfo.name}
+                </p>
+              )}
+              <p className="text-xs italic opacity-50">
+                Tin nhắn đã bị thu hồi
+              </p>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div
@@ -126,17 +444,17 @@ const MessageItem = memo(
                 <p className="opacity-70 truncate">{message.reply.content}</p>
               </div>
             )}
-            <p className="text-sm break-words">{message.content}</p>
-            {message.revoke && (
-              <p className="text-xs italic opacity-50 mt-1">
-                Tin nhắn đã được thu hồi
-              </p>
+            {/* Content text - only show if exists */}
+            {message.content && (
+              <p className="text-sm break-words">{message.content}</p>
             )}
-            {message.remove && (
-              <p className="text-xs italic opacity-50 mt-1">
-                Tin nhắn đã bị xóa
-              </p>
-            )}
+            {/* Files section - show if exists and not revoked */}
+            {message.files?.length ? (
+              <MessageFiles
+                files={message.files}
+                isCurrentUser={isCurrentUser}
+              />
+            ) : null}
             <div
               className={`flex items-end gap-2 ${isCurrentUser ? 'flex-row-reverse justify-end' : 'flex-row justify-start'}`}
             >

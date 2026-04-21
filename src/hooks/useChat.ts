@@ -1,7 +1,7 @@
 import { useDispatch, useSelector } from 'react-redux';
 import type { RootState } from '../redux/store';
 import { useEffect } from 'react';
-import { chat } from '../services/chatService';
+import { chat as chatService } from '../services/chatService';
 import {
   addNewMessage,
   addChat,
@@ -14,12 +14,14 @@ import type { ISChatEventPayloads, User } from '../types';
 
 export const useChat = () => {
   const dispatch = useDispatch();
-  const { currentUser, chats } = useSelector((state: RootState) => state.chat);
+  const { currentUser, chats, currentChat } = useSelector(
+    (state: RootState) => state.chat,
+  );
 
   const setChatAuth = async (user: User) => {
     if (!user._id || !user.name) return;
     try {
-      const currentUserData = await chat.setAuth({
+      const currentUserData = await chatService.setAuth({
         code: user._id,
         name: user.name,
         avatar: user.avatar,
@@ -33,12 +35,15 @@ export const useChat = () => {
   };
 
   useEffect(() => {
-    const handleNewMessage = (
+    async function handleNewMessage(
       payload: ISChatEventPayloads['chats.message'],
-    ) => {
+    ) {
       const { chat, message, type, chat_id, message_id } = payload;
       console.warn('Chat new message event:', payload);
       if (type === 'add') {
+        if (currentChat && chat.id === currentChat.id) {
+          await chatService.readChat(chat.id);
+        }
         dispatch(
           addNewMessage({
             chat,
@@ -58,11 +63,12 @@ export const useChat = () => {
         );
         return;
       }
-    };
+    }
 
-    chat.addEventListener('chats.message', handleNewMessage);
-    return () => chat.removeEventListener('chats.message', handleNewMessage);
-  }, [currentUser?.id, dispatch]);
+    chatService.addEventListener('chats.message', handleNewMessage);
+    return () =>
+      chatService.removeEventListener('chats.message', handleNewMessage);
+  }, [currentUser?.id, currentChat?.id, dispatch]);
 
   useEffect(() => {
     const handleNewChat = (payload: ISChatEventPayloads['chats.created']) => {
@@ -71,8 +77,9 @@ export const useChat = () => {
       dispatch(addChat(chat));
     };
 
-    chat.addEventListener('chats.created', handleNewChat);
-    return () => chat.removeEventListener('chats.created', handleNewChat);
+    chatService.addEventListener('chats.created', handleNewChat);
+    return () =>
+      chatService.removeEventListener('chats.created', handleNewChat);
   }, [currentUser?.id, dispatch]);
 
   useEffect(() => {
@@ -84,8 +91,9 @@ export const useChat = () => {
       dispatch(updateChat(chat));
     };
 
-    chat.addEventListener('chats.updated', handleUpdateChat);
-    return () => chat.removeEventListener('chats.updated', handleUpdateChat);
+    chatService.addEventListener('chats.updated', handleUpdateChat);
+    return () =>
+      chatService.removeEventListener('chats.updated', handleUpdateChat);
   }, [currentUser?.id, dispatch]);
 
   useEffect(() => {
@@ -102,8 +110,9 @@ export const useChat = () => {
       dispatch(removeChat(chat_id));
     };
 
-    chat.addEventListener('chats.deleted', handleDeleteChat);
-    return () => chat.removeEventListener('chats.deleted', handleDeleteChat);
+    chatService.addEventListener('chats.deleted', handleDeleteChat);
+    return () =>
+      chatService.removeEventListener('chats.deleted', handleDeleteChat);
   }, [currentUser?.id, chats, dispatch]);
 
   useEffect(() => {
@@ -112,8 +121,9 @@ export const useChat = () => {
       console.warn('Chat member event:', payload);
     };
 
-    chat.addEventListener('chats.member', handleMemberChat);
-    return () => chat.removeEventListener('chats.member', handleMemberChat);
+    chatService.addEventListener('chats.member', handleMemberChat);
+    return () =>
+      chatService.removeEventListener('chats.member', handleMemberChat);
   }, [currentUser?.id, dispatch]);
 
   useEffect(() => {
@@ -125,8 +135,9 @@ export const useChat = () => {
       }
     };
 
-    chat.addEventListener('chats.action', handleActionChat);
-    return () => chat.removeEventListener('chats.action', handleActionChat);
+    chatService.addEventListener('chats.action', handleActionChat);
+    return () =>
+      chatService.removeEventListener('chats.action', handleActionChat);
   }, [currentUser?.id, dispatch]);
 
   // useEffect(() => {
@@ -135,22 +146,22 @@ export const useChat = () => {
   //     console.warn('New message event:', payload);
   //   };
 
-  //   chat.addEventListener('new_message', handleNewMessage);
-  //   return () => chat.removeEventListener('new_message', handleNewMessage);
+  //   chatService.addEventListener('new_message', handleNewMessage);
+  //   return () => chatService.removeEventListener('new_message', handleNewMessage);
   // }, [currentUser?.id, dispatch]);
 
-  useEffect(() => {
-    const handleProjectsMember = (
-      payload: ISChatEventPayloads['projects.member'],
-    ) => {
-      // const { chat_id, user_id, message_id, action } = payload;
-      console.warn('Projects member event:', payload);
-    };
+  // useEffect(() => {
+  //   const handleProjectsMember = (
+  //     payload: ISChatEventPayloads['projects.member'],
+  //   ) => {
+  //     // const { chat_id, user_id, message_id, action } = payload;
+  //     console.warn('Projects member event:', payload);
+  //   };
 
-    chat.addEventListener('projects.member', handleProjectsMember);
-    return () =>
-      chat.removeEventListener('projects.member', handleProjectsMember);
-  }, [currentUser?.id, dispatch]);
+  //   chatService.addEventListener('projects.member', handleProjectsMember);
+  //   return () =>
+  //     chatService.removeEventListener('projects.member', handleProjectsMember);
+  // }, [currentUser?.id, dispatch]);
 
   return {
     setChatAuth,
