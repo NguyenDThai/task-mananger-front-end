@@ -100,7 +100,7 @@ export const NewChatWindow = memo(
     return (
       <div className="h-full flex flex-col bg-white">
         {/* Header */}
-        <div className="h-14 flex items-center gap-3 px-4 py-3 border-b border-gray-100 sticky top-0">
+        <div className="h-14 flex items-center gap-3 px-4 py-3 border-b border-gray-100 sticky top-0 z-10 bg-white">
           <button
             onClick={onBack}
             className="p-1 hover:bg-gray-100 rounded transition-colors"
@@ -117,7 +117,7 @@ export const NewChatWindow = memo(
         </div>
 
         {/* Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
+        <div className="flex-1 flex flex-col overflow-y-auto">
           {/* Receiver Input */}
           <div className="px-4 py-4 border-b border-gray-100 flex flex-row items-center gap-4">
             <label className="block text-xs font-medium text-gray-700 mb-2">
@@ -146,7 +146,7 @@ export const NewChatWindow = memo(
               {showDropdown && (
                 <div
                   ref={dropdownRef}
-                  className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-10 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded"
+                  className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded shadow-lg z-20 max-h-60 overflow-y-auto [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded"
                 >
                   {isLoading ? (
                     <div className="flex items-center justify-center py-8">
