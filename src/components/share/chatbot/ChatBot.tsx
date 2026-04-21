@@ -12,6 +12,7 @@ import {
   setRecentChats,
   upsertMessage,
   setChatActivated,
+  selectCurrentUser,
 } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 import { chatSDK } from '../../../services/chat.service';
@@ -83,6 +84,8 @@ const ChatBot = () => {
   const messages = useSelector(currentMessages);
   const allSystemUsers = useSelector(selectSystemUsers);
   const currentChatMembers = useSelector(selectChatMembers);
+  // Lấy member hiện tại
+  const currentMember = useSelector(selectCurrentUser);
   const allChatMembers = useSelector(
     (state: { chat: { chatMembers: Record<number, User[]> } }) =>
       state.chat.chatMembers,
@@ -314,7 +317,12 @@ const ChatBot = () => {
 
       try {
         // Gọi lệnh tạo nhóm (SDK sẽ crash ở bước nhận phản hồi)
-        await chatSDK.addGroup(memberIds, groupName, '');
+        await chatSDK.addGroup(
+          memberIds,
+          groupName,
+          undefined,
+          currentMember?.id,
+        );
       } catch {
         // Nếu lỗi đúng là cái lỗi ".map" của SDK, ta sẽ âm thầm xử lý tiếp
         console.warn(

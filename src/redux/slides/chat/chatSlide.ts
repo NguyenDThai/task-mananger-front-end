@@ -46,6 +46,7 @@ interface ChatState {
   currentChatId: number | null;
   systemUsers: User[]; // Danh bạ toàn hệ thống
   chatMembers: Record<number, User[]>; //Lưu danh sách thành viên trong group
+  currentUser: User | null; // Người dùng hiện tại trong Chat
 }
 
 const initialState: ChatState = {
@@ -57,6 +58,7 @@ const initialState: ChatState = {
   currentChatId: null,
   systemUsers: [],
   chatMembers: {},
+  currentUser: null,
 };
 
 const chatSlide = createSlice({
@@ -147,6 +149,9 @@ const chatSlide = createSlice({
       const { chatId, members } = action.payload;
       state.chatMembers[chatId] = members;
     },
+    setAuth: (state, action: PayloadAction<User | null>) => {
+      state.currentUser = action.payload;
+    },
   },
 });
 
@@ -159,6 +164,7 @@ export const {
   setUnreadCount,
   setSystemUsers,
   setChatMembers,
+  setAuth,
 } = chatSlide.actions;
 
 export default chatSlide.reducer;
@@ -193,3 +199,6 @@ export const selectChatMembers = (state: { chat: ChatState }) => {
   const chatId = state.chat.currentChatId;
   return chatId ? state.chat.chatMembers[chatId] || [] : [];
 };
+
+export const selectCurrentUser = (state: { chat: ChatState }) =>
+  state.chat.currentUser;

@@ -114,6 +114,7 @@ interface SChatInstance {
     memberIds: number[],
     name: string,
     avatar?: string,
+    userId?: number,
   ): Promise<SatekChatResponse<SatekChatConversation>>;
 
   // Cập nhật thông tin nhóm

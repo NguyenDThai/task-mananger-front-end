@@ -68,8 +68,13 @@ class ChatService {
     return this.chatSDK.addChat(receiverId, content);
   }
 
-  public async addGroup(memberIds: number[], name: string, avatar?: string) {
-    return this.chatSDK.addGroup(memberIds, name, avatar);
+  public async addGroup(
+    memberIds: number[],
+    name: string,
+    avatar?: string,
+    userId?: number,
+  ) {
+    return this.chatSDK.addGroup(memberIds, name, avatar, userId);
   }
 
   public async updateGroup(chatId: number, name: string, avatar?: string) {
