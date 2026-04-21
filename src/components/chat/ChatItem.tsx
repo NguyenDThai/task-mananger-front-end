@@ -128,11 +128,15 @@ export const ChatItem = ({
             <h3 className="font-medium text-gray-900 truncate text-sm w-full">
               {chatName}
             </h3>
-            {lastMessageContent && (
+            {chat.message?.files && chat.message.files.length > 0 ? (
+              <p className="text-xs text-gray-400 truncate mt-1 w-full">
+                [Tệp tin đính kèm]
+              </p>
+            ) : lastMessageContent ? (
               <p className="text-xs text-gray-400 truncate mt-1 w-full">
                 {lastMessageContent}
               </p>
-            )}
+            ) : null}
           </div>
 
           <div className="flex flex-col items-start justify-end">
