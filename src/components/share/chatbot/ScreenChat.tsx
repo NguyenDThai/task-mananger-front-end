@@ -20,7 +20,7 @@ interface ScreenChatProps {
   currentChat: Chat | null;
   newMessage: string;
   setNewMessage: (msg: string) => void;
-  handleSendMessage: (content?: string, files?: FileList | null) => void;
+  handleSendMessage: (content?: string, files?: FileList) => void;
   onMessageAction: (
     messageId: number,
     action: 'like' | 'love' | 'revoke' | 'remove',

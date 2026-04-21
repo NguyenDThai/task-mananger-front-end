@@ -95,7 +95,7 @@ class ChatService {
   public async addMessage(
     chatId: number,
     content?: string | null,
-    files?: FileList | File[] | null,
+    files?: FileList,
     replyId?: number,
   ) {
     return this.chatSDK.addMessage(chatId, content, files, replyId);

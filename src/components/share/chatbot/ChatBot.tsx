@@ -145,14 +145,12 @@ const ChatBot = () => {
   };
 
   // Hàm gửi tin nhắn
-  const handleSendMessage = async (
-    content?: string,
-    files?: FileList | null,
-  ) => {
+  const handleSendMessage = async (content?: string, files?: FileList) => {
     const textContent = content !== undefined ? content : newMessage;
+
     const trimmedText = textContent.trim();
     // Gửi null nếu chỉ có file (theo docs)
-    const messageToSend = trimmedText || null;
+    const messageToSend = trimmedText || '';
 
     // Yêu cầu có tin nhắn HOẶC có file
     if (!messageToSend && (!files || files.length === 0)) return;
@@ -164,12 +162,11 @@ const ChatBot = () => {
     setReplyMessage(null);
 
     try {
-      const fileArray = files ? Array.from(files) : undefined;
       // Theo docs: addMessage(chatId, content, files, replyId)
       const res = await chatSDK.addMessage(
-        String(currentChat.id) as any,
+        currentChat.id,
         messageToSend,
-        fileArray,
+        files,
         replyId,
       );
 
