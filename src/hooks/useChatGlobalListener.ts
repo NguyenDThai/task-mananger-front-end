@@ -40,7 +40,7 @@ export const useChatGlobalListener = () => {
 
     const refreshChatData = async (chatId?: number, includeMembers = false) => {
       const now = Date.now();
-      if (now - lastRefreshTimeRef.current < 1000) return;
+      if (now - lastRefreshTimeRef.current < 3000) return;
       lastRefreshTimeRef.current = now;
 
       await new Promise((resolve) => setTimeout(resolve, 500));

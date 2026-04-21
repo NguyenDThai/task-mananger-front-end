@@ -184,9 +184,18 @@ export const selectCurrentChatId = (state: { chat: ChatState }) =>
 export const selectRecentChats = (state: { chat: ChatState }) =>
   state.chat.recentChats;
 
+// Hàm lấy tin nhắn hiện tại
 export const currentMessages = (state: { chat: ChatState }) => {
   const chatId = state.chat.currentChatId;
-  return chatId ? state.chat.message[chatId] || [] : [];
+  const msgs = chatId ? state.chat.message[chatId] || [] : [];
+  return [...msgs].sort((a, b) => {
+    // Chuyển đổi created_at thành timestamp để so sánh
+    const timesA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const timesB = b.created_at ? new Date(b.created_at).getTime() : 0;
+
+    // Sắp xếp tăng dần: Tin nhắn cũ (thời gian nhỏ) ở trên, mới (thời gian lớn) ở dưới
+    return timesA - timesB;
+  });
 };
 
 export const selectUnreadCount = (state: { chat: ChatState }) =>

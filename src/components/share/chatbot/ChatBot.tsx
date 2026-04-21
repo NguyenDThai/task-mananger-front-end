@@ -204,7 +204,7 @@ const ChatBot = () => {
         const data = res.data || [];
 
         // Đẩy toàn bộ tin nhắn vào Redux qua loop (Sau này nên dùng setMessagesHistory để nhanh hơn)
-        [...data].reverse().forEach((m: Message) => {
+        [...data].forEach((m: Message) => {
           dispatch(upsertMessage({ chat: currentChat, message: m }));
         });
 
