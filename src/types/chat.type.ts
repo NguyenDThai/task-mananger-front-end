@@ -93,6 +93,7 @@ export interface ISChatInstance {
     memberIds: number[],
     name: string,
     avatar?: string,
+    currentUserId?: number,
   ) => Promise<{
     data: IChatItem;
   }>;
@@ -265,13 +266,21 @@ export interface IMessageItem {
   action: string[];
   member: ISChatUser;
   content: string | null; // Nội dung tin nhắn (có thể null nếu chỉ có file đính kèm)
-  files?: unknown[]; // Danh sách file gửi kèm (nếu có)
+  files?: IFileItem[]; // Danh sách file gửi kèm (nếu có)
   revoke: boolean; // Trạng thái thu hồi tin nhắn
   remove: boolean; // Trạng thái xóa tin nhắn
   date: string;
   reply?: IMessageItem | null; // Tin nhắn được trả lời (nếu có)
   updated_at: string;
   created_at: string;
+}
+
+export interface IFileItem {
+  id: number;
+  name: string;
+  ext: string;
+  size: number;
+  link: string;
 }
 
 export interface ISChatEventPayloads {

@@ -11,6 +11,7 @@ import {
   setCurrentChatMessages,
   setMessagesPagination,
   prependMessages,
+  setCurrentChatMembers,
 } from '../../redux/slides/chat/chatSlide';
 import type { ISChatUser, TMessageAction } from '../../types/chat.type';
 
@@ -46,21 +47,39 @@ export const LiveChatWidgetContainer = ({
       if (currentChat?.id) {
         // Fetch messages for the selected chat
         try {
-          const result = await chat.getMessages(currentChat.id, 20, 1);
-          const messagesList = result?.data || [];
-          const pagination = result?.pagination;
-          dispatch(setCurrentChatMessages(messagesList.toReversed()));
+          const { data: messagesList, pagination } = await chat.getMessages(
+            currentChat.id,
+            20,
+            1,
+          );
+          await chat.readChat(currentChat.id);
+
+          dispatch(setCurrentChatMessages(messagesList));
+
           if (pagination) {
             dispatch(setMessagesPagination(pagination));
+          }
+
+          if (currentChat.type === 'group') {
+            const { data: members } = await chat.getMembers(
+              currentChat.id,
+              20,
+              1,
+            );
+            dispatch(setCurrentChatMembers(members));
+          } else {
+            dispatch(setCurrentChatMembers(currentChat.members));
           }
         } catch (error) {
           console.error('Failed to fetch messages:', error);
           dispatch(setCurrentChatMessages([]));
           dispatch(setMessagesPagination(null));
+          dispatch(setCurrentChatMembers([]));
         }
       } else {
         dispatch(setCurrentChatMessages([]));
         dispatch(setMessagesPagination(null));
+        dispatch(setCurrentChatMembers([]));
       }
     };
 
@@ -74,7 +93,6 @@ export const LiveChatWidgetContainer = ({
     if (!selectedChat) return;
 
     try {
-      await chat.readChat(selectedChat.id);
       dispatch(setCurrentChat(selectedChat));
     } catch (error) {
       console.error('Failed to select chat:', error);
@@ -192,7 +210,7 @@ export const LiveChatWidgetContainer = ({
       const pagination = response?.pagination;
 
       if (messagesList.length > 0) {
-        dispatch(prependMessages(messagesList.toReversed()));
+        dispatch(prependMessages(messagesList));
         if (pagination) {
           dispatch(setMessagesPagination(pagination));
         }

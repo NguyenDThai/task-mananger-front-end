@@ -12,6 +12,7 @@ type ChatState = {
   currentChat?: IChatItem | null;
   currentChatMessages: IMessageItem[];
   currentReceiver?: ISChatUser | null;
+  currentChatMembers: ISChatUser[];
   members: ISChatUser[];
   messagesPagination: IPaginationInfo | null;
 };
@@ -21,6 +22,7 @@ const initialState: ChatState = {
   chats: [],
   currentChat: null,
   currentChatMessages: [],
+  currentChatMembers: [],
   currentReceiver: null,
   members: [],
   messagesPagination: null,
@@ -54,7 +56,7 @@ const chatSlice = createSlice({
     prependMessages: (state, action) => {
       const messages = action.payload;
       if (Array.isArray(messages) && messages.length > 0) {
-        state.currentChatMessages.unshift(...messages);
+        state.currentChatMessages.push(...messages);
       }
     },
     addNewMessage: (state, action) => {
@@ -65,13 +67,14 @@ const chatSlice = createSlice({
       const chatIndex = state.chats.findIndex((c) => c.id === chat.id);
 
       if (chatIndex !== -1) {
-        state.chats[chatIndex].message = message;
+        state.chats[chatIndex] = chat;
         const updatedChat = state.chats.splice(chatIndex, 1)[0];
         state.chats.unshift(updatedChat);
       }
 
       if (!state.currentChat || chat.id !== state.currentChat?.id) return;
-      state.currentChatMessages.push(message);
+      state.currentChatMessages.unshift(message);
+      state.currentChat = chat;
     },
     addChat: (state, action) => {
       const chatIndex = state.chats.findIndex(
@@ -133,6 +136,9 @@ const chatSlice = createSlice({
         message.content = content;
       }
     },
+    setCurrentChatMembers: (state, action) => {
+      state.currentChatMembers = action.payload;
+    },
   },
 });
 
@@ -141,6 +147,7 @@ export const {
   setChats,
   setCurrentChat,
   setCurrentChatMessages,
+  setCurrentChatMembers,
   setMembers,
   setCurrentReceiver,
   setMessagesPagination,

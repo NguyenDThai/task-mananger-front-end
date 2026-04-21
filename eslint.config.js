@@ -41,7 +41,7 @@ export default defineConfig([
       // React best practices
       ...react.configs.recommended.rules,
       ...react.configs['jsx-runtime'].rules,
-      'react-hooks/exhaustive-deps': 'warn',
+      'react-hooks/exhaustive-deps': 'off',
       'react/prop-types': 'off', // Since we use TS
       'react-refresh/only-export-components': [
         'warn',

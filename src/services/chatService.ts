@@ -142,10 +142,11 @@ class ChatService {
     memberIds: number[],
     name: string,
     avatar?: string,
+    currentUserId?: number,
   ): Promise<{
     data: IChatItem;
   }> {
-    return this.chatSDK.addGroup(memberIds, name, avatar);
+    return this.chatSDK.addGroup(memberIds, name, avatar, currentUserId);
   }
   /**
    * Cập nhật thông tin nhóm (Tên và Ảnh đại diện).

@@ -82,7 +82,6 @@ export const ChatItem = ({
   onDelete,
 }: ChatItemProps) => {
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-
   const chatName = getChatDisplayName(chat, currentUser);
   const avatar = getChatAvatar(chat, currentUser);
   const lastMessageContent = chat.message?.content;
@@ -136,8 +135,8 @@ export const ChatItem = ({
             )}
           </div>
 
-          <div className="flex flex-col items-start justify-start">
-            {unreadCount && unreadCount > 0 && (
+          <div className="flex flex-col items-start justify-end">
+            {!!unreadCount && unreadCount > 0 && (
               <span className="flex-shrink-0 inline-flex items-center justify-center min-w-7 h-5 bg-gray-900 text-white text-xs font-semibold rounded-full">
                 {unreadCount > 99 ? '99+' : unreadCount}
               </span>

@@ -12,6 +12,7 @@ import {
   removeMessage,
   setMessagesPagination,
   prependMessages,
+  setCurrentChatMembers,
 } from '../../redux/slides/chat/chatSlide';
 import type { ISChatUser, TMessageAction } from '../../types';
 
@@ -76,7 +77,12 @@ export const Chat = () => {
         const finalGroupName =
           chatName || receivers.map((r) => r.name).join(', ');
 
-        const response = await chat.addGroup(memberIds, finalGroupName);
+        const response = await chat.addGroup(
+          memberIds,
+          finalGroupName,
+          undefined,
+          currentUser?.id,
+        );
         targetChat = response.data;
         isNewChat = true;
         toastMessage = `Đã tạo nhóm với ${receivers.length} thành viên`;
@@ -99,8 +105,6 @@ export const Chat = () => {
           toastMessage = `Đã tạo cuộc trò chuyện với ${singleReceiver.name}`;
         }
       }
-
-      await chat.readChat(targetChat.id);
 
       if (isNewChat) {
         const now = new Date().toISOString();
@@ -136,26 +140,43 @@ export const Chat = () => {
 
   useEffect(() => {
     const loadMessages = async () => {
-      setIsLoading((prev) => ({ ...prev, chatWindow: true }));
-
       if (!currentChat?.id) {
         dispatch(setCurrentChatMessages([]));
+        dispatch(setCurrentChatMembers([]));
         dispatch(setMessagesPagination(null));
         setIsLoading((prev) => ({ ...prev, chatWindow: false }));
         return;
       }
 
+      setIsLoading((prev) => ({ ...prev, chatWindow: true }));
+
       try {
-        const response = await chat.getMessages(currentChat.id, 20, 1);
-        const messagesList = response?.data || [];
-        const pagination = response?.pagination;
-        dispatch(setCurrentChatMessages(messagesList.toReversed()));
+        const { data: messagesList, pagination } = await chat.getMessages(
+          currentChat.id,
+          20,
+          1,
+        );
+        await chat.readChat(currentChat.id);
+
+        dispatch(setCurrentChatMessages(messagesList));
         if (pagination) {
           dispatch(setMessagesPagination(pagination));
+        }
+
+        if (currentChat.type === 'group') {
+          const { data: members } = await chat.getMembers(
+            currentChat.id,
+            20,
+            1,
+          );
+          dispatch(setCurrentChatMembers(members));
+        } else {
+          dispatch(setCurrentChatMembers(currentChat.members));
         }
       } catch (error) {
         console.error('Lỗi khi lấy tin nhắn:', error);
         dispatch(setCurrentChatMessages([]));
+        dispatch(setCurrentChatMembers([]));
         dispatch(setMessagesPagination(null));
       } finally {
         setIsLoading((prev) => ({ ...prev, chatWindow: false }));
@@ -190,7 +211,6 @@ export const Chat = () => {
     const selectedChat = chats.find((chat) => chat.id === chatId);
     if (!selectedChat) return;
 
-    await chat.readChat(selectedChat.id);
     dispatch(setCurrentChat(selectedChat));
   };
 
@@ -276,7 +296,7 @@ export const Chat = () => {
       const pagination = response?.pagination;
 
       if (messagesList.length > 0) {
-        dispatch(prependMessages(messagesList.toReversed()));
+        dispatch(prependMessages(messagesList));
         if (pagination) {
           dispatch(setMessagesPagination(pagination));
         }
@@ -322,7 +342,6 @@ export const Chat = () => {
             messages={currentChatMessages}
             isLoading={isLoading.chatWindow}
             isLoadingOldMessages={isLoadingOldMessages}
-            currentUserId={currentUser?.id}
             onSendMessage={handleSendMessage}
             onMessageAction={handleMessageAction}
             onLoadOldMessages={handleLoadOldMessages}

@@ -1,16 +1,7 @@
 import React from 'react';
 import type { IMessageItem, TMessageAction } from '../../types/chat.type';
-import {
-  ThumbsUp,
-  Heart,
-  RotateCcw,
-  Trash2,
-  Smile,
-  Reply,
-  X,
-  ChevronLeft,
-  MoreVertical,
-} from 'lucide-react';
+import { Smile, X, ChevronLeft } from 'lucide-react';
+import { MessagesList } from './MessageList';
 
 interface ChatWindowProps {
   chatId?: number;
@@ -22,7 +13,6 @@ interface ChatWindowProps {
   messages: IMessageItem[];
   isLoading?: boolean;
   isLoadingOldMessages?: boolean;
-  currentUserId?: number;
   onSendMessage: (
     content: string,
     files: File[],
@@ -41,7 +31,6 @@ export const ChatWindow = React.memo(
     messages = [],
     isLoading = false,
     isLoadingOldMessages = false,
-    currentUserId,
     onSendMessage,
     onMessageAction,
     onLoadOldMessages,
@@ -129,7 +118,7 @@ export const ChatWindow = React.memo(
     React.useEffect(() => {
       if (isLoading || messages.length === 0) return;
 
-      const currentLastMessage = messages[messages.length - 1];
+      const currentLastMessage = messages[0];
       const prevLastMessageId = lastMessageIdRef.current;
 
       if (
@@ -260,37 +249,6 @@ export const ChatWindow = React.memo(
       }
     };
 
-    const formatTime = (isoString: string) => {
-      const date = new Date(isoString);
-      const today = new Date();
-      const yesterday = new Date(today);
-      yesterday.setDate(yesterday.getDate() - 1);
-
-      if (date.toDateString() === today.toDateString()) {
-        return date.toLocaleTimeString('vi-VN', {
-          hour: '2-digit',
-          minute: '2-digit',
-        });
-      } else if (date.toDateString() === yesterday.toDateString()) {
-        return 'Hôm qua';
-      } else {
-        return date.toLocaleDateString('vi-VN', {
-          month: 'short',
-          day: 'numeric',
-        });
-      }
-    };
-
-    // Helper function to get member avatar and name
-    const getSenderInfo = (message: IMessageItem) => {
-      const member = message.member;
-      return {
-        code: member.code,
-        name: member?.name || 'Người dùng',
-        avatar: member?.avatar,
-      };
-    };
-
     if (!chatId) {
       return (
         <div className="h-full flex items-center justify-center bg-white">
@@ -374,272 +332,36 @@ export const ChatWindow = React.memo(
 
         {/* Messages */}
         <div className="bg-white flex-1 overflow-y-auto px-4 pb-4 pt-11 space-y-3 bg-transparent [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
-          {isLoading ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <div className="w-8 h-8 rounded-full border-2 border-gray-200 border-t-gray-600 animate-spin mx-auto mb-2"></div>
-                <p className="text-xs text-gray-400">Đang tải tin nhắn...</p>
-              </div>
-            </div>
-          ) : messages.length === 0 ? (
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <p className="text-gray-600 text-sm font-medium">
-                  Chưa có tin nhắn nào
-                </p>
-                <p className="text-xs text-gray-400 mt-1">
-                  Hãy gửi tin nhắn đầu tiên
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <div ref={messagesStartRef} />
-              {isLoadingOldMessages && (
-                <div className="flex items-center justify-center py-4">
-                  <div className="text-center">
-                    <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-gray-600 animate-spin mx-auto mb-1"></div>
-                    <p className="text-xs text-gray-400">
-                      Đang tải tin nhắn cũ...
-                    </p>
-                  </div>
-                </div>
-              )}
-              {messages.map((message, index) => {
-                const senderInfo = getSenderInfo(message);
-                // Determine if this is a message from current user
-                const isCurrentUser =
-                  currentUserId && message.member?.id === currentUserId;
-
-                return (
-                  <div
-                    key={message.id}
-                    id={`message-${message.id}`}
-                    className={`flex gap-2 justify-start items-center relative ${
-                      isCurrentUser ? 'flex-row-reverse' : ''
-                    } transition-colors duration-300`}
-                    onMouseEnter={() => setHoveredMessageId(message.id)}
-                    onMouseLeave={() => {
-                      // Nếu menu đang mở, giữ hoveredMessageId để menu vẫn hiển thị
-                      if (openMenuId.messageId !== message.id) {
-                        setHoveredMessageId(null);
-                      }
-                    }}
-                  >
-                    {!isCurrentUser &&
-                    senderInfo.avatar &&
-                    messages.at(index + 1)?.member?.code !== senderInfo.code ? (
-                      <img
-                        src={senderInfo.avatar}
-                        alt={senderInfo.name}
-                        className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5 self-end"
-                      />
-                    ) : (
-                      !isCurrentUser && <div className="w-7 h-7"></div>
-                    )}
-
-                    <div className="flex flex-col gap-1">
-                      <div
-                        className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded relative group ${
-                          isCurrentUser
-                            ? 'bg-blue-900 text-white'
-                            : 'bg-blue-100 text-gray-900'
-                        }`}
-                      >
-                        {!isCurrentUser && (
-                          <p className="text-xs font-medium mb-0.5 opacity-70">
-                            {senderInfo.name}
-                          </p>
-                        )}
-                        {/* Reply Preview */}
-                        {message.reply && (
-                          <div
-                            onClick={() => scrollToMessage(message.reply!.id)}
-                            className={`mb-2 p-2 rounded text-xs border-l-2 cursor-pointer transition-all hover:opacity-80 ${
-                              isCurrentUser
-                                ? 'bg-blue-800 border-blue-400'
-                                : 'bg-white/30 border-blue-300'
-                            }`}
-                          >
-                            <p className="font-medium opacity-80">
-                              {message.reply.member?.name || 'Người dùng'}
-                            </p>
-                            <p className="opacity-70 truncate">
-                              {message.reply.content}
-                            </p>
-                          </div>
-                        )}
-                        <p className="text-sm break-words">{message.content}</p>
-                        {message.revoke && (
-                          <p className="text-xs italic opacity-50 mt-1">
-                            Tin nhắn đã được thu hồi
-                          </p>
-                        )}
-                        {message.remove && (
-                          <p className="text-xs italic opacity-50 mt-1">
-                            Tin nhắn đã bị xóa
-                          </p>
-                        )}
-                        <p
-                          className={`text-xs mt-1 ${
-                            isCurrentUser ? 'text-gray-300' : 'text-gray-600'
-                          }`}
-                        >
-                          {formatTime(message.created_at)}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Reaction Button and Menu */}
-                    {hoveredMessageId === message.id &&
-                      !message.revoke &&
-                      !message.remove && (
-                        <div
-                          className={`
-                            flex items-center gap-2 relative
-                            ${isCurrentUser ? 'flex-row-reverse' : ''}  
-                          `}
-                          data-reaction-menu
-                        >
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(
-                                openMenuId.messageId === message.id &&
-                                  openMenuId.type === 'reaction'
-                                  ? { messageId: null, type: null }
-                                  : { messageId: message.id, type: 'reaction' },
-                              );
-                            }}
-                            className="p-1 text-white bg-gray-400 hover:bg-gray-500 rounded-full transition-all duration-200"
-                            title="Phản ứng"
-                          >
-                            <Smile size={16} />
-                          </button>
-
-                          {/* Reaction Actions Menu */}
-                          {openMenuId.messageId === message.id &&
-                            openMenuId.type === 'reaction' && (
-                              <div
-                                className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2
-                                  ${isCurrentUser ? '-left-8' : 'left-0'}
-                                `}
-                                data-reaction-menu
-                              >
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleMessageAction(message.id, 'like');
-                                  }}
-                                  title="Thích"
-                                  className="p-2 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-200 hover:scale-110"
-                                >
-                                  <ThumbsUp size={18} />
-                                </button>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleMessageAction(message.id, 'love');
-                                  }}
-                                  title="Yêu thích"
-                                  className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-500 rounded-lg transition-all duration-200 hover:scale-110"
-                                >
-                                  <Heart size={18} />
-                                </button>
-                              </div>
-                            )}
-
-                          {/* More Button */}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setOpenMenuId(
-                                openMenuId.messageId === message.id &&
-                                  openMenuId.type === 'more'
-                                  ? { messageId: null, type: null }
-                                  : { messageId: message.id, type: 'more' },
-                              );
-                            }}
-                            className="p-1 text-white bg-gray-400 hover:bg-gray-500 rounded-full transition-all duration-200"
-                            title="Thêm tùy chọn"
-                            data-more-menu
-                          >
-                            <MoreVertical size={16} />
-                          </button>
-
-                          {/* More Menu */}
-                          {openMenuId.messageId === message.id &&
-                            openMenuId.type === 'more' && (
-                              <div
-                                className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2 z-50
-                          ${isCurrentUser ? '-left-26' : 'left-7'}
-                        `}
-                                data-more-menu
-                              >
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setReplyingTo(message);
-                                    setOpenMenuId({
-                                      messageId: null,
-                                      type: null,
-                                    });
-                                  }}
-                                  title="Trả lời"
-                                  className="p-2 hover:bg-blue-50 text-gray-600 hover:text-blue-600 rounded-lg transition-all duration-200 hover:scale-110"
-                                >
-                                  <Reply size={18} />
-                                </button>
-
-                                {isCurrentUser && (
-                                  <>
-                                    <div className="w-px bg-gray-200"></div>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleMessageAction(
-                                          message.id,
-                                          'revoke',
-                                        );
-                                        setOpenMenuId({
-                                          messageId: null,
-                                          type: null,
-                                        });
-                                      }}
-                                      title="Thu hồi"
-                                      className="p-2 hover:bg-amber-50 text-gray-600 hover:text-amber-600 rounded-lg transition-all duration-200 hover:scale-110"
-                                    >
-                                      <RotateCcw size={18} />
-                                    </button>
-                                    <button
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleMessageAction(
-                                          message.id,
-                                          'remove',
-                                        );
-                                        setOpenMenuId({
-                                          messageId: null,
-                                          type: null,
-                                        });
-                                      }}
-                                      title="Xóa"
-                                      className="p-2 hover:bg-red-50 text-gray-600 hover:text-red-600 rounded-lg transition-all duration-200 hover:scale-110"
-                                    >
-                                      <Trash2 size={18} />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            )}
-                        </div>
-                      )}
-                  </div>
-                );
-              })}
-              <div ref={messagesEndRef} />
-            </>
-          )}
+          <MessagesList
+            messages={messages}
+            isLoading={isLoading}
+            isLoadingOldMessages={isLoadingOldMessages}
+            hoveredId={hoveredMessageId}
+            openMenuId={openMenuId}
+            onHover={setHoveredMessageId}
+            onHoverLeave={() => {
+              if (openMenuId.messageId === null) {
+                setHoveredMessageId(null);
+              }
+            }}
+            onMenuToggle={(id, type) => {
+              setOpenMenuId(
+                openMenuId.messageId === id && openMenuId.type === type
+                  ? { messageId: null, type: null }
+                  : { messageId: id, type },
+              );
+            }}
+            onAction={(id, action) => {
+              handleMessageAction(id, action);
+            }}
+            onReply={(msg) => {
+              setReplyingTo(msg);
+              setOpenMenuId({ messageId: null, type: null });
+            }}
+            onScroll={scrollToMessage}
+            messagesStartRef={messagesStartRef}
+            messagesEndRef={messagesEndRef}
+          />
         </div>
 
         {/* Input */}

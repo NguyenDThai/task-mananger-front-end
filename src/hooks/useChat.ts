@@ -5,9 +5,7 @@ import { chat } from '../services/chatService';
 import {
   addNewMessage,
   addChat,
-  setChats,
   setCurrentUser,
-  setMembers,
   updateChat,
   removeChat,
   removeMessage,
@@ -35,30 +33,11 @@ export const useChat = () => {
   };
 
   useEffect(() => {
-    const fetchInitialData = async () => {
-      if (!currentUser?.id) return;
-
-      try {
-        const [{ data: chatsData }, { data: membersData }] = await Promise.all([
-          chat.getChats(),
-          chat.getMembers(),
-        ]);
-
-        dispatch(setChats(chatsData));
-        dispatch(setMembers(membersData));
-      } catch (error) {
-        console.error('Failed to fetch initial chat data:', error);
-      }
-    };
-
-    fetchInitialData();
-  }, [currentUser?.id, dispatch]);
-
-  useEffect(() => {
     const handleNewMessage = (
       payload: ISChatEventPayloads['chats.message'],
     ) => {
       const { chat, message, type, chat_id, message_id } = payload;
+      console.warn('Chat new message event:', payload);
       if (type === 'add') {
         dispatch(
           addNewMessage({
@@ -88,6 +67,7 @@ export const useChat = () => {
   useEffect(() => {
     const handleNewChat = (payload: ISChatEventPayloads['chats.created']) => {
       const { chat } = payload;
+      console.warn('New chat created:', chat);
       dispatch(addChat(chat));
     };
 
@@ -100,6 +80,7 @@ export const useChat = () => {
       payload: ISChatEventPayloads['chats.updated'],
     ) => {
       const { chat } = payload;
+      console.warn('Chat updated:', chat);
       dispatch(updateChat(chat));
     };
 
@@ -112,6 +93,7 @@ export const useChat = () => {
       payload: ISChatEventPayloads['chats.deleted'],
     ) => {
       const { chat_id } = payload;
+      console.warn('Chat deleted:', payload);
       const chat = chats.find((c) => c.id === chat_id);
       if (!chat || chat.type !== 'group') {
         return;
@@ -136,8 +118,11 @@ export const useChat = () => {
 
   useEffect(() => {
     const handleActionChat = (payload: ISChatEventPayloads['chats.action']) => {
-      // const { chat_id, user_id, message_id, action } = payload;
+      const { type, chat } = payload;
       console.warn('Chat action event:', payload);
+      if (type === 'read') {
+        dispatch(updateChat(chat));
+      }
     };
 
     chat.addEventListener('chats.action', handleActionChat);
@@ -154,18 +139,18 @@ export const useChat = () => {
   //   return () => chat.removeEventListener('new_message', handleNewMessage);
   // }, [currentUser?.id, dispatch]);
 
-  // useEffect(() => {
-  //   const handleProjectsMember = (
-  //     payload: ISChatEventPayloads['projects.member'],
-  //   ) => {
-  //     // const { chat_id, user_id, message_id, action } = payload;
-  //     console.warn('Projects member event:', payload);
-  //   };
+  useEffect(() => {
+    const handleProjectsMember = (
+      payload: ISChatEventPayloads['projects.member'],
+    ) => {
+      // const { chat_id, user_id, message_id, action } = payload;
+      console.warn('Projects member event:', payload);
+    };
 
-  //   chat.addEventListener('projects.member', handleProjectsMember);
-  //   return () =>
-  //     chat.removeEventListener('projects.member', handleProjectsMember);
-  // }, [currentUser?.id, dispatch]);
+    chat.addEventListener('projects.member', handleProjectsMember);
+    return () =>
+      chat.removeEventListener('projects.member', handleProjectsMember);
+  }, [currentUser?.id, dispatch]);
 
   return {
     setChatAuth,
