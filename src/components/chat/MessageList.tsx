@@ -555,7 +555,7 @@ const MessageItem = memo(
             {/* Reaction Actions Menu */}
             {menuId.messageId === message.id && menuId.type === 'reaction' && (
               <div
-                className={`absolute bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2
+                className={`absolute z-1 bottom-full mb-2 flex gap-1 bg-white rounded-xl shadow-lg border border-gray-200 p-2
                     ${isCurrentUser ? '-left-8' : 'left-0'}
                   `}
                 data-reaction-menu

@@ -55,14 +55,11 @@ export const ChatWindow = React.memo(
       null,
     );
     const fileInputRef = React.useRef<HTMLInputElement>(null);
-    const emojiPickerRef = React.useRef<HTMLDivElement>(null);
     const messagesStartRef = React.useRef<HTMLDivElement>(null);
     const intersectionObserverRef = React.useRef<IntersectionObserver | null>(
       null,
     );
 
-    const [isReadyForInfiniteScroll, setIsReadyForInfiniteScroll] =
-      React.useState(false);
     const lastMessageIdRef = React.useRef<number | null>(null);
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
     const isAtBottomRef = React.useRef(true);
@@ -89,14 +86,39 @@ export const ChatWindow = React.memo(
     ];
 
     const scrollToEnd = React.useCallback(() => {
-      if (!scrollRef.current) return;
+      const container = scrollRef.current;
+      if (!container) return;
 
-      // Use setTimeout to ensure DOM has updated
-      setTimeout(() => {
-        if (scrollRef.current) {
-          scrollRef.current.scrollTop = 0;
-        }
-      }, 0);
+      // Đợi DOM cập nhật xong xuôi mới bắt đầu animation
+      requestAnimationFrame(() => {
+        const duration = 1000; // Thời gian cuộn - có thể điều chỉnh
+        const startPosition = container.scrollTop;
+        let startTime: number | null = null;
+
+        const animation = (currentTime: number) => {
+          if (startTime === null) startTime = currentTime;
+          const timeElapsed = currentTime - startTime;
+
+          // Tính toán tiến trình từ 0 đến 1
+          const progress = Math.min(timeElapsed / duration, 1);
+
+          // Easing function: easeOutCubic (Chậm dần ở khúc cuối cho cảm giác tự nhiên)
+          const easeOut = 1 - Math.pow(1 - progress, 5);
+
+          // Tính toán vị trí tiếp theo và gán thẳng vào scrollTop
+          container.scrollTop = startPosition * (1 - easeOut);
+
+          // Nếu chưa hết thời gian thì tiếp tục gọi frame tiếp theo
+          if (timeElapsed < duration) {
+            requestAnimationFrame(animation);
+          } else {
+            // Đảm bảo đích đến chính xác 100% khi kết thúc
+            container.scrollTop = 0;
+          }
+        };
+
+        requestAnimationFrame(animation);
+      });
     }, []);
 
     const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -117,33 +139,13 @@ export const ChatWindow = React.memo(
       }
     };
 
-    // React.useEffect(() => {
-    //   lastMessageIdRef.current = null;
-    //   setIsReadyForInfiniteScroll(false);
-    // }, [chatId]);
-
-    // React.useEffect(() => {
-    //   const chatContainer = scrollRef.current;
-    //   if (!chatContainer) return;
-
-    //   const resizeObserver = new ResizeObserver(() => {
-    //     if (isAtBottomRef.current) {
-    //       scrollToEnd();
-    //     }
-    //   });
-
-    //   resizeObserver.observe(chatContainer);
-
-    //   return () => resizeObserver.disconnect();
-    // }, [scrollToEnd]);
+    React.useEffect(() => {
+      lastMessageIdRef.current = null;
+      isAtBottomRef.current = true;
+    }, [chatId]);
 
     React.useLayoutEffect(() => {
       if (isLoading || messages.length === 0) return;
-
-      if (!isReadyForInfiniteScroll) {
-        setIsReadyForInfiniteScroll(true);
-        return;
-      }
 
       const currentLastMessage = messages[0];
       const prevLastMessageId = lastMessageIdRef.current;
@@ -154,26 +156,22 @@ export const ChatWindow = React.memo(
       ) {
         if (isAtBottomRef.current) {
           scrollToEnd();
-          chatService.readChat(chatId!);
+          if (chatId) chatService.readChat(chatId);
         }
       }
 
+      // Cập nhật lại ID tin nhắn mới nhất
       lastMessageIdRef.current = currentLastMessage.id;
     }, [messages, isLoading, chatId, scrollToEnd]);
 
     // Infinity scroll: Load old messages when user scrolls to top
     React.useEffect(() => {
-      if (
-        !messagesStartRef.current ||
-        !onLoadOldMessages ||
-        isLoadingOldMessages ||
-        !isReadyForInfiniteScroll
-      ) {
-        return;
-      }
+      const target = messagesStartRef.current;
+      if (!target || !onLoadOldMessages) return;
 
       const handleIntersection = (entries: IntersectionObserverEntry[]) => {
         const [entry] = entries;
+        // Bỏ check isLoadingOldMessages ở ngoài, chỉ check bên trong này
         if (entry.isIntersecting && !isLoadingOldMessages) {
           onLoadOldMessages();
         }
@@ -182,20 +180,20 @@ export const ChatWindow = React.memo(
       intersectionObserverRef.current = new IntersectionObserver(
         handleIntersection,
         {
-          root: messagesStartRef.current.parentElement,
+          root: target.parentElement,
           rootMargin: '20px 0px',
           threshold: 0.1,
         },
       );
 
-      intersectionObserverRef.current.observe(messagesStartRef.current);
+      intersectionObserverRef.current.observe(target);
 
       return () => {
         if (intersectionObserverRef.current) {
           intersectionObserverRef.current.disconnect();
         }
       };
-    }, [onLoadOldMessages, isLoadingOldMessages, isReadyForInfiniteScroll]);
+    }, [onLoadOldMessages, isLoadingOldMessages]);
 
     React.useEffect(() => {
       const handleClickOutside = (event: MouseEvent) => {
@@ -578,7 +576,6 @@ export const ChatWindow = React.memo(
               {/* Emoji Picker Popup */}
               {isEmojiPickerOpen && (
                 <div
-                  ref={emojiPickerRef}
                   data-emoji-picker
                   className="absolute bottom-full mb-2 right-0 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-50 w-64"
                 >
