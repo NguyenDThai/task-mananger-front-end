@@ -37,6 +37,11 @@ export interface User {
   [key: string]: unknown;
 }
 
+export interface PaginationInfo {
+  page: number;
+  hasMore: boolean;
+}
+
 interface ChatState {
   isInitialized: boolean;
   isActivated: boolean; // Trạng thái đã mở chatbot lần đầu
@@ -48,6 +53,7 @@ interface ChatState {
   chatMembers: Record<number, User[]>; //Lưu danh sách thành viên trong group
   currentUser: User | null; // Người dùng hiện tại trong Chat
   onlineUsers: Record<number, boolean>; // Lưu danh sách người dùng online
+  pagination: Record<number, PaginationInfo>; // Lưu thông tin phân trang
 }
 
 const initialState: ChatState = {
@@ -61,6 +67,7 @@ const initialState: ChatState = {
   chatMembers: {},
   currentUser: null,
   onlineUsers: {},
+  pagination: {},
 };
 
 const chatSlide = createSlice({
@@ -200,6 +207,12 @@ const chatSlide = createSlice({
       const chatId = Number(chat.id);
       state.message[chatId] = messages;
 
+      // Khởi tạo phân trang
+      state.pagination[chatId] = {
+        page: 1,
+        hasMore: messages.length >= 20,
+      };
+
       // Cập nhật tin nhắn cuối cùng trong danh sách chat gần đây nếu có tin nhắn mới nhất
       if (messages.length > 0) {
         const lastMsg = messages[messages.length - 1];
@@ -214,6 +227,23 @@ const chatSlide = createSlice({
         };
         state.recentChats = [updatedChat, ...otherChats];
       }
+    },
+
+    prependMessages: (
+      state,
+      action: PayloadAction<{
+        chatId: number;
+        messages: Message[];
+        page: number;
+      }>,
+    ) => {
+      const { chatId, messages, page } = action.payload;
+      if (!state.message[chatId]) state.message[chatId] = [];
+      state.message[chatId] = [...messages, ...state.message[chatId]];
+      state.pagination[chatId] = {
+        page: page,
+        hasMore: messages.length >= 20,
+      };
     },
   },
 });
@@ -232,6 +262,7 @@ export const {
   setMessagesHistory,
   updateChat,
   setUserPresence,
+  prependMessages,
 } = chatSlide.actions;
 
 export default chatSlide.reducer;
@@ -281,3 +312,10 @@ export const selectCurrentUser = (state: { chat: ChatState }) =>
 
 export const selectOnlineUser = (state: { chat: ChatState }) =>
   state.chat.onlineUsers;
+
+export const selectChatPagination = (state: { chat: ChatState }) => {
+  const chatId = state.chat.currentChatId;
+  return chatId
+    ? state.chat.pagination[chatId] || { page: 1, hasMore: true }
+    : { page: 1, hasMore: true };
+};

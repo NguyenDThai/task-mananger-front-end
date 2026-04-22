@@ -11,7 +11,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useState, useRef } from 'react';
+import React, { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import {
   currentMessages,
@@ -33,6 +33,8 @@ interface ScreenChatProps {
   onAddMemberClick: (chat?: Chat) => void;
   replyMessage: Message | null;
   setReplyMessage: (msg: Message | null) => void;
+  onScroll: () => void;
+  isLoadingMore: boolean;
 }
 
 const ScreenChat = ({
@@ -46,6 +48,8 @@ const ScreenChat = ({
   onAddMemberClick,
   replyMessage,
   setReplyMessage,
+  onScroll,
+  isLoadingMore,
 }: ScreenChatProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
@@ -108,14 +112,26 @@ const ScreenChat = ({
     setNewMessage('');
   };
 
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    if (e.currentTarget.scrollTop === 0) {
+      onScroll();
+    }
+  };
+
   return (
     <div
       className={`absolute inset-0 flex flex-col transition-all duration-300 ${currentChat ? 'translate-x-0' : 'translate-x-full opacity-0'}`}
     >
       <div
         ref={scrollRef}
-        className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scrollbar-hide scroll-smooth"
+        onScroll={handleScroll}
+        className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scrollbar-hide"
       >
+        {isLoadingMore && (
+          <div className="flex justify-center py-2">
+            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
         {messages.length > 0 ? (
           messages.map((item: Message) => {
             // SDK trả về field thành viên trong item.member

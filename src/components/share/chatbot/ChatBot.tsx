@@ -15,6 +15,8 @@ import {
   selectCurrentUser,
   updateChatUnread,
   setMessagesHistory,
+  selectChatPagination,
+  prependMessages,
 } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 import { chatSDK } from '../../../services/chat.service';
@@ -56,9 +58,64 @@ const ChatBot = () => {
   const [groupName, setGroupName] = useState('');
   const [newMessage, setNewMessage] = useState('');
   const [replyMessage, setReplyMessage] = useState<Message | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const isInitialized = useSelector(selectIsChatInitialized);
+
+  // Phân trang
+  const pagination = useSelector(selectChatPagination);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // 1. Đặt biến ref này ở trên cùng của component
+  const isPrependingRef = useRef(false);
+
+  // 2. Trong hàm loadMoreMessages
+  const loadMoreMessages = async () => {
+    if (!currentChat?.id || isLoadingMore || !pagination.hasMore) return;
+
+    setIsLoadingMore(true);
+    isPrependingRef.current = true; // BẮT ĐẦU KHÓA
+
+    const container = scrollContainerRef.current;
+    const previousScrollHeight = container ? container.scrollHeight : 0;
+    const previousScrollTop = container ? container.scrollTop : 0;
+
+    try {
+      const nextPage = pagination.page + 1;
+      const res = await chatSDK.getMessages(currentChat.id, 20, nextPage);
+      const newMsgs = res.data || [];
+
+      if (newMsgs.length > 0) {
+        dispatch(
+          prependMessages({
+            chatId: currentChat.id,
+            messages: newMsgs,
+            page: nextPage,
+          }),
+        );
+
+        // Đợi DOM cập nhật xong
+        requestAnimationFrame(() => {
+          if (container) {
+            // Tính toán lại vị trí để đứng im tại chỗ
+            container.scrollTop =
+              container.scrollHeight - previousScrollHeight + previousScrollTop;
+
+            // Mở khóa sau khi đã ổn định vị trí (đợi thêm một chút để chắc chắn)
+            setTimeout(() => {
+              isPrependingRef.current = false;
+            }, 200);
+          }
+        });
+      } else {
+        isPrependingRef.current = false;
+      }
+    } catch {
+      isPrependingRef.current = false;
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
 
   // Xử lý click ngoài để đóng chat
   useEffect(() => {
@@ -98,13 +155,15 @@ const ChatBot = () => {
 
   // Tự động cuộn xuống cuối mỗi khi có tin nhắn mới
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTo({
-        top: scrollRef.current.scrollHeight,
-        behavior: 'smooth',
-      });
+    // Nếu đang load tin cũ thì tuyệt đối không cuộn xuống cuối
+    if (isPrependingRef.current) return;
+    if (scrollContainerRef.current && !isLoadingMore) {
+      const container = scrollContainerRef.current;
+      // Chỉ tự động cuộn xuống cuối khi mới mở chat
+      // hoặc khi bạn đang ở gần đáy mà có tin mới
+      container.scrollTop = container.scrollHeight;
     }
-  }, [messages]);
+  }, [messages.length, currentChat?.id, isLoadingMore]);
 
   // Xử lý kéo thả icon
   useEffect(() => {
@@ -727,7 +786,7 @@ const ChatBot = () => {
 
           {/* Màn hình Chat */}
           <ScreenChat
-            scrollRef={scrollRef}
+            scrollRef={scrollContainerRef}
             user={user as any}
             currentChat={currentChat}
             newMessage={newMessage}
@@ -737,6 +796,8 @@ const ChatBot = () => {
             onAddMemberClick={handleOpenAddMemberModal}
             replyMessage={replyMessage}
             setReplyMessage={setReplyMessage}
+            onScroll={loadMoreMessages}
+            isLoadingMore={isLoadingMore}
           />
         </div>
       </div>
