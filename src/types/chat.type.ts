@@ -93,7 +93,6 @@ export interface ISChatInstance {
     memberIds: number[],
     name: string,
     avatar?: string,
-    currentUserId?: number,
   ) => Promise<{
     data: IChatItem;
   }>;

@@ -314,7 +314,7 @@ const MessageFiles = memo(
               download={file.name}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex-1 max-w-50 flex items-center gap-2 px-3 py-2 rounded border transition-all hover:scale-105 text-black ${
+              className={`flex-1 max-w-50 h-60 flex items-center gap-2 px-3 py-2 rounded border transition-all hover:scale-105 text-black ${
                 isCurrentUser
                   ? `${fileTypeInfo.colorClass}`
                   : 'bg-white/20 border-gray-300 hover:bg-white/30'
@@ -395,7 +395,6 @@ const MessageItem = memo(
     if (message.revoked) {
       return (
         <div
-          key={message.id}
           id={`message-${message.id}`}
           className={`flex gap-2 justify-start items-center relative ${
             isCurrentUser ? 'flex-row-reverse' : ''
@@ -670,7 +669,6 @@ const MessagesList = memo(
     onReply,
     onScroll,
     messagesStartRef: startRef,
-    messagesEndRef: endRef,
   }: {
     messages: IMessageItem[];
     isLoading: boolean;
@@ -684,7 +682,6 @@ const MessagesList = memo(
     onReply: (msg: IMessageItem) => void;
     onScroll: (id: number) => void;
     messagesStartRef: React.RefObject<HTMLDivElement | null>;
-    messagesEndRef: React.RefObject<HTMLDivElement | null>;
   }) => {
     const { currentChatMembers, currentUser, currentChat } = useSelector(
       (state: RootState) => state.chat,
@@ -748,29 +745,18 @@ const MessagesList = memo(
           </div>
         ) : (
           <>
-            <div ref={startRef} />
-            {isLoadingOldMessages && (
-              <div className="flex items-center justify-center py-4">
-                <div className="text-center">
-                  <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-gray-600 animate-spin mx-auto mb-1"></div>
-                  <p className="text-xs text-gray-400">
-                    Đang tải tin nhắn cũ...
-                  </p>
-                </div>
-              </div>
-            )}
-            {msgList.toReversed().map((message, index, list) => {
+            {msgList.map((message, index) => {
               const isCurrentUser =
                 currentUser && message.member?.id === currentUser.id;
 
               const shouldShowAvatar =
                 !isCurrentUser &&
-                (index === list.length - 1 ||
-                  list.at(index + 1)?.member?.id !== message.member?.id);
+                (index === msgList.length - 1 ||
+                  msgList[index + 1]?.member?.id !== message.member?.id);
 
               return (
                 <MessageItem
-                  key={message.id}
+                  key={`${message.id}-${index}`}
                   message={message}
                   index={index}
                   isCurrentUser={isCurrentUser || false}
@@ -787,7 +773,17 @@ const MessagesList = memo(
                 />
               );
             })}
-            <div ref={endRef} />
+            {isLoadingOldMessages && (
+              <div className="flex items-center justify-center py-4">
+                <div className="text-center">
+                  <div className="w-6 h-6 rounded-full border-2 border-gray-200 border-t-gray-600 animate-spin mx-auto mb-1"></div>
+                  <p className="text-xs text-gray-400">
+                    Đang tải tin nhắn cũ...
+                  </p>
+                </div>
+              </div>
+            )}
+            <div ref={startRef} />
           </>
         )}
       </>

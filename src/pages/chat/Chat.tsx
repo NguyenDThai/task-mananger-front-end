@@ -81,7 +81,6 @@ export const Chat = () => {
           memberIds,
           finalGroupName,
           undefined,
-          currentUser?.id,
         );
         targetChat = response.data;
         isNewChat = true;

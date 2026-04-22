@@ -2,6 +2,7 @@ import React from 'react';
 import type { IMessageItem, TMessageAction } from '../../types/chat.type';
 import { Smile, X, ChevronLeft } from 'lucide-react';
 import { MessagesList } from './MessageList';
+import { chat as chatService } from '../../services/chatService';
 
 interface ChatWindowProps {
   chatId?: number;
@@ -55,7 +56,6 @@ export const ChatWindow = React.memo(
     );
     const fileInputRef = React.useRef<HTMLInputElement>(null);
     const emojiPickerRef = React.useRef<HTMLDivElement>(null);
-    const messagesEndRef = React.useRef<HTMLDivElement>(null);
     const messagesStartRef = React.useRef<HTMLDivElement>(null);
     const intersectionObserverRef = React.useRef<IntersectionObserver | null>(
       null,
@@ -64,8 +64,9 @@ export const ChatWindow = React.memo(
     const [isReadyForInfiniteScroll, setIsReadyForInfiniteScroll] =
       React.useState(false);
     const lastMessageIdRef = React.useRef<number | null>(null);
-    const wasSendingMessageRef = React.useRef(isSendingMessage);
     const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+    const isAtBottomRef = React.useRef(true);
+    const scrollRef = React.useRef<HTMLDivElement>(null);
 
     // Popular emojis
     const emojis = [
@@ -87,14 +88,22 @@ export const ChatWindow = React.memo(
       '🚀',
     ];
 
-    const scrollToBottom = React.useCallback(() => {
-      requestAnimationFrame(() => {
-        messagesEndRef.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'end',
-        });
-      });
+    const scrollToEnd = React.useCallback(() => {
+      if (!scrollRef.current) return;
+
+      // Use setTimeout to ensure DOM has updated
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = 0;
+        }
+      }, 0);
     }, []);
+
+    const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+      const target = e.currentTarget;
+      // For flex-col-reverse: check if scrollTop is near 0 (top of reverse list)
+      isAtBottomRef.current = target.scrollTop < 100;
+    };
 
     const scrollToMessage = (messageId: number) => {
       const element = document.getElementById(`message-${messageId}`);
@@ -108,42 +117,49 @@ export const ChatWindow = React.memo(
       }
     };
 
-    React.useEffect(() => {
-      lastMessageIdRef.current = null;
-      setIsReadyForInfiniteScroll(false);
-    }, [chatId]);
+    // React.useEffect(() => {
+    //   lastMessageIdRef.current = null;
+    //   setIsReadyForInfiniteScroll(false);
+    // }, [chatId]);
 
-    React.useEffect(() => {
-      if (!isLoading && messages.length > 0 && !isReadyForInfiniteScroll) {
-        // Đợi một khoảng ngắn để trình duyệt hoàn tất việc scroll xuống dưới
-        const timer = setTimeout(() => {
-          setIsReadyForInfiniteScroll(true);
-        }, 500);
-        return () => clearTimeout(timer);
-      }
-    }, [messages, isLoading, isReadyForInfiniteScroll]);
+    // React.useEffect(() => {
+    //   const chatContainer = scrollRef.current;
+    //   if (!chatContainer) return;
 
-    React.useEffect(() => {
+    //   const resizeObserver = new ResizeObserver(() => {
+    //     if (isAtBottomRef.current) {
+    //       scrollToEnd();
+    //     }
+    //   });
+
+    //   resizeObserver.observe(chatContainer);
+
+    //   return () => resizeObserver.disconnect();
+    // }, [scrollToEnd]);
+
+    React.useLayoutEffect(() => {
       if (isLoading || messages.length === 0) return;
+
+      if (!isReadyForInfiniteScroll) {
+        setIsReadyForInfiniteScroll(true);
+        return;
+      }
 
       const currentLastMessage = messages[0];
       const prevLastMessageId = lastMessageIdRef.current;
 
-      let timer: number;
       if (
-        prevLastMessageId === null ||
+        prevLastMessageId !== null &&
         currentLastMessage.id !== prevLastMessageId
       ) {
-        scrollToBottom();
-        timer = setTimeout(() => {
-          scrollToBottom();
-        }, 300);
+        if (isAtBottomRef.current) {
+          scrollToEnd();
+          chatService.readChat(chatId!);
+        }
       }
 
       lastMessageIdRef.current = currentLastMessage.id;
-
-      return () => clearTimeout(timer);
-    }, [messages, isLoading]);
+    }, [messages, isLoading, chatId, scrollToEnd]);
 
     // Infinity scroll: Load old messages when user scrolls to top
     React.useEffect(() => {
@@ -212,21 +228,6 @@ export const ChatWindow = React.memo(
       }
     }, [openMenuId, isEmojiPickerOpen]);
 
-    // Effect: Clear form data sau khi gửi message thành công
-    React.useEffect(() => {
-      if (wasSendingMessageRef.current && !isSendingMessage) {
-        // Từ đang gửi (true) -> gửi xong (false), có nghĩa là gửi thành công
-        setMessageInput('');
-        setSelectedFiles([]);
-        setReplyingTo(null);
-        // Focus vào textarea
-        setTimeout(() => {
-          textareaRef.current?.focus();
-        }, 0);
-      }
-      wasSendingMessageRef.current = isSendingMessage;
-    }, [isSendingMessage]);
-
     const handleSend = async () => {
       if (messageInput.trim() || selectedFiles.length > 0) {
         setIsSendingMessage(true);
@@ -237,6 +238,14 @@ export const ChatWindow = React.memo(
             selectedFiles,
             replyingTo?.id,
           );
+
+          setMessageInput('');
+          setSelectedFiles([]);
+          setReplyingTo(null);
+
+          setTimeout(() => {
+            textareaRef.current?.focus();
+          }, 0);
         } catch (error) {
           console.error('Lỗi khi gửi tin nhắn:', error);
         } finally {
@@ -379,13 +388,18 @@ export const ChatWindow = React.memo(
         </div>
 
         {/* Messages */}
-        <div className="bg-white flex-1 overflow-y-auto px-4 pb-4 pt-11 space-y-3 bg-transparent [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded">
+        <div
+          onScroll={handleScroll}
+          ref={scrollRef}
+          className="bg-white flex-1 overflow-y-auto flex flex-col-reverse px-4 pb-4 pt-11 gap-3 bg-transparent [&::-webkit-scrollbar]:!w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-gray-200 [&::-webkit-scrollbar-thumb]:rounded"
+        >
           <MessagesList
             messages={messages}
             isLoading={isLoading}
             isLoadingOldMessages={isLoadingOldMessages}
             hoveredId={hoveredMessageId}
             openMenuId={openMenuId}
+            messagesStartRef={messagesStartRef}
             onHover={setHoveredMessageId}
             onHoverLeave={() => {
               if (openMenuId.messageId === null) {
@@ -407,8 +421,6 @@ export const ChatWindow = React.memo(
               setOpenMenuId({ messageId: null, type: null });
             }}
             onScroll={scrollToMessage}
-            messagesStartRef={messagesStartRef}
-            messagesEndRef={messagesEndRef}
           />
         </div>
 

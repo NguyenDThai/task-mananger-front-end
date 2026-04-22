@@ -14,6 +14,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useLogoutMutation } from '../../redux/api/authApi';
 import { logout as logoutAction } from '../../redux/slides/auth/authSlide';
 import { toast } from 'react-toastify';
+import { chat } from '../../services/chatService';
 
 const SideBar = () => {
   const [isCollapsed, setIsCollapsed] = useState(true);
@@ -53,6 +54,7 @@ const SideBar = () => {
   const handleLogout = async () => {
     try {
       await logoutApi().unwrap();
+      await chat.clearAuth();
       dispatch(logoutAction());
       toast.success('Bạn đã đăng xuất thành công');
       navigate('/login');
