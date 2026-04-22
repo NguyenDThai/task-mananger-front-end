@@ -6,11 +6,12 @@ import {
   Reply,
   RotateCcw,
   Send,
+  Smile,
   ThumbsUp,
   Trash2,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
 import { currentMessages } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
@@ -44,7 +45,43 @@ const ScreenChat = ({
   setReplyMessage,
 }: ScreenChatProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const messages = useSelector(currentMessages);
+
+  const emojis = [
+    {
+      cat: 'Phổ biến',
+      items: ['😂', '❤️', '😍', '🤣', '😊', '🙏', '😭', '😘', '👍', '✨'],
+    },
+    {
+      cat: 'Cảm xúc',
+      items: ['😎', '🤔', '🤨', '😐', '😑', '🙄', '😏', '😣', '😥', '😮'],
+    },
+    {
+      cat: 'Biểu tượng',
+      items: ['🔥', '💯', '🚀', '⭐', '🎈', '🎉', '🎁', '💎', '🌈', '⚡'],
+    },
+  ];
+
+  const addEmoji = (emoji: string) => {
+    const input = inputRef.current;
+    if (input) {
+      const start = input.selectionStart || 0;
+      const end = input.selectionEnd || 0;
+      const val = newMessage;
+      const nextText = val.substring(0, start) + emoji + val.substring(end);
+      setNewMessage(nextText);
+
+      // Đưa con trỏ ra sau emoji vừa chèn
+      setTimeout(() => {
+        input.focus();
+        input.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    } else {
+      setNewMessage(newMessage + emoji);
+    }
+  };
 
   const onFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -444,16 +481,62 @@ const ScreenChat = ({
           <Paperclip size={20} />
         </button>
 
-        <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter') onSend();
-          }}
-          placeholder="Nhập tin nhắn..."
-          className="flex-1 bg-slate-100 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
-        />
+        <div className="flex-1 relative">
+          <input
+            ref={inputRef}
+            type="text"
+            value={newMessage}
+            onChange={(e) => setNewMessage(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') onSend();
+            }}
+            placeholder="Nhập tin nhắn..."
+            className="w-full bg-slate-100 rounded-xl pl-4 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
+          />
+          <button
+            type="button"
+            onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors ${
+              showEmojiPicker
+                ? 'text-indigo-600 bg-indigo-50'
+                : 'text-slate-400 hover:text-indigo-600 hover:bg-slate-200'
+            }`}
+          >
+            <Smile size={18} />
+          </button>
+
+          {/* Emoji Picker Popover */}
+          {showEmojiPicker && (
+            <>
+              <div
+                className="fixed inset-0 z-[60]"
+                onClick={() => setShowEmojiPicker(false)}
+              />
+              <div className="absolute bottom-12 right-0 w-64 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl z-[70] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+                <div className="p-3">
+                  {emojis.map((group) => (
+                    <div key={group.cat} className="mb-3 last:mb-0">
+                      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 px-1">
+                        {group.cat}
+                      </h4>
+                      <div className="grid grid-cols-5 gap-1">
+                        {group.items.map((emoji) => (
+                          <button
+                            key={emoji}
+                            onClick={() => addEmoji(emoji)}
+                            className="w-8 h-8 flex items-center justify-center text-lg hover:bg-indigo-50 rounded-lg transition-colors"
+                          >
+                            {emoji}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
         <button
           onClick={onSend}
           disabled={
