@@ -45,6 +45,12 @@ export const LiveChatWidgetContainer = ({
   useEffect(() => {
     const loadMessages = async () => {
       if (currentChat?.id) {
+        // Clear old messages immediately when changing chat
+        dispatch(setCurrentChatMessages([]));
+        dispatch(setMessagesPagination(null));
+        dispatch(setCurrentChatMembers([]));
+        setIsLoading(true);
+
         // Fetch messages for the selected chat
         try {
           const { data: messagesList, pagination } = await chat.getMessages(
@@ -75,6 +81,8 @@ export const LiveChatWidgetContainer = ({
           dispatch(setCurrentChatMessages([]));
           dispatch(setMessagesPagination(null));
           dispatch(setCurrentChatMembers([]));
+        } finally {
+          setIsLoading(false);
         }
       } else {
         dispatch(setCurrentChatMessages([]));
@@ -88,7 +96,6 @@ export const LiveChatWidgetContainer = ({
 
   // Xử lý chọn chat
   const handleSelectChat = async (chatId: number) => {
-    setIsLoading(true);
     const selectedChat = chats.find((c) => c.id === chatId);
     if (!selectedChat) return;
 
@@ -97,8 +104,6 @@ export const LiveChatWidgetContainer = ({
     } catch (error) {
       console.error('Failed to select chat:', error);
     }
-
-    setIsLoading(false);
   };
 
   // Xử lý xóa chat

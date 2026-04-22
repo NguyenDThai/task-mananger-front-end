@@ -44,8 +44,8 @@ interface Position {
 
 const STORAGE_KEY = 'live-chat-widget-position';
 const BUTTON_SIZE = 48; // w-12 h-12
-const WIDGET_WIDTH = 360; // w-90 = 360px
-const WIDGET_HEIGHT = 400; // h-[400px]
+const WIDGET_WIDTH = 300;
+const WIDGET_HEIGHT = 300;
 
 export const LiveChatWidget = ({
   chats = [],
@@ -264,7 +264,7 @@ export const LiveChatWidget = ({
   const isNearTop = position.y < WIDGET_HEIGHT;
 
   // Generate dynamic positioning classes
-  const expandedWidgetClasses = `absolute ${isNearLeft ? 'left-full' : 'right-full'} ${isNearTop ? 'top-0' : 'bottom-0'} ml-3 mr-3 w-90 h-[500px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 transition-all duration-200`;
+  const expandedWidgetClasses = `absolute ${isNearLeft ? 'left-full' : 'right-full'} ${isNearTop ? 'top-0' : 'bottom-0'} ml-3 mr-3 w-100 h-[550px] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-200 transition-all duration-200`;
 
   // (Sync innerWidgetRef classes when widgetView changes - initial render)
   useEffect(() => {
