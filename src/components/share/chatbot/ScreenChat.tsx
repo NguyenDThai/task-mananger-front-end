@@ -1,4 +1,5 @@
 import {
+  ArrowDown,
   Heart,
   MessageSquareMore,
   Paperclip,
@@ -53,6 +54,7 @@ const ScreenChat = ({
 }: ScreenChatProps) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [showScrollBottom, setShowScrollBottom] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messages = useSelector(currentMessages);
   const onlineUsers = useSelector(selectOnlineUser);
@@ -113,8 +115,21 @@ const ScreenChat = ({
   };
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
-    if (e.currentTarget.scrollTop === 0) {
+    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+    if (scrollTop === 0) {
       onScroll();
+    }
+
+    const isFarFromBottom = scrollHeight - clientHeight - scrollTop > 300;
+    setShowScrollBottom(isFarFromBottom);
+  };
+
+  const scrollToBottom = () => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        top: scrollRef.current.scrollHeight,
+        behavior: 'smooth',
+      });
     }
   };
 
@@ -125,7 +140,7 @@ const ScreenChat = ({
       <div
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scrollbar-hide"
+        className="relative flex-1 p-4 overflow-y-auto space-y-4 bg-slate-50/50 scrollbar-hide"
       >
         {isLoadingMore && (
           <div className="flex justify-center py-2">
@@ -423,6 +438,16 @@ const ScreenChat = ({
               Chưa có tin nhắn nào. Hãy bắt đầu chào nhau!
             </p>
           </div>
+        )}
+        {showScrollBottom && (
+          <button
+            onClick={scrollToBottom}
+            className="fixed bottom-20 left-1/2 flex items-center justify-center -translate-x-1/2 w-8 h-8 rounded-full bg-white cursor-pointer hover:bg-slate-100 hover:text-slate-500"
+          >
+            <ArrowDown size={20} className="text-slate-400" />
+
+            <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 border-2 border-white rounded-full hidden"></span>
+          </button>
         )}
       </div>
       {/* Thanh hiển thị tin nhắn đang trả lời */}
