@@ -207,14 +207,17 @@ export const useChatGlobalListener = () => {
       }
     };
 
+    // Lắng nghe sự kiện thay đổi trạng thái trực tuyến của user
     const handlePresenceChange = (data: any) => {
-      const userId = data.member?.id || data.id;
-      if (!userId) return;
+      const userId = data.member?.id || data.member_id || data.id;
+      if (!userId) {
+        console.warn('Không tìm thấy user trong event', data);
+      }
       const isOnline = data.type
         ? data.type === 'join'
         : data.status
           ? data.status === 'online'
-          : true;
+          : !!data.member;
 
       dispatch(setUserPresence({ userId: Number(userId), isOnline }));
     };

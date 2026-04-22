@@ -13,7 +13,10 @@ import {
 } from 'lucide-react';
 import { useState, useRef } from 'react';
 import { useSelector } from 'react-redux';
-import { currentMessages } from '../../../redux/slides/chat/chatSlide';
+import {
+  currentMessages,
+  selectOnlineUser,
+} from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 
 interface ScreenChatProps {
@@ -48,6 +51,7 @@ const ScreenChat = ({
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const messages = useSelector(currentMessages);
+  const onlineUsers = useSelector(selectOnlineUser);
 
   const emojis = [
     {
@@ -194,7 +198,9 @@ const ScreenChat = ({
                         </span>
                       )}
                     </div>
-                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 border-2 border-white rounded-full shadow-sm"></div>
+                    <div
+                      className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 border-2 border-white rounded-full shadow-sm ${onlineUsers[sender.id] ? 'bg-emerald-500' : 'bg-slate-300'}`}
+                    ></div>
                   </div>
                 )}
 

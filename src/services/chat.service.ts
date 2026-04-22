@@ -27,7 +27,7 @@ class ChatService {
     return this.chatSDK.getAuth();
   }
 
-  public async clearAuth() {
+  public clearAuth() {
     return this.chatSDK.clearAuth();
   }
 

@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useLogoutMutation } from '../../redux/api/authApi';
 import { logout as logoutAction } from '../../redux/slides/auth/authSlide';
 import { toast } from 'react-toastify';
+import { chatSDK } from '../../services/chat.service';
 
 const SideBar = () => {
   const dispatch = useDispatch();
@@ -45,6 +46,7 @@ const SideBar = () => {
   const handleLogout = async () => {
     try {
       await logoutApi().unwrap();
+      chatSDK.clearAuth();
       dispatch(logoutAction());
       toast.success('Bạn đã đăng xuất thành công');
       navigate('/login');
