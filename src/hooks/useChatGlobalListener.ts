@@ -15,6 +15,7 @@ import {
   setMessagesHistory,
   updateChatUnread,
   updateChat,
+  setUserPresence,
 } from '../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../redux/slides/chat/chatSlide';
 
@@ -43,7 +44,14 @@ export const useChatGlobalListener = () => {
     const fetchSystemUsers = async () => {
       try {
         const res = await chatSDK.getMembers();
-        dispatch(setSystemUsers((res.data as User[]) || []));
+        const users = (res.data as User[]) || [];
+        dispatch(setSystemUsers(users));
+
+        users.forEach((u) => {
+          if (u.status === 'online') {
+            dispatch(setUserPresence({ userId: Number(u.id), isOnline: true }));
+          }
+        });
       } catch {
         /* silent catch */
       }
@@ -199,6 +207,18 @@ export const useChatGlobalListener = () => {
       }
     };
 
+    const handlePresenceChange = (data: any) => {
+      const userId = data.member?.id || data.id;
+      if (!userId) return;
+      const isOnline = data.type
+        ? data.type === 'join'
+        : data.status
+          ? data.status === 'online'
+          : true;
+
+      dispatch(setUserPresence({ userId: Number(userId), isOnline }));
+    };
+
     chatSDK.addEventListener(chatSDK.EVENTS.chats_message, handleMessage);
     chatSDK.addEventListener(chatSDK.EVENTS.chats_created, handleChatCreated);
     chatSDK.addEventListener(chatSDK.EVENTS.chats_member, handleMemberChange);
@@ -206,6 +226,10 @@ export const useChatGlobalListener = () => {
     chatSDK.addEventListener(chatSDK.EVENTS.chats_updated, handleChatUpdated);
     chatSDK.addEventListener(chatSDK.EVENTS.chats_action, handleChatAction);
     chatSDK.addEventListener(chatSDK.EVENTS.new_message, handleNewMessage);
+    chatSDK.addEventListener(
+      chatSDK.EVENTS.projects_member,
+      handlePresenceChange,
+    );
 
     return () => {
       chatSDK.removeEventListener(chatSDK.EVENTS.chats_message, handleMessage);
@@ -230,6 +254,10 @@ export const useChatGlobalListener = () => {
         handleChatAction,
       );
       chatSDK.removeEventListener(chatSDK.EVENTS.new_message, handleNewMessage);
+      chatSDK.removeEventListener(
+        chatSDK.EVENTS.projects_member,
+        handlePresenceChange,
+      );
     };
   }, [isInitialized, isActivated, dispatch]);
 };

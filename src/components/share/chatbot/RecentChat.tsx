@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import {
   selectRecentChats,
   selectCurrentUser,
+  selectOnlineUser,
 } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, User } from '../../../redux/slides/chat/chatSlide';
 
@@ -25,6 +26,7 @@ const RecentChat = ({
   const recentChats = useSelector(selectRecentChats);
   const currentMember = useSelector(selectCurrentUser);
   const [menuOpenId, setMenuOpenId] = useState<number | null>(null);
+  const onlineUser = useSelector(selectOnlineUser);
 
   const toggleMenu = (e: React.MouseEvent, chatId: number) => {
     e.stopPropagation();
@@ -39,10 +41,17 @@ const RecentChat = ({
           let displayName = chat.name || 'Nhóm chat';
           let displayAvatar = chat.avatar;
 
-          if (chat.type === 'single') {
+          const isGroup = chat.type === 'group';
+          let isOnline = false;
+
+          if (!isGroup) {
             const partner = (chat.members as User[])?.find(
-              (m: User) => m.code !== user?._id,
+              (m: User) => String(m.code) !== String(user?._id),
             );
+
+            if (partner) {
+              isOnline = !!onlineUser[partner.id];
+            }
             displayName = partner ? partner.name : 'Người dùng';
             displayAvatar = partner ? partner.avatar : null;
           }
@@ -73,7 +82,9 @@ const RecentChat = ({
                     {displayName.charAt(0)}
                   </div>
                 )}
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full"></div>
+                <div
+                  className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-white rounded-full ${isOnline ? 'bg-green-500' : 'bg-slate-300'}`}
+                ></div>
                 {unreadCount > 0 && (
                   <div className="absolute -top-1 -left-1 w-5 h-5 flex items-center justify-center bg-red-500 text-white rounded-full text-[10px] font-bold shadow-sm border border-white animate-in zoom-in">
                     {unreadCount > 99 ? '99+' : unreadCount}
