@@ -139,6 +139,21 @@ const chatSlide = createSlice({
     setUnreadCount: (state, action: PayloadAction<number>) => {
       state.unreadCount = action.payload;
     },
+    updateChat: (
+      state,
+      action: PayloadAction<Partial<Chat> & { id: number }>,
+    ) => {
+      const { id, ...updates } = action.payload;
+      const index = state.recentChats.findIndex(
+        (c) => Number(c.id) === Number(id),
+      );
+      if (index !== -1) {
+        state.recentChats[index] = {
+          ...state.recentChats[index],
+          ...updates,
+        };
+      }
+    },
     setSystemUsers: (state, action: PayloadAction<User[]>) => {
       state.systemUsers = action.payload;
     },
@@ -168,6 +183,29 @@ const chatSlide = createSlice({
         };
       }
     },
+    setMessagesHistory: (
+      state,
+      action: PayloadAction<{ chat: Chat; messages: Message[] }>,
+    ) => {
+      const { chat, messages } = action.payload;
+      const chatId = Number(chat.id);
+      state.message[chatId] = messages;
+
+      // Cập nhật tin nhắn cuối cùng trong danh sách chat gần đây nếu có tin nhắn mới nhất
+      if (messages.length > 0) {
+        const lastMsg = messages[messages.length - 1];
+        const existingChat = state.recentChats.find((c) => c.id === chatId);
+        const otherChats = state.recentChats.filter((c) => c.id !== chatId);
+
+        const updatedChat: Chat = {
+          ...(existingChat || {}),
+          ...chat,
+          message: lastMsg,
+          updated_at: lastMsg.created_at,
+        };
+        state.recentChats = [updatedChat, ...otherChats];
+      }
+    },
   },
 });
 
@@ -182,6 +220,8 @@ export const {
   setChatMembers,
   setAuth,
   updateChatUnread,
+  setMessagesHistory,
+  updateChat,
 } = chatSlide.actions;
 
 export default chatSlide.reducer;

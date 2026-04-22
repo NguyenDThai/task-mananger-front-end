@@ -14,6 +14,7 @@ import {
   setChatActivated,
   selectCurrentUser,
   updateChatUnread,
+  setMessagesHistory,
 } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 import { chatSDK } from '../../../services/chat.service';
@@ -193,10 +194,17 @@ const ChatBot = () => {
     }
   };
 
+  const lastFetchedChatIdRef = useRef<number | null>(null);
+
   // Lấy tin nhắn của cuộc trò chuyện hiện tại
   useEffect(() => {
     const fetchMessagesAndMembers = async () => {
       if (!currentChat || !isInitialized) return;
+
+      // Chống gọi lặp nếu đã đang/vừa load chatId này
+      if (lastFetchedChatIdRef.current === currentChat.id) return;
+      lastFetchedChatIdRef.current = currentChat.id;
+
       try {
         // Cập nhật ID vào Redux ngay lập tức để đồng bộ trạng thái
         dispatch(setCurrentChatId(currentChat.id));
@@ -204,10 +212,8 @@ const ChatBot = () => {
         const res = await chatSDK.getMessages(currentChat.id);
         const data = res.data || [];
 
-        // Đẩy toàn bộ tin nhắn vào Redux qua loop (Sau này nên dùng setMessagesHistory để nhanh hơn)
-        [...data].forEach((m: Message) => {
-          dispatch(upsertMessage({ chat: currentChat, message: m }));
-        });
+        // Sử dụng setMessagesHistory để cập nhật toàn bộ tin nhắn một lần, tránh loop dispatch
+        dispatch(setMessagesHistory({ chat: currentChat, messages: data }));
 
         // Lấy danh sách thành viên
         if (currentChat.type === 'group') {
@@ -274,6 +280,7 @@ const ChatBot = () => {
       currentChat !== null
     ) {
       setCurrentChat(null);
+      lastFetchedChatIdRef.current = null; // Reset guard
     }
     prevReduxChatIdRef.current = reduxCurrentChatId;
   }, [reduxCurrentChatId, currentChat]);

@@ -12,6 +12,9 @@ import {
   setCurrentChatId,
   selectCurrentUser,
   setUnreadCount,
+  setMessagesHistory,
+  updateChatUnread,
+  updateChat,
 } from '../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../redux/slides/chat/chatSlide';
 
@@ -77,9 +80,10 @@ export const useChatGlobalListener = () => {
               const currentChat =
                 chats.find((c) => c.id === targetId) ||
                 ({ id: targetId } as Chat);
-              [...res.data].reverse().forEach((m: Message) => {
-                dispatch(upsertMessage({ chat: currentChat, message: m }));
-              });
+
+              // Sử dụng setMessagesHistory thay vì loop dispatch upsertMessage
+              const messages = [...res.data].reverse();
+              dispatch(setMessagesHistory({ chat: currentChat, messages }));
             }
           } catch {
             /* ignore */
@@ -149,14 +153,7 @@ export const useChatGlobalListener = () => {
       if (payload.type === 'like') processedMessage.like = true;
       if (payload.type === 'unlike') processedMessage.like = false;
 
-      // Xử lý unread: Nếu tin nhắn đến từ người khác
-      const senderId =
-        processedMessage.sender_id || (processedMessage.member as any)?.id;
-      if (senderId && senderId !== currentMemberRef.current?.id) {
-        // Làm mới ngay lập tức (với cờ force) nếu là tin nhắn từ người khác
-        refreshChatData(chatId, false, true);
-      }
-
+      // Xử lý unread: Redux upsertMessage sẽ tự động cập nhật dựa trên payload.chat
       dispatch(upsertMessage({ chat: chat, message: processedMessage }));
     };
 
@@ -181,16 +178,25 @@ export const useChatGlobalListener = () => {
     };
 
     const handleChatUpdated = () => {
-      refreshChatData(undefined, false, true);
+      refreshChatData(); // Bỏ force true để dùng throttle 1s
     };
-    const handleChatAction = () => {
-      refreshChatData(undefined, false, true);
+    const handleChatAction = (data: any) => {
+      // Nếu payload có object chat (như log bạn cung cấp), cập nhật toàn bộ chat đó
+      if (data?.chat && data.chat.id) {
+        dispatch(updateChat(data.chat));
+      }
+      // Fallback cho các cấu trúc khác nếu có
+      else {
+        const chatId = Number(data?.chat_id || data?.id);
+        if (chatId && data?.new) {
+          dispatch(updateChatUnread({ chatId, unreadData: data.new }));
+        }
+      }
     };
     const handleNewMessage = (data: any) => {
       if (data && typeof data.new === 'number') {
         dispatch(setUnreadCount(data.new));
       }
-      refreshChatData(undefined, false, true);
     };
 
     chatSDK.addEventListener(chatSDK.EVENTS.chats_message, handleMessage);
