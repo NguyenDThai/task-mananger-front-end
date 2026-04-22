@@ -140,13 +140,13 @@ export const LiveChatWidget = ({
     }
   };
 
-  const handleSendMessage = (
+  const handleSendMessage = async (
     content: string,
     files: File[],
     replyId?: number | null,
   ) => {
     if (currentChat?.id) {
-      onSendMessage(currentChat.id, content, files, replyId);
+      await onSendMessage(currentChat.id, content, files, replyId);
     }
   };
 

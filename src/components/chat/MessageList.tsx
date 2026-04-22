@@ -169,7 +169,7 @@ const getFileTypeInfo = (fileExt: string): FileTypeInfo => {
   // Default
   return {
     icon: <File size={18} className="flex-shrink-0" />,
-    colorClass: 'bg-gray-800 border-gray-600 hover:bg-gray-700',
+    colorClass: 'bg-gray-800 border-gray-600 hover:bg-black text-white',
     type: 'other',
   };
 };
@@ -245,7 +245,7 @@ const MessageActions = memo(
 
           if (actionName === 'like') {
             icon = <ThumbsUp size={14} />;
-            bgColor = 'bg-blue-100';
+            bgColor = 'bg-blue-200';
           } else if (actionName === 'love') {
             icon = <Heart size={14} />;
             bgColor = 'bg-red-100';
@@ -314,11 +314,11 @@ const MessageFiles = memo(
               download={file.name}
               target="_blank"
               rel="noopener noreferrer"
-              className={`flex items-center gap-2 px-3 py-2 rounded border transition-all hover:scale-105 ${
+              className={`flex-1 max-w-50 flex items-center gap-2 px-3 py-2 rounded border transition-all hover:scale-105 text-black ${
                 isCurrentUser
                   ? `${fileTypeInfo.colorClass}`
                   : 'bg-white/20 border-gray-300 hover:bg-white/30'
-              } text-black`}
+              }`}
             >
               {fileTypeInfo.icon || (
                 <File size={18} className="flex-shrink-0" />

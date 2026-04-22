@@ -58,7 +58,9 @@ export const LiveChatWidgetContainer = ({
             20,
             1,
           );
-          await chat.readChat(currentChat.id);
+          if (currentChat.new[currentUser?.id as number]) {
+            await chat.readChat(currentChat.id);
+          }
 
           dispatch(setCurrentChatMessages(messagesList));
 

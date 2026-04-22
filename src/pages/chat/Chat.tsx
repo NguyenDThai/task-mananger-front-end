@@ -156,7 +156,9 @@ export const Chat = () => {
           20,
           1,
         );
-        await chat.readChat(currentChat.id);
+        if (currentChat.new[currentUser?.id as number]) {
+          await chat.readChat(currentChat.id);
+        }
 
         dispatch(setCurrentChatMessages(messagesList));
         if (pagination) {
@@ -228,6 +230,7 @@ export const Chat = () => {
     replyId?: number | null,
   ) => {
     if (!currentUser || !chat || !currentChat) return;
+
     try {
       // Gửi message với content (bắt buộc), files (có thể rỗng) và replyId (tùy chọn)
       await chat?.addMessage(
@@ -239,6 +242,7 @@ export const Chat = () => {
     } catch (error) {
       console.error('Lỗi khi gửi tin nhắn:', error);
       toast.error('Không thể gửi tin nhắn');
+      throw error; // Re-throw để ChatWindow biết là có lỗi
     }
   };
 
@@ -259,10 +263,6 @@ export const Chat = () => {
           }),
         );
       }
-
-      toast.success(
-        `Tin nhắn ${action === 'like' ? 'đã được thích' : action === 'love' ? 'đã được yêu thích' : action === 'revoke' ? 'đã được thu hồi' : 'đã bị xóa'}`,
-      );
     } catch (error) {
       console.error(`Lỗi khi ${action}:`, error);
       toast.error(

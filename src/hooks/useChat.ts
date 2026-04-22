@@ -42,7 +42,11 @@ export const useChat = () => {
       const { chat, message, type, chat_id, message_id } = payload;
       console.warn('Chat new message event:', payload);
       if (type === 'add') {
-        if (currentChat && chat.id === currentChat.id) {
+        if (
+          currentChat &&
+          chat.id === currentChat.id &&
+          message.member?.id !== currentUser?.id
+        ) {
           await chatService.readChat(chat.id);
         }
         dispatch(
