@@ -103,3 +103,11 @@ export interface PaginationInfo {
   page: number;
   hasMore: boolean;
 }
+
+export interface FileItem {
+  id: number;
+  name: string;
+  ext: string;
+  size: number;
+  link: string;
+}

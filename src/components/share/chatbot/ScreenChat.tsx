@@ -19,6 +19,7 @@ import {
   selectOnlineUser,
 } from '../../../redux/slides/chat/chatSlide';
 import type { Chat, Message, UserChat } from '../../../types';
+import { ImagePreviewModal } from '../../chat/ImagePreviewModal';
 
 interface ScreenChatProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -63,6 +64,52 @@ const ScreenChat = ({
   const inputRef = useRef<HTMLInputElement>(null);
   const messages = useSelector(currentMessages);
   const onlineUsers = useSelector(selectOnlineUser);
+  const [previewData, setPreviewData] = useState<{
+    images: string[];
+    initialIndex: number;
+  } | null>(null);
+
+  // Helper function to check if file is image
+  const isImageFile = (file: { type?: string; ext?: string }): boolean => {
+    if (file.type) {
+      return file.type.startsWith('image/');
+    }
+    if (file.ext) {
+      return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(
+        file.ext.toLowerCase(),
+      );
+    }
+    return false;
+  };
+
+  // Helper function to sort files (images first, then other files)
+  const sortFilesByPriority = <T extends { type?: string; ext?: string }>(
+    files: T[],
+  ): T[] => {
+    return [...files].sort((a, b) => {
+      const aIsImage = isImageFile(a);
+      const bIsImage = isImageFile(b);
+      if (aIsImage === bIsImage) return 0;
+      return aIsImage ? -1 : 1;
+    });
+  };
+
+  // Handler to open image preview modal
+  const handleImageClick = (
+    files: { link: string; ext?: string }[] | undefined,
+    clickedIndex: number,
+  ) => {
+    if (!files || files.length === 0) return;
+    const imageFiles = files.filter((file) => isImageFile({ ext: file.ext }));
+    const imageLinks = imageFiles.map((file) => file.link);
+    const initialIndex = imageLinks.findIndex(
+      (link) => link === files[clickedIndex].link,
+    );
+    setPreviewData({
+      images: imageLinks,
+      initialIndex: Math.max(0, initialIndex),
+    });
+  };
 
   const emojis = [
     {
@@ -336,7 +383,7 @@ const ScreenChat = ({
                           <div
                             className={`flex flex-col gap-2 ${item.content ? 'mb-2' : ''}`}
                           >
-                            {item.files.map((file) => {
+                            {sortFilesByPriority(item.files).map((file) => {
                               const isImg = [
                                 'jpg',
                                 'jpeg',
@@ -354,9 +401,14 @@ const ScreenChat = ({
                                       src={file.link}
                                       alt={file.name}
                                       className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
-                                      onClick={() =>
-                                        window.open(file.link, '_blank')
-                                      }
+                                      onClick={() => {
+                                        if (item.files) {
+                                          handleImageClick(
+                                            item.files,
+                                            item.files.indexOf(file),
+                                          );
+                                        }
+                                      }}
                                     />
                                   </div>
                                 );
@@ -477,7 +529,7 @@ const ScreenChat = ({
       {/* THANH PREVIEW FILE TRƯỚC KHI GỬI */}
       {selectedFiles.length > 0 && (
         <div className="px-4 py-3 bg-white border-t border-slate-100 flex gap-3 overflow-x-auto scrollbar-hide animate-in slide-in-from-bottom-2">
-          {selectedFiles.map((file, index) => {
+          {sortFilesByPriority(selectedFiles).map((file, index) => {
             const isImg = file.type.startsWith('image/');
             const previewUrl = isImg ? URL.createObjectURL(file) : null;
 
@@ -604,6 +656,15 @@ const ScreenChat = ({
           </button>
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      {previewData && (
+        <ImagePreviewModal
+          images={previewData.images}
+          initialIndex={previewData.initialIndex}
+          onClose={() => setPreviewData(null)}
+        />
+      )}
     </div>
   );
 };
