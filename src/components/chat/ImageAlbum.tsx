@@ -34,7 +34,7 @@ export const ImageAlbum: React.FC<ImageAlbumProps> = ({
           return (
             <div
               key={image.id}
-              className="absolute w-44 h-48 rounded-lg overflow-hidden shadow-lg transition-all duration-300 hover:scale-105 hover:z-50 group"
+              className="absolute w-44 h-48 relative group/img overflow-hidden rounded-xl border border-black/5 shadow-lg transition-all duration-300 hover:z-50"
               style={{
                 transform: `translateY(${offset}px) rotate(${rotation}deg) ${
                   isExpanded ? 'translateX(0px)' : ''
@@ -49,11 +49,11 @@ export const ImageAlbum: React.FC<ImageAlbumProps> = ({
               <img
                 src={image.link}
                 alt={image.name}
-                className="w-full h-full object-cover"
+                className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer w-full h-full"
               />
 
               {/* Overlay on hover */}
-              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity duration-200"></div>
 
               {/* Image count badge on the first card */}
               {index === 0 && images.length > 1 && !isExpanded && (

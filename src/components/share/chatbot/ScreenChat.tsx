@@ -18,8 +18,10 @@ import {
   currentMessages,
   selectOnlineUser,
 } from '../../../redux/slides/chat/chatSlide';
-import type { Chat, Message, UserChat } from '../../../types';
+import type { Chat, ChatFile, Message, UserChat } from '../../../types';
 import { ImagePreviewModal } from '../../chat/ImagePreviewModal';
+
+const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
 
 interface ScreenChatProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -153,6 +155,29 @@ const ScreenChat = ({
     }
   };
 
+  const onPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+
+    const imageFiles: File[] = [];
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      // Kiểm tra xem item có phải là image không
+      if (item.kind === 'file' && item.type.startsWith('image/')) {
+        const file = item.getAsFile();
+        if (file) {
+          imageFiles.push(file);
+        }
+      }
+    }
+
+    if (imageFiles.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...imageFiles]);
+      // Ngăn chặn hành động dán mặc định
+      e.preventDefault();
+    }
+  };
+
   const removeFile = (index: number) => {
     setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
   };
@@ -207,6 +232,26 @@ const ScreenChat = ({
               ((sender.code as string) || (item.sender_code as string)) ===
               user?._id;
             const isRevoked = item.revoke;
+
+            let imageFiles: ChatFile[] = [];
+            let nonImageFiles: ChatFile[] = [];
+
+            if (item.files && item.files.length > 0) {
+              // Sắp xếp
+              const sortedFiles = sortFilesByPriority(item.files);
+
+              // Phân loại
+              imageFiles = sortedFiles.filter((file) =>
+                IMAGE_EXTS.includes(file.ext?.toLowerCase()),
+              );
+              nonImageFiles = sortedFiles.filter(
+                (file) => !IMAGE_EXTS.includes(file.ext?.toLowerCase()),
+              );
+            }
+
+            // Tính toán các thông số cho grid ảnh
+            const visibleImages = imageFiles.slice(0, 4);
+            const remainingImages = imageFiles.length - 4;
 
             return (
               <div
@@ -288,7 +333,7 @@ const ScreenChat = ({
                 )}
 
                 <div
-                  className={`flex flex-col gap-1.5 max-w-[78%] ${isMine ? 'items-end' : 'items-start'}`}
+                  className={`flex flex-col gap-1.5 max-w-[50%] ${isMine ? 'items-end' : 'items-start'}`}
                 >
                   {/* Sender Name (for group chats) */}
                   {currentChat?.type === 'group' && !isMine && (
@@ -383,57 +428,76 @@ const ScreenChat = ({
                           <div
                             className={`flex flex-col gap-2 ${item.content ? 'mb-2' : ''}`}
                           >
-                            {sortFilesByPriority(item.files).map((file) => {
-                              const isImg = [
-                                'jpg',
-                                'jpeg',
-                                'png',
-                                'gif',
-                                'webp',
-                              ].includes(file.ext?.toLowerCase());
-                              if (isImg) {
-                                return (
-                                  <div
-                                    key={file.id}
-                                    className="relative group/img overflow-hidden rounded-xl border border-black/5"
-                                  >
-                                    <img
-                                      src={file.link}
-                                      alt={file.name}
-                                      className="max-w-full h-auto object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
-                                      onClick={() => {
-                                        if (item.files) {
+                            {/* Images grid */}
+                            {imageFiles.length > 0 && (
+                              <div
+                                className={`grid gap-2 w-full ${imageFiles.length > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}
+                              >
+                                {visibleImages.map((file, index) => {
+                                  const isLastVisible =
+                                    index === 3 && remainingImages > 0;
+                                  // Lấy index gốc để truyền vào handleImageClick
+                                  const originalIndex =
+                                    item.files?.indexOf(file) || index;
+
+                                  return (
+                                    <div
+                                      key={file.id}
+                                      className="relative group/img overflow-hidden rounded-xl border border-black/5 aspect-square"
+                                    >
+                                      <img
+                                        src={file.link}
+                                        alt={file.name}
+                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 cursor-pointer"
+                                        onClick={() =>
                                           handleImageClick(
                                             item.files,
-                                            item.files.indexOf(file),
-                                          );
+                                            originalIndex,
+                                          )
                                         }
-                                      }}
-                                    />
-                                  </div>
-                                );
-                              }
-                              return (
-                                <div
-                                  key={file.id}
-                                  className={`flex items-center gap-2 p-2 rounded-lg border ${
-                                    isMine
-                                      ? 'bg-white/10 border-white/20'
-                                      : 'bg-slate-50 border-slate-200'
-                                  }`}
+                                      />
+                                      {isLastVisible && (
+                                        <div
+                                          className="absolute inset-0 bg-black/50 flex items-center justify-center cursor-pointer hover:bg-black/60 transition-colors"
+                                          onClick={() =>
+                                            handleImageClick(
+                                              item.files,
+                                              originalIndex,
+                                            )
+                                          }
+                                        >
+                                          <span className="text-white text-2xl font-bold">
+                                            +{remainingImages}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            )}
+
+                            {/* Non-image files */}
+                            {nonImageFiles.map((file) => (
+                              <div
+                                key={file.id}
+                                className={`flex items-center gap-2 p-2 rounded-lg border ${
+                                  isMine
+                                    ? 'bg-white/10 border-white/20'
+                                    : 'bg-slate-50 border-slate-200'
+                                }`}
+                              >
+                                <Paperclip size={16} />
+                                <a
+                                  href={file.link}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="text-xs hover:underline truncate max-w-[150px]"
                                 >
-                                  <Paperclip size={16} />
-                                  <a
-                                    href={file.link}
-                                    target="_blank"
-                                    rel="noreferrer"
-                                    className="text-xs hover:underline truncate max-w-[150px]"
-                                  >
-                                    {file.name}
-                                  </a>
-                                </div>
-                              );
-                            })}
+                                  {file.name}
+                                </a>
+                              </div>
+                            ))}
                           </div>
                         )}
                         {item.content}
@@ -590,6 +654,7 @@ const ScreenChat = ({
             onKeyDown={(e) => {
               if (e.key === 'Enter') onSend();
             }}
+            onPaste={onPaste}
             placeholder="Nhập tin nhắn..."
             className="w-full bg-slate-100 rounded-xl pl-4 pr-10 py-2 text-sm outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all font-medium"
           />

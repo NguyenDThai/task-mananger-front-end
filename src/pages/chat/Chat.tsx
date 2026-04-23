@@ -27,7 +27,6 @@ import {
   Search,
   User as UserIcon,
   X,
-  Phone,
   Info,
   Plus,
 } from 'lucide-react';
@@ -622,9 +621,6 @@ export const Chat = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <button className="p-2.5 hover:bg-slate-100 rounded-lg transition-colors text-slate-600">
-                  <Phone size={20} />
-                </button>
                 <button
                   onClick={() => {
                     if (currentChat.type === 'group') {

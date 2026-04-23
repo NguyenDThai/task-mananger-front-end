@@ -38,19 +38,10 @@ export const ImagePreviewModal: React.FC<ImagePreviewModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [currentIndex, images.length, onClose, handlePrevious, handleNext]);
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget) {
-      onClose();
-    }
-  };
-
   const currentImage = images[currentIndex];
 
   return createPortal(
-    <div
-      className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
-      onClick={handleBackdropClick}
-    >
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center">
       <div className="relative w-full h-full flex items-center justify-center">
         {/* Close Button */}
         <button
