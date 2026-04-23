@@ -1,12 +1,6 @@
 import { Search, Users, X, Check, UserPlus } from 'lucide-react';
 
-interface Member {
-  id: string | number;
-  name: string;
-  avatar?: string;
-  code: string;
-  email?: string;
-}
+import type { User as ChatUser } from '../../../redux/slides/chat/chatSlide';
 
 interface CreateGroupInlineProps {
   isActive: boolean;
@@ -14,9 +8,9 @@ interface CreateGroupInlineProps {
   setGroupName: (name: string) => void;
   searchQuery: string;
   setSearchQuery: (query: string) => void;
-  selectedMembers: Member[];
-  onToggleMember: (member: Member) => void;
-  filteredMembers: Member[];
+  selectedMembers: ChatUser[];
+  onToggleMember: (member: ChatUser) => void;
+  filteredMembers: ChatUser[];
   onCreateGroup: () => void;
 }
 

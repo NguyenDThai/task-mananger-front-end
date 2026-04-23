@@ -19,6 +19,19 @@ import {
 } from '../redux/slides/chat/chatSlide';
 import type { Chat, Message, User } from '../redux/slides/chat/chatSlide';
 
+interface ChatEventData {
+  chat?: Chat;
+  chat_id?: number;
+  message?: Message;
+  id?: number;
+  message_id?: number;
+  type?: string;
+  new?: number | Record<string, number>;
+  status?: string;
+  member?: User;
+  member_id?: number;
+}
+
 export const useChatGlobalListener = () => {
   const dispatch = useDispatch();
   const isInitialized = useSelector(selectIsChatInitialized);
@@ -169,8 +182,9 @@ export const useChatGlobalListener = () => {
       refreshChatData(undefined, false, true);
     };
 
-    const handleMemberChange = (data: any) => {
-      const chatId = Number(data?.chat_id || data?.id);
+    const handleMemberChange = (data: unknown) => {
+      const payload = data as ChatEventData;
+      const chatId = Number(payload?.chat_id || payload?.id);
 
       // Ép buộc xóa cache và lấy lại toàn bộ danh sách chat + member
       refreshChatData(chatId, true, true);
@@ -188,36 +202,44 @@ export const useChatGlobalListener = () => {
     const handleChatUpdated = () => {
       refreshChatData(); // Bỏ force true để dùng throttle 1s
     };
-    const handleChatAction = (data: any) => {
+    const handleChatAction = (data: unknown) => {
+      const payload = data as ChatEventData;
       // Nếu payload có object chat (như log bạn cung cấp), cập nhật toàn bộ chat đó
-      if (data?.chat && data.chat.id) {
-        dispatch(updateChat(data.chat));
+      if (payload?.chat && payload.chat.id) {
+        dispatch(updateChat(payload.chat));
       }
       // Fallback cho các cấu trúc khác nếu có
       else {
-        const chatId = Number(data?.chat_id || data?.id);
-        if (chatId && data?.new) {
-          dispatch(updateChatUnread({ chatId, unreadData: data.new }));
+        const chatId = Number(payload?.chat_id || payload?.id);
+        if (chatId && payload?.new && typeof payload.new !== 'number') {
+          dispatch(
+            updateChatUnread({
+              chatId,
+              unreadData: payload.new as Record<string, number>,
+            }),
+          );
         }
       }
     };
-    const handleNewMessage = (data: any) => {
-      if (data && typeof data.new === 'number') {
-        dispatch(setUnreadCount(data.new));
+    const handleNewMessage = (data: unknown) => {
+      const payload = data as ChatEventData;
+      if (payload && typeof payload.new === 'number') {
+        dispatch(setUnreadCount(payload.new));
       }
     };
 
     // Lắng nghe sự kiện thay đổi trạng thái trực tuyến của user
-    const handlePresenceChange = (data: any) => {
-      const userId = data.member?.id || data.member_id || data.id;
+    const handlePresenceChange = (data: unknown) => {
+      const payload = data as ChatEventData;
+      const userId = payload.member?.id || payload.member_id || payload.id;
       if (!userId) {
-        console.warn('Không tìm thấy user trong event', data);
+        console.warn('Không tìm thấy user trong event', payload);
       }
-      const isOnline = data.type
-        ? data.type === 'join'
-        : data.status
-          ? data.status === 'online'
-          : !!data.member;
+      const isOnline = payload.type
+        ? payload.type === 'join'
+        : payload.status
+          ? payload.status === 'online'
+          : !!payload.member;
 
       dispatch(setUserPresence({ userId: Number(userId), isOnline }));
     };

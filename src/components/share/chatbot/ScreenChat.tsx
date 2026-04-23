@@ -22,11 +22,16 @@ import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 
 interface ScreenChatProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
-  user: { _id?: string; [key: string]: unknown } | null;
+  user: {
+    _id?: string;
+    id?: string | number;
+    name?: string;
+    code?: string;
+  } | null;
   currentChat: Chat | null;
   newMessage: string;
   setNewMessage: (msg: string) => void;
-  handleSendMessage: (content?: string, files?: FileList) => void;
+  handleSendMessage: (content?: string, files?: FileList | File[]) => void;
   onMessageAction: (
     messageId: number,
     action: 'like' | 'love' | 'revoke' | 'remove',
@@ -109,7 +114,7 @@ const ScreenChat = ({
     if (!newMessage.trim() && selectedFiles.length === 0 && !replyMessage)
       return;
     // Chuyển mảng File[] sang FileList (nếu cần) hoặc truyền trực tiếp nếu SDK hỗ trợ
-    handleSendMessage(newMessage, selectedFiles as any);
+    handleSendMessage(newMessage, selectedFiles);
     setSelectedFiles([]);
     setNewMessage('');
   };
@@ -215,7 +220,7 @@ const ScreenChat = ({
 
                 {/* Sender Avatar */}
                 {!isMine && (
-                  <div className="relative flex-shrink-0 group/avatar">
+                  <div className="relative shrink-0 group/avatar">
                     <div className="w-9 h-9 rounded-2xl overflow-hidden bg-linear-to-tr from-indigo-50 to-white flex items-center justify-center text-[10px] font-bold text-indigo-600 shadow-sm border border-slate-100 group-hover/avatar:border-indigo-200 transition-colors">
                       {sender.avatar ? (
                         <img
@@ -293,12 +298,11 @@ const ScreenChat = ({
                               return (
                                 <>
                                   <span className="font-bold block mb-0.5">
-                                    {(originalMsg.member as any)?.name ||
-                                      'Người dùng'}
+                                    {originalMsg.member?.name || 'Người dùng'}
                                   </span>
                                   <div className="flex items-center gap-2">
                                     {originalMsg.files &&
-                                      (originalMsg.files as any[]).length > 0 &&
+                                      originalMsg.files.length > 0 &&
                                       [
                                         'jpg',
                                         'jpeg',
@@ -306,21 +310,18 @@ const ScreenChat = ({
                                         'gif',
                                         'webp',
                                       ].includes(
-                                        (
-                                          originalMsg.files as any[]
-                                        )[0].ext?.toLowerCase(),
+                                        originalMsg.files[0].ext?.toLowerCase(),
                                       ) && (
                                         <img
-                                          src={
-                                            (originalMsg.files as any[])[0].link
-                                          }
+                                          src={originalMsg.files[0].link}
                                           alt=""
                                           className="w-8 h-8 rounded-md object-cover border border-white/20"
                                         />
                                       )}
                                     <span className="opacity-80 truncate">
                                       {originalMsg.content ||
-                                        ((originalMsg.files as any[]).length > 0
+                                        (originalMsg.files &&
+                                        originalMsg.files.length > 0
                                           ? 'Một tệp tin'
                                           : '...')}
                                     </span>
@@ -331,11 +332,11 @@ const ScreenChat = ({
                           </div>
                         )}
                         {/* HIỂN THỊ HÌNH ẢNH (NẾU CÓ) */}
-                        {item.files && (item.files as any[]).length > 0 && (
+                        {item.files && item.files.length > 0 && (
                           <div
                             className={`flex flex-col gap-2 ${item.content ? 'mb-2' : ''}`}
                           >
-                            {(item.files as any[]).map((file: any) => {
+                            {item.files.map((file) => {
                               const isImg = [
                                 'jpg',
                                 'jpeg',
@@ -459,7 +460,7 @@ const ScreenChat = ({
             </span>
             <span className="text-xs text-slate-500 truncate max-w-[250px]">
               {replyMessage.content ||
-                (replyMessage.files && (replyMessage.files as any[]).length > 0
+                (replyMessage.files && replyMessage.files.length > 0
                   ? 'Một tệp tin'
                   : '...')}
             </span>
@@ -556,10 +557,10 @@ const ScreenChat = ({
           {showEmojiPicker && (
             <>
               <div
-                className="fixed inset-0 z-[60]"
+                className="fixed inset-0 z-60"
                 onClick={() => setShowEmojiPicker(false)}
               />
-              <div className="absolute bottom-12 right-0 w-64 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl z-[70] overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+              <div className="absolute bottom-12 right-0 w-64 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-2xl z-70 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
                 <div className="p-3">
                   {emojis.map((group) => (
                     <div key={group.cat} className="mb-3 last:mb-0">

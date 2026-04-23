@@ -38,6 +38,7 @@ import { toast } from 'react-toastify';
 import EditGroupModal from './EditGroupModal';
 import { useDispatch } from 'react-redux';
 import AddMemberModal from './AddMemberModal';
+import type { RootState } from '../../../redux/store';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -136,7 +137,7 @@ const ChatBot = () => {
     };
   }, [isOpen]);
 
-  const { user } = useSelector((state: { auth: { user: any } }) => state.auth);
+  const { user } = useSelector((state: RootState) => state.auth);
 
   const dispatch = useDispatch();
   const recentChats = useSelector(selectRecentChats);
@@ -209,7 +210,10 @@ const ChatBot = () => {
   };
 
   // Hàm gửi tin nhắn
-  const handleSendMessage = async (content?: string, files?: FileList) => {
+  const handleSendMessage = async (
+    content?: string,
+    files?: FileList | File[],
+  ) => {
     const textContent = content !== undefined ? content : newMessage;
 
     const trimmedText = textContent.trim();
@@ -308,7 +312,7 @@ const ChatBot = () => {
     };
 
     fetchMessagesAndMembers();
-  }, [currentChat, isInitialized, chatSDK, dispatch]);
+  }, [currentChat, isInitialized, dispatch]);
 
   // Lấy danh sách chat gần đây
   useEffect(() => {
@@ -323,7 +327,7 @@ const ChatBot = () => {
     };
 
     fetchRecentChats();
-  }, [isInitialized, isOpen, chatSDK]);
+  }, [isInitialized, isOpen, dispatch]);
 
   const reduxCurrentChatId = useSelector(selectCurrentChatId);
   const prevReduxChatIdRef = useRef(reduxCurrentChatId);
@@ -384,7 +388,7 @@ const ChatBot = () => {
           updateChatUnread({
             chatId: chat.id,
             unreadData: {
-              ...((chat.new as any) || {}),
+              ...(chat.new || {}),
               [currentMember.id]: 0,
             },
           }),
@@ -584,7 +588,7 @@ const ChatBot = () => {
   const handleRemoveMember = async (memberId: number) => {
     if (!editingChat) return;
 
-    const isOwner = memberId === user.id;
+    const isOwner = String(memberId) === String(user?.id || user?._id);
     if (
       isOwner &&
       !window.confirm(
@@ -778,16 +782,16 @@ const ChatBot = () => {
             setGroupName={setGroupName}
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
-            selectedMembers={selectedMembers as any}
-            onToggleMember={toggleMemberSelection as any}
-            filteredMembers={filteredMembers as any}
+            selectedMembers={selectedMembers}
+            onToggleMember={toggleMemberSelection}
+            filteredMembers={filteredMembers}
             onCreateGroup={handleCreateGroup}
           />
 
           {/* Màn hình Chat */}
           <ScreenChat
             scrollRef={scrollContainerRef}
-            user={user as any}
+            user={user}
             currentChat={currentChat}
             newMessage={newMessage}
             setNewMessage={setNewMessage}

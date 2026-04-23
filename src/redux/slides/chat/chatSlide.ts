@@ -1,5 +1,13 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
+export interface ChatFile {
+  id: number;
+  link: string;
+  name: string;
+  ext: string;
+  [key: string]: unknown;
+}
+
 export interface Chat {
   id: number;
   name?: string;
@@ -8,6 +16,7 @@ export interface Chat {
   message?: Message;
   updated_at?: string;
   members?: User[];
+  new?: Record<number, number>;
   [key: string]: unknown;
 }
 
@@ -22,7 +31,7 @@ export interface Message {
   sender_id?: number;
   sender_code?: string;
   member?: User;
-  files?: Array<{ [key: string]: unknown }>;
+  files?: ChatFile[];
   reply_id?: number;
   reply?: Message | null;
   [key: string]: unknown;
