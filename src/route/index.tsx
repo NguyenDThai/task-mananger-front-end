@@ -1,7 +1,7 @@
 import { createBrowserRouter } from 'react-router-dom';
 import Login from '../pages/auth/Login';
 import Register from '../pages/auth/Register';
-import Home from '../pages/Home/Home';
+import Home from '../pages/home/Home';
 import { AuthWrapper } from '../components';
 import KanbanPage from '../pages/kanban/Kanban';
 import DashboardPage from '../pages/dashboard/Dashboard';

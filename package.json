@@ -54,7 +54,7 @@
     "vite": "^8.0.1"
   },
   "validate-branch-name": {
-    "pattern": "^(master|main|develop)$|^(feature|fix|hotfix|release)\\/.+$",
+    "pattern": "^(master|main)$|^(develop|feature|fix|hotfix|release)\\/.+$",
     "errorMsg": "Tên nhánh không hợp lệ! Vui lòng đặt tên theo mẫu: feature/ten-tinh-nang, fix/ten-loi, hotfix/ten-sua, release/ten-phat-hanh"
   },
   "lint-staged": {

@@ -6,12 +6,14 @@ import {
 import authReducer from './slides/auth/authSlide';
 import taskReducer from './slides/task/taskSlide';
 import userReducer from './slides/user/userSlide';
+import chatReducer from './slides/chat/chatSlide';
 import { baseApi } from './api/baseApi';
 
 const appReducer = combineReducers({
   auth: authReducer,
   task: taskReducer,
   user: userReducer,
+  chat: chatReducer,
   [baseApi.reducerPath]: baseApi.reducer,
 });
 
@@ -29,7 +31,13 @@ const rootReducer = (
 export const store = configureStore({
   reducer: rootReducer,
   middleware: (getDefaultMiddleware) => {
-    return getDefaultMiddleware().concat(baseApi.middleware);
+    return getDefaultMiddleware({
+      serializableCheck: {
+        // Ignore the chatSDK instance as it's non-serializable
+        ignoredPaths: ['chat.chatSDK'],
+        ignoredActions: ['chatSlide/setInitialized'],
+      },
+    }).concat(baseApi.middleware);
   },
 });
 

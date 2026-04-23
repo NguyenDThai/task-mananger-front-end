@@ -1,6 +1,7 @@
 import { Outlet } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { SideBar } from '../../components';
+import { ChatBot } from '../../components';
 import { Bell, Search } from 'lucide-react';
 import type { RootState } from '../../redux/store';
 
@@ -56,6 +57,7 @@ const Home = () => {
         <div className="flex-1 overflow-y-auto px-10 pb-10 has-[.hidden-y]:overflow-y-hidden has-[.hidden-y]:pb-0">
           <Outlet />
         </div>
+        <ChatBot />
       </main>
     </div>
   );
