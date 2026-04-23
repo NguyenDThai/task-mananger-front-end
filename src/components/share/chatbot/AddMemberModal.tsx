@@ -75,7 +75,7 @@ const AddMemberModal = ({
         {/* Kết quả tìm kiếm */}
         <div className="flex-1 overflow-y-auto min-h-[250px] max-h-[400px] p-2 space-y-1">
           {filteredResults.length > 0 ? (
-            filteredResults.map((m: any) => {
+            filteredResults.map((m: User) => {
               const isJoined = joinedMemberIds.includes(m.id);
               return (
                 <div

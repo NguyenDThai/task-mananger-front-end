@@ -6,7 +6,7 @@ import {
   selectCurrentUser,
   selectOnlineUser,
 } from '../../../redux/slides/chat/chatSlide';
-import type { Chat, User } from '../../../redux/slides/chat/chatSlide';
+import type { Chat, UserChat } from '../../../types';
 
 interface RecentChatProps {
   setCurrentChat: (chat: Chat) => void;
@@ -45,8 +45,8 @@ const RecentChat = ({
           let isOnline = false;
 
           if (!isGroup) {
-            const partner = (chat.members as User[])?.find(
-              (m: User) => String(m.code) !== String(user?._id),
+            const partner = (chat.members as UserChat[])?.find(
+              (m: UserChat) => String(m.code) !== String(user?._id),
             );
 
             if (partner) {

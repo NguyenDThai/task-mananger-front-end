@@ -45,15 +45,15 @@ class ChatService {
 
   public async getMembers(chatId?: number, limit = 100, page = 1) {
     if (!chatId) return this.chatSDK.getMembers();
-    return this.chatSDK.getMembers(String(chatId) as any, limit, page);
+    return this.chatSDK.getMembers(chatId, limit, page);
   }
 
   public async addMember(chatId: number, memberId: number) {
-    return this.chatSDK.addMember(String(chatId) as any, memberId);
+    return this.chatSDK.addMember(chatId, memberId);
   }
 
   public async removeMember(chatId: number, memberId: number) {
-    return this.chatSDK.removeMember(String(chatId) as any, memberId);
+    return this.chatSDK.removeMember(chatId, memberId);
   }
 
   public async getChats(limit?: number, page?: number) {
@@ -100,7 +100,7 @@ class ChatService {
   public async addMessage(
     chatId: number,
     content?: string | null,
-    files?: FileList,
+    files?: FileList | File[],
     replyId?: number,
   ) {
     return this.chatSDK.addMessage(chatId, content, files, replyId);

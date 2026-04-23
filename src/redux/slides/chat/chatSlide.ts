@@ -1,46 +1,5 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
-
-export interface Chat {
-  id: number;
-  name?: string;
-  type: 'single' | 'group';
-  avatar?: string | null;
-  message?: Message;
-  updated_at?: string;
-  members?: User[];
-  [key: string]: unknown;
-}
-
-export interface Message {
-  id: number;
-  content: string;
-  revoke?: boolean;
-  remove?: boolean;
-  like?: boolean;
-  love?: boolean;
-  created_at?: string;
-  sender_id?: number;
-  sender_code?: string;
-  member?: User;
-  files?: Array<{ [key: string]: unknown }>;
-  reply_id?: number;
-  reply?: Message | null;
-  [key: string]: unknown;
-}
-
-export interface User {
-  id: number;
-  name: string;
-  code: string;
-  avatar?: string | null;
-  email?: string | null;
-  [key: string]: unknown;
-}
-
-export interface PaginationInfo {
-  page: number;
-  hasMore: boolean;
-}
+import type { Chat, Message, PaginationInfo, UserChat } from '../../../types';
 
 interface ChatState {
   isInitialized: boolean;
@@ -49,9 +8,9 @@ interface ChatState {
   recentChats: Chat[];
   message: Record<number, Message[]>;
   currentChatId: number | null;
-  systemUsers: User[]; // Danh bạ toàn hệ thống
-  chatMembers: Record<number, User[]>; //Lưu danh sách thành viên trong group
-  currentUser: User | null; // Người dùng hiện tại trong Chat
+  systemUsers: UserChat[]; // Danh bạ toàn hệ thống
+  chatMembers: Record<number, UserChat[]>; //Lưu danh sách thành viên trong group
+  currentUser: UserChat | null; // Người dùng hiện tại trong Chat
   onlineUsers: Record<number, boolean>; // Lưu danh sách người dùng online
   pagination: Record<number, PaginationInfo>; // Lưu thông tin phân trang
 }
@@ -163,17 +122,17 @@ const chatSlide = createSlice({
         };
       }
     },
-    setSystemUsers: (state, action: PayloadAction<User[]>) => {
+    setSystemUsers: (state, action: PayloadAction<UserChat[]>) => {
       state.systemUsers = action.payload;
     },
     setChatMembers: (
       state,
-      action: PayloadAction<{ chatId: number; members: User[] }>,
+      action: PayloadAction<{ chatId: number; members: UserChat[] }>,
     ) => {
       const { chatId, members } = action.payload;
       state.chatMembers[chatId] = members;
     },
-    setAuth: (state, action: PayloadAction<User | null>) => {
+    setAuth: (state, action: PayloadAction<UserChat | null>) => {
       state.currentUser = action.payload;
     },
     setUserPresence: (

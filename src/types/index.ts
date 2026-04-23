@@ -51,3 +51,55 @@ export interface ProjectTask extends SubTask {
   prevPos?: number | null;
   nextPos?: number | null;
 }
+
+// Type into chatSlide
+export interface ChatFile {
+  id: number;
+  link: string;
+  name: string;
+  ext: string;
+  [key: string]: unknown;
+}
+
+export interface Chat {
+  id: number;
+  name?: string;
+  type: 'single' | 'group';
+  avatar?: string | null;
+  message?: Message;
+  updated_at?: string;
+  members?: UserChat[];
+  new?: Record<number, number>;
+  [key: string]: unknown;
+}
+
+export interface Message {
+  id: number;
+  content: string;
+  revoke?: boolean;
+  remove?: boolean;
+  like?: boolean;
+  love?: boolean;
+  created_at?: string;
+  sender_id?: number;
+  sender_code?: string;
+  member?: UserChat;
+  files?: ChatFile[];
+  reply_id?: number;
+  reply?: Message | null;
+  [key: string]: unknown;
+}
+
+export interface UserChat {
+  id: number;
+  name: string;
+  code: string;
+  avatar?: string | null;
+  email?: string | null;
+  [key: string]: unknown;
+}
+
+export interface PaginationInfo {
+  page: number;
+  hasMore: boolean;
+}
