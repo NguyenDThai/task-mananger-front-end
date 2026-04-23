@@ -153,18 +153,18 @@ export const useChat = () => {
   //   return () => chatService.removeEventListener('new_message', handleNewMessage);
   // }, [currentUser?.id, dispatch]);
 
-  // useEffect(() => {
-  //   const handleProjectsMember = (
-  //     payload: ISChatEventPayloads['projects.member'],
-  //   ) => {
-  //     // const { chat_id, user_id, message_id, action } = payload;
-  //     console.warn('Projects member event:', payload);
-  //   };
+  useEffect(() => {
+    const handleProjectsMember = (
+      payload: ISChatEventPayloads['projects.member'],
+    ) => {
+      // const { chat_id, user_id, message_id, action } = payload;
+      console.warn('Projects member event:', payload);
+    };
 
-  //   chatService.addEventListener('projects.member', handleProjectsMember);
-  //   return () =>
-  //     chatService.removeEventListener('projects.member', handleProjectsMember);
-  // }, [currentUser?.id, dispatch]);
+    chatService.addEventListener('projects.member', handleProjectsMember);
+    return () =>
+      chatService.removeEventListener('projects.member', handleProjectsMember);
+  }, [currentUser?.id, dispatch]);
 
   return {
     setChatAuth,

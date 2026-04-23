@@ -164,14 +164,12 @@ export const ChatWindow = React.memo(
       lastMessageIdRef.current = currentLastMessage.id;
     }, [messages, isLoading, chatId, scrollToEnd]);
 
-    // Infinity scroll: Load old messages when user scrolls to top
     React.useEffect(() => {
       const target = messagesStartRef.current;
       if (!target || !onLoadOldMessages) return;
 
       const handleIntersection = (entries: IntersectionObserverEntry[]) => {
         const [entry] = entries;
-        // Bỏ check isLoadingOldMessages ở ngoài, chỉ check bên trong này
         if (entry.isIntersecting && !isLoadingOldMessages) {
           onLoadOldMessages();
         }
@@ -366,7 +364,7 @@ export const ChatWindow = React.memo(
                 <h2 className="font-medium text-gray-900 text-sm">
                   {chatName}
                 </h2>
-                <p className="text-xs text-gray-400">Online</p>
+                {/* <p className="text-xs text-gray-400">Online</p> */}
               </div>
             </>
           ) : (
@@ -529,7 +527,7 @@ export const ChatWindow = React.memo(
                 placeholder="Nhập tin nhắn..."
                 rows={1}
                 disabled={isSendingMessage}
-                className="w-full px-3 py-2 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full pl-3 pr-14 py-2 bg-gray-50 rounded text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-gray-100 focus:ring-1 focus:ring-gray-300 resize-none transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               />
               <div className="absolute right-2 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
                 {/* File Upload Button */}

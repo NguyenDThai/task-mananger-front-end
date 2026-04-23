@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react';
+import { memo, useMemo, useState } from 'react';
 import type {
   IMessageItem,
   ISChatUser,
@@ -23,24 +23,24 @@ import {
   Archive,
   Code,
 } from 'lucide-react';
+import { ImagePreviewModal } from './ImagePreviewModal';
+import { ImageAlbum } from './ImageAlbum';
 
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
   const today = new Date();
-  const yesterday = new Date(today);
-  yesterday.setDate(yesterday.getDate() - 1);
 
   if (date.toDateString() === today.toDateString()) {
     return date.toLocaleTimeString('vi-VN', {
       hour: '2-digit',
       minute: '2-digit',
     });
-  } else if (date.toDateString() === yesterday.toDateString()) {
-    return 'Hôm qua';
   } else {
     return date.toLocaleDateString('vi-VN', {
       month: 'short',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   }
 };
@@ -278,64 +278,83 @@ const MessageFiles = memo(
     files: IFileItem[];
     isCurrentUser: boolean;
   }) => {
+    const [previewData, setPreviewData] = useState<{
+      images: string[];
+      initialIndex: number;
+    } | null>(null);
+
     if (!files?.length) return null;
 
     const sortedFiles = sortFiles(files);
+    const imageFiles = sortedFiles.filter(
+      (file) => getFileTypeInfo(file.ext).type === 'image',
+    );
+    const otherFiles = sortedFiles.filter(
+      (file) => getFileTypeInfo(file.ext).type !== 'image',
+    );
+
+    const handleImageClick = (clickedFile: IFileItem) => {
+      const imageLinks = imageFiles.map((f) => f.link);
+      const initialIndex = imageLinks.indexOf(clickedFile.link);
+      setPreviewData({
+        images: imageLinks,
+        initialIndex: initialIndex >= 0 ? initialIndex : 0,
+      });
+    };
 
     return (
-      <div className="flex flex-wrap gap-2 mt-2">
-        {sortedFiles.map((file) => {
-          const fileTypeInfo = getFileTypeInfo(file.ext);
+      <>
+        {/* Image Album Grid */}
+        {imageFiles.length > 0 && (
+          <ImageAlbum images={imageFiles} onImageClick={handleImageClick} />
+        )}
 
-          // Image - render as thumbnail
-          if (fileTypeInfo.type === 'image') {
-            return (
-              <a
-                key={file.id}
-                href={file.link}
-                download={file.name}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <img
-                  src={file.link}
-                  alt={file.name}
-                  className="max-w-xs max-h-64 rounded object-cover hover:opacity-80 transition-opacity cursor-pointer"
-                />
-              </a>
-            );
-          }
+        {/* Other Files */}
+        {otherFiles.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2 justify-evenly mb-2">
+            {otherFiles.map((file) => {
+              const fileTypeInfo = getFileTypeInfo(file.ext);
 
-          // Video, Audio, Document, Code, Archive, Other - render as file card
-          return (
-            <a
-              key={file.id}
-              href={file.link}
-              download={file.name}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`flex-1 max-w-50 h-60 flex items-center gap-2 px-3 py-2 rounded border transition-all hover:scale-105 text-black ${
-                isCurrentUser
-                  ? `${fileTypeInfo.colorClass}`
-                  : 'bg-white/20 border-gray-300 hover:bg-white/30'
-              }`}
-            >
-              {fileTypeInfo.icon || (
-                <File size={18} className="flex-shrink-0" />
-              )}
-              <div className="flex flex-col gap-0.5 min-w-0">
-                <p className="text-xs font-medium truncate">{file.name}</p>
-                {file.size && (
-                  <p className="text-xs opacity-70">
-                    {(file.size / 1024).toFixed(1)} KB
-                  </p>
-                )}
-              </div>
-              <Download size={16} className="flex-shrink-0 opacity-60" />
-            </a>
-          );
-        })}
-      </div>
+              // Video, Audio, Document, Code, Archive, Other - render as file card
+              return (
+                <a
+                  key={file.id}
+                  href={file.link}
+                  download={file.name}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex-1 max-w-50 flex items-center gap-2 px-3 py-2 rounded border transition-all hover:scale-105 text-black ${
+                    isCurrentUser
+                      ? `${fileTypeInfo.colorClass}`
+                      : 'bg-white/20 border-gray-300 hover:bg-white/30'
+                  }`}
+                >
+                  {fileTypeInfo.icon || (
+                    <File size={18} className="flex-shrink-0" />
+                  )}
+                  <div className="flex flex-col gap-0.5 min-w-0">
+                    <p className="text-xs font-medium truncate">{file.name}</p>
+                    {file.size && (
+                      <p className="text-xs opacity-70">
+                        {(file.size / 1024).toFixed(1)} KB
+                      </p>
+                    )}
+                  </div>
+                  <Download size={16} className="flex-shrink-0 opacity-60" />
+                </a>
+              );
+            })}
+          </div>
+        )}
+
+        {previewData && (
+          <ImagePreviewModal
+            images={previewData.images}
+            initialIndex={previewData.initialIndex}
+            onClose={() => setPreviewData(null)}
+          />
+        )}
+      </>
     );
   },
 );
@@ -448,18 +467,18 @@ const MessageItem = memo(
           <img
             src={senderInfo.avatar}
             alt={senderInfo.name}
-            className="w-7 h-7 rounded-full object-cover flex-shrink-0 mt-0.5 self-end"
+            className="w-7 h-7 mb-7 rounded-full object-cover flex-shrink-0 mt-0.5 self-end"
           />
         ) : (
           !isCurrentUser && <div className="w-7 h-7"></div>
         )}
 
-        <div className="flex flex-col gap-1">
+        <div className="flex flex-col">
           <div
-            className={`max-w-xs lg:max-w-md xl:max-w-lg px-3 py-2 rounded relative group ${
+            className={`max-w-md w-fit min-w-0 flex flex-col px-3 py-2 rounded relative group ${
               isCurrentUser
-                ? 'bg-blue-800/90 text-white'
-                : 'bg-blue-100 text-gray-900'
+                ? 'bg-blue-800/90 text-white self-end'
+                : 'bg-blue-100 text-gray-900 self-start'
             }`}
           >
             {!isCurrentUser && (
@@ -500,30 +519,27 @@ const MessageItem = memo(
               Object.keys(message.action).length > 0 && (
                 <MessageActions actions={message.action} />
               )}
-            <div
-              className={`flex items-end gap-2 ${isCurrentUser ? 'flex-row-reverse justify-end' : 'flex-row justify-start'}`}
-            >
-              <p
-                className={`text-xs mt-1 ${
-                  isCurrentUser ? 'text-gray-300' : 'text-gray-600'
-                }`}
-              >
-                {formatTime(message.created_at)}
-              </p>
-              {seenBy.length > 0 && (
-                <div className="seen-status-container flex flex-row gap-1 mt-2">
-                  {seenBy.slice(0, 3).map((user) => (
-                    <img
-                      key={user.id}
-                      src={user.avatar || 'default-avatar.png'}
-                      title={`Đã xem bởi ${user.name}`}
-                      className="w-4 h-4 rounded-full"
-                      alt={user.name}
-                    />
-                  ))}
-                </div>
-              )}
-            </div>
+          </div>
+          {/* Time and Seen Status - outside bubble */}
+          <div
+            className={`flex items-center gap-2 py-1 px-1 ${isCurrentUser ? 'flex-row-reverse justify-end' : 'flex-row justify-start'}`}
+          >
+            <p className={'text-xs text-gray-900'}>
+              {formatTime(message.created_at)}
+            </p>
+            {seenBy.length > 0 && (
+              <div className="flex gap-0.5">
+                {seenBy.slice(0, 3).map((user) => (
+                  <img
+                    key={user.id}
+                    src={user.avatar || 'default-avatar.png'}
+                    title={`Đã xem bởi ${user.name}`}
+                    className="w-3 h-3 rounded-full"
+                    alt={user.name}
+                  />
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -531,7 +547,7 @@ const MessageItem = memo(
         {showReactions && (
           <div
             className={`
-              flex items-center gap-2 relative
+              flex items-center gap-2 relative mb-6
               ${isCurrentUser ? 'flex-row-reverse' : ''}  
             `}
             data-reaction-menu
@@ -751,8 +767,8 @@ const MessagesList = memo(
 
               const shouldShowAvatar =
                 !isCurrentUser &&
-                (index === msgList.length - 1 ||
-                  msgList[index + 1]?.member?.id !== message.member?.id);
+                (index === 0 ||
+                  msgList[index - 1]?.member?.id !== message.member?.id);
 
               return (
                 <MessageItem

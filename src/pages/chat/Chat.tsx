@@ -160,16 +160,13 @@ export const Chat = () => {
         }
 
         dispatch(setCurrentChatMessages(messagesList));
+
         if (pagination) {
           dispatch(setMessagesPagination(pagination));
         }
 
         if (currentChat.type === 'group') {
-          const { data: members } = await chat.getMembers(
-            currentChat.id,
-            20,
-            1,
-          );
+          const { data: members } = await chat.getMembers(currentChat.id, 0, 1);
           dispatch(setCurrentChatMembers(members));
         } else {
           dispatch(setCurrentChatMembers(currentChat.members));

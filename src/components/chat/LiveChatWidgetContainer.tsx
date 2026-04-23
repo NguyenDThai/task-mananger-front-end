@@ -71,7 +71,7 @@ export const LiveChatWidgetContainer = ({
           if (currentChat.type === 'group') {
             const { data: members } = await chat.getMembers(
               currentChat.id,
-              20,
+              0,
               1,
             );
             dispatch(setCurrentChatMembers(members));
