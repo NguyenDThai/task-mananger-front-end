@@ -1,10 +1,7 @@
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import {
-  setAuth,
-  setInitialized,
-  type User,
-} from '../../redux/slides/chat/chatSlide';
+import { setAuth, setInitialized } from '../../redux/slides/chat/chatSlide';
+import type { UserChat } from '../../types';
 import { useGetMeQuery } from '../../redux/api/authApi';
 import { setCredentials } from '../../redux/slides/auth/authSlide';
 import { useNavigate } from 'react-router-dom';
@@ -29,7 +26,7 @@ const AuthWrapper = ({ children }: { children: React.ReactNode }) => {
         })
         .then((res) => {
           dispatch(setInitialized(true));
-          dispatch(setAuth(res as User));
+          dispatch(setAuth(res as UserChat));
         })
         .catch((err) => {
           console.error('Chat SDK authentication failed:', err);

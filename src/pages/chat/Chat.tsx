@@ -15,12 +15,9 @@ import {
   setMessagesHistory,
   selectChatPagination,
   prependMessages,
+  setChatActivated,
 } from '../../redux/slides/chat/chatSlide';
-import type {
-  Chat as ChatType,
-  Message,
-  User,
-} from '../../redux/slides/chat/chatSlide';
+import type { Chat as ChatType, Message, UserChat } from '../../types';
 import { chatSDK } from '../../services/chat.service';
 import useDebounce from '../../hooks/useDebound';
 import { ChatbotSearchList } from '../../components/share/chatbot/ChatbotSearchList';
@@ -47,7 +44,7 @@ export const Chat = () => {
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingChat, setEditingChat] = useState<ChatType | null>(null);
-  const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<UserChat[]>([]);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [newMessage, setNewMessage] = useState('');
@@ -60,7 +57,9 @@ export const Chat = () => {
   const isPrependingRef = useRef(false);
 
   const isInitialized = useSelector(selectIsChatInitialized);
-  const { user } = useSelector((state: { auth: { user: any } }) => state.auth);
+  const { user } = useSelector(
+    (state: { auth: { user: UserChat } }) => state.auth,
+  );
   const dispatch = useDispatch();
   const recentChats = useSelector(selectRecentChats);
   const messages = useSelector(currentMessages);
@@ -68,7 +67,7 @@ export const Chat = () => {
   const currentChatMembers = useSelector(selectChatMembers);
   const currentMember = useSelector(selectCurrentUser);
   const allChatMembers = useSelector(
-    (state: { chat: { chatMembers: Record<number, User[]> } }) =>
+    (state: { chat: { chatMembers: Record<number, UserChat[]> } }) =>
       state.chat.chatMembers,
   );
 
@@ -128,7 +127,10 @@ export const Chat = () => {
   }, [messages.length, currentChat?.id, isLoadingMore]);
 
   // Send message
-  const handleSendMessage = async (content?: string, files?: FileList) => {
+  const handleSendMessage = async (
+    content?: string,
+    files?: FileList | File[],
+  ) => {
     const textContent = content !== undefined ? content : newMessage;
     const trimmedText = textContent.trim();
     const messageToSend = trimmedText || '';
@@ -141,22 +143,18 @@ export const Chat = () => {
     setReplyMessage(null);
 
     try {
-      const res = await chatSDK.addMessage(
+      const { chat, message } = await chatSDK.addMessage(
         currentChat.id,
         messageToSend,
         files,
         replyId,
       );
 
-      if (res.data) {
+      if (chat && message) {
         dispatch(
           upsertMessage({
-            chat: currentChat,
-            message: {
-              ...(res.data as Message),
-              reply: replyMessage,
-              reply_id: replyId ? Number(replyId) : undefined,
-            },
+            chat: chat,
+            message: message,
           }),
         );
       }
@@ -190,7 +188,7 @@ export const Chat = () => {
             dispatch(
               setChatMembers({
                 chatId: currentChat.id,
-                members: currentChat.members as User[],
+                members: currentChat.members as UserChat[],
               }),
             );
           }
@@ -228,7 +226,7 @@ export const Chat = () => {
         console.error('Lỗi khi lấy danh sách chat:', error);
       }
     };
-
+    dispatch(setChatActivated(true));
     fetchRecentChats();
   }, [isInitialized, dispatch]);
 
@@ -236,7 +234,7 @@ export const Chat = () => {
     if (!currentChat) return 'Tin nhắn';
     if (currentChat.type === 'single') {
       const partner = currentChat.members?.find(
-        (m: User) => m.code !== user?._id,
+        (m: UserChat) => m.code !== user?._id,
       );
       return partner ? partner.name : 'Người dùng';
     }
@@ -250,7 +248,7 @@ export const Chat = () => {
       index === self.findIndex((t) => t.code === m.code),
   );
 
-  const toggleMemberSelection = (member: User) => {
+  const toggleMemberSelection = (member: UserChat) => {
     setSelectedMembers((prev) =>
       prev.find((m) => m.id === member.id)
         ? prev.filter((m) => m.id !== member.id)
@@ -268,7 +266,7 @@ export const Chat = () => {
           updateChatUnread({
             chatId: chat.id,
             unreadData: {
-              ...((chat.new as any) || {}),
+              ...((chat.new as { [key: number]: number }) || {}),
               [currentMember.id]: 0,
             },
           }),
@@ -428,7 +426,7 @@ export const Chat = () => {
     }
   };
 
-  const handleAddMember = async (member: User) => {
+  const handleAddMember = async (member: UserChat) => {
     if (!currentChat || !member.id) return;
 
     try {
@@ -464,7 +462,7 @@ export const Chat = () => {
 
       const membersForThisChat = allChatMembers[editingChat.id] || [];
       const updateMembers = membersForThisChat.filter(
-        (m: User) => m.id !== memberId,
+        (m: UserChat) => m.id !== memberId,
       );
       dispatch(
         setChatMembers({ chatId: editingChat.id, members: updateMembers }),
@@ -549,7 +547,7 @@ export const Chat = () => {
               </p>
               <RecentChat
                 setCurrentChat={handleSelectChat}
-                user={user}
+                user={user as any}
                 onRemoveChat={handleRemoveChat}
                 onUpdateGroupName={handleUpdateGroupName}
                 onAddMember={handleOpenAddMemberModal}
@@ -587,9 +585,11 @@ export const Chat = () => {
                   setGroupName={setGroupName}
                   searchQuery={searchQuery}
                   setSearchQuery={setSearchQuery}
-                  selectedMembers={selectedMembers as any}
-                  onToggleMember={toggleMemberSelection as any}
-                  filteredMembers={filteredMembers as any}
+                  selectedMembers={selectedMembers as UserChat[]}
+                  onToggleMember={
+                    toggleMemberSelection as (member: UserChat) => void
+                  }
+                  filteredMembers={filteredMembers as UserChat[]}
                   onCreateGroup={handleCreateGroup}
                 />
               </div>
@@ -648,7 +648,7 @@ export const Chat = () => {
               {currentChat ? (
                 <ScreenChat
                   scrollRef={scrollContainerRef}
-                  user={user as any}
+                  user={user as UserChat}
                   currentChat={currentChat}
                   newMessage={newMessage}
                   setNewMessage={setNewMessage}
