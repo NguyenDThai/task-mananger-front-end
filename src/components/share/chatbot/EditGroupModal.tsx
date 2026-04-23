@@ -1,6 +1,6 @@
 import { X, Save, Users, ShieldCheck, Trash2 } from 'lucide-react';
 import { useSelector } from 'react-redux';
-import type { User } from '../../../redux/slides/chat/chatSlide';
+import type { UserChat } from '../../../types';
 
 interface EditGroupModalProps {
   isOpen: boolean;
@@ -22,7 +22,7 @@ const EditGroupModal = ({
   onRemoveMember,
 }: EditGroupModalProps) => {
   const allChatMembers = useSelector(
-    (state: { chat: { chatMembers: Record<number, User[]> } }) =>
+    (state: { chat: { chatMembers: Record<number, UserChat[]> } }) =>
       state.chat.chatMembers,
   );
   const members = chatId ? allChatMembers[chatId] || [] : [];
@@ -76,7 +76,7 @@ const EditGroupModal = ({
             </div>
 
             <div className="max-h-[220px] overflow-y-auto pr-1 space-y-2 custom-scrollbar">
-              {members?.map((m: User) => (
+              {members?.map((m: UserChat) => (
                 <div
                   key={m.id}
                   className="flex items-center gap-3 p-3 bg-white rounded-2xl border border-slate-100 shadow-sm transition-all hover:bg-slate-50 group"

@@ -18,7 +18,6 @@ import {
   selectChatPagination,
   prependMessages,
 } from '../../../redux/slides/chat/chatSlide';
-import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
 import { chatSDK } from '../../../services/chat.service';
 import useDebounce from '../../../hooks/useDebound';
 import { ChatbotSearchList } from './ChatbotSearchList';
@@ -39,6 +38,7 @@ import EditGroupModal from './EditGroupModal';
 import { useDispatch } from 'react-redux';
 import AddMemberModal from './AddMemberModal';
 import type { RootState } from '../../../redux/store';
+import type { Chat, Message, UserChat } from '../../../types';
 
 const ChatBot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,7 +54,7 @@ const ChatBot = () => {
   const [isGroupMode, setIsGroupMode] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingChat, setEditingChat] = useState<Chat | null>(null);
-  const [selectedMembers, setSelectedMembers] = useState<User[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<UserChat[]>([]);
   const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
   const [newMessage, setNewMessage] = useState('');
@@ -147,7 +147,7 @@ const ChatBot = () => {
   // Lấy member hiện tại
   const currentMember = useSelector(selectCurrentUser);
   const allChatMembers = useSelector(
-    (state: { chat: { chatMembers: Record<number, User[]> } }) =>
+    (state: { chat: { chatMembers: Record<number, UserChat[]> } }) =>
       state.chat.chatMembers,
   );
 
@@ -285,7 +285,7 @@ const ChatBot = () => {
             dispatch(
               setChatMembers({
                 chatId: currentChat.id,
-                members: currentChat.members as User[],
+                members: currentChat.members as UserChat[],
               }),
             );
           }
@@ -353,7 +353,7 @@ const ChatBot = () => {
     if (!currentChat) return 'Tin nhắn';
     if (currentChat.type === 'single') {
       const partner = currentChat.members?.find(
-        (m: User) => m.code !== user?._id,
+        (m: UserChat) => m.code !== user?._id,
       );
       return partner ? partner.name : 'Người dùng';
     }
@@ -371,7 +371,7 @@ const ChatBot = () => {
       index === self.findIndex((t) => t.code === m.code),
   );
 
-  const toggleMemberSelection = (member: User) => {
+  const toggleMemberSelection = (member: UserChat) => {
     setSelectedMembers((prev) =>
       prev.find((m) => m.id === member.id)
         ? prev.filter((m) => m.id !== member.id)
@@ -566,7 +566,7 @@ const ChatBot = () => {
   };
 
   // Hàm thêm thành viên vào nhóm
-  const handleAddMember = async (member: User) => {
+  const handleAddMember = async (member: UserChat) => {
     if (!currentChat || !member.id) return;
 
     try {
@@ -605,7 +605,7 @@ const ChatBot = () => {
       // Cập nhật danh sách thành viên trong chat trên redux
       const membersForThisChat = allChatMembers[editingChat.id] || [];
       const updateMembers = membersForThisChat.filter(
-        (m: User) => m.id !== memberId,
+        (m: UserChat) => m.id !== memberId,
       );
       dispatch(
         setChatMembers({ chatId: editingChat.id, members: updateMembers }),

@@ -1,13 +1,13 @@
 import { chatSDK } from '../../../services/chat.service';
-import type { Chat, User } from '../../../redux/slides/chat/chatSlide';
+import type { Chat, UserChat } from '../../../types';
 
 interface ChatbotSearchListProps {
-  m: User;
+  m: UserChat;
   setCurrentChat: (chat: Chat) => void;
   setSearchQuery: (query: string) => void;
   isGroupMode: boolean;
   isSelected: boolean;
-  toggleMemberSelection: (member: User) => void;
+  toggleMemberSelection: (member: UserChat) => void;
 }
 
 export const ChatbotSearchList = ({

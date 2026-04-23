@@ -18,7 +18,7 @@ import {
   currentMessages,
   selectOnlineUser,
 } from '../../../redux/slides/chat/chatSlide';
-import type { Chat, Message, User } from '../../../redux/slides/chat/chatSlide';
+import type { Chat, Message, UserChat } from '../../../types';
 
 interface ScreenChatProps {
   scrollRef: React.RefObject<HTMLDivElement | null>;
@@ -155,7 +155,7 @@ const ScreenChat = ({
         {messages.length > 0 ? (
           messages.map((item: Message) => {
             // SDK trả về field thành viên trong item.member
-            const sender = (item.member as User) || ({} as User);
+            const sender = (item.member as UserChat) || ({} as UserChat);
             const isMine =
               ((sender.code as string) || (item.sender_code as string)) ===
               user?._id;

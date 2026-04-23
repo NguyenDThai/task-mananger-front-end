@@ -17,7 +17,7 @@ import {
   updateChat,
   setUserPresence,
 } from '../redux/slides/chat/chatSlide';
-import type { Chat, Message, User } from '../redux/slides/chat/chatSlide';
+import type { Chat, Message, UserChat } from '../types';
 
 interface ChatEventData {
   chat?: Chat;
@@ -28,7 +28,7 @@ interface ChatEventData {
   type?: string;
   new?: number | Record<string, number>;
   status?: string;
-  member?: User;
+  member?: UserChat;
   member_id?: number;
 }
 
@@ -57,7 +57,7 @@ export const useChatGlobalListener = () => {
     const fetchSystemUsers = async () => {
       try {
         const res = await chatSDK.getMembers();
-        const users = (res.data as User[]) || [];
+        const users = (res.data as UserChat[]) || [];
         dispatch(setSystemUsers(users));
 
         users.forEach((u) => {
@@ -121,7 +121,7 @@ export const useChatGlobalListener = () => {
                 dispatch(
                   setChatMembers({
                     chatId: targetId as number,
-                    members: resMem.data as User[],
+                    members: resMem.data as UserChat[],
                   }),
                 );
               }
