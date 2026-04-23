@@ -1,4 +1,4 @@
-interface SatekChatauthData {
+export interface SatekChatauthData {
   code: string;
   name: string;
   avatar?: string;
@@ -6,7 +6,7 @@ interface SatekChatauthData {
   email?: string;
 }
 
-interface SatekChatResponse<T = unknown> {
+export interface SatekChatResponse<T = unknown> {
   data?: T;
   message?: string;
   statusCode?: number;
@@ -14,7 +14,7 @@ interface SatekChatResponse<T = unknown> {
   [key: string]: unknown;
 }
 
-interface SatekChatUser {
+export interface SatekChatUser {
   id: number;
   name: string;
   code: string;
@@ -22,7 +22,7 @@ interface SatekChatUser {
   [key: string]: unknown;
 }
 
-interface SatekChatMessage {
+export interface SatekChatMessage {
   id: number;
   content: string;
   chat_id: number;
@@ -34,7 +34,7 @@ interface SatekChatMessage {
   [key: string]: unknown;
 }
 
-interface SatekChatConversation {
+export interface SatekChatConversation {
   id: number;
   name?: string;
   type: 'single' | 'group';
